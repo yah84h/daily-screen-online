@@ -11,6 +11,7 @@ type Store = {
   data: api.AdminData | null;
   loadError: string;
   reload: () => Promise<void>;
+  selectScreen: (id: string) => void;
   tab: Tab;
   setTab: (t: Tab) => void;
   modal: Modal;
@@ -47,7 +48,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const target = useRef<UploadTarget>('image');
-  const loadedOnce = useRef(false);
+  const loadedFor = useRef<string | null>(null);
+  const screenId = useRef<string | null>(localStorage.getItem('admin-screen'));
 
   const notify = useCallback((m: string) => {
     setToast(m);
@@ -56,11 +58,13 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const reload = useCallback(async () => {
     try {
-      const d = await api.loadAdmin();
+      const d = await api.loadAdmin(screenId.current);
       setData(d);
       setLoadError('');
-      if (!loadedOnce.current) {
-        loadedOnce.current = true;
+      if (loadedFor.current !== d.screen.id) {
+        loadedFor.current = d.screen.id;
+        screenId.current = d.screen.id;
+        localStorage.setItem('admin-screen', d.screen.id);
         setTemplate({ ...defaultTemplate, ...d.screen.template });
         setContentState({ ...initialContent, ...(d.screen.draft || d.current?.content || {}) });
         setDirty(!!d.screen.draft);
@@ -75,6 +79,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     const t = setInterval(reload, 20_000); // لتحديث حالة التلفزيون «متصلة/غير متصلة»
     return () => clearInterval(t);
   }, [reload]);
+
+  const selectScreen = (id: string) => {
+    if (dirty && !confirm('لديك تعديلات غير محفوظة. الانتقال إلى شاشة أخرى سيتجاهلها. متابعة؟')) return;
+    screenId.current = id;
+    reload();
+  };
 
   const edit: Store['edit'] = (key, value) => {
     setContentState((c) => ({ ...c, [key]: value }));
@@ -137,7 +147,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ data, loadError, reload, tab, setTab, modal, setModal, content, edit, setContent, template, setTemplate, dirty, busy, toast, notify, run, chooseImage, fileInput, presetName, setPresetName, editingPreset, openPresetEditor }}
+      value={{ data, loadError, reload, selectScreen, tab, setTab, modal, setModal, content, edit, setContent, template, setTemplate, dirty, busy, toast, notify, run, chooseImage, fileInput, presetName, setPresetName, editingPreset, openPresetEditor }}
     >
       {children}
     </Ctx.Provider>

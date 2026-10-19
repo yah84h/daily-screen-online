@@ -35,6 +35,7 @@ export type Template = {
   textW: number;
   spacing: number;
   align?: 'left' | 'center' | 'right';
+  calendar?: 'gregory' | 'islamic' | 'both';
 };
 
 export type School = { name: string; tagline: string; logo_url: string | null };
@@ -115,6 +116,7 @@ export const defaultTemplate: Template = {
   textW: 45,
   spacing: 1,
   align: 'right',
+  calendar: 'gregory',
 };
 
 export const defaultSchool: School = { name: 'معهد النور', tagline: 'تعلّم، تطوّر، ألهم.', logo_url: null };

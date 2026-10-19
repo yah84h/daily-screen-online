@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowUpRight, Copy, Monitor, Trash2, Upload, X } from 'lucide-react';
+import { ArrowUpRight, Copy, Monitor, Plus, Trash2, Upload, X, Eraser, Check } from 'lucide-react';
 import { Screen } from '@/components/Screen';
 import * as api from '@/lib/api';
 import { riyadhToday, type Content } from '@/lib/types';
@@ -52,12 +52,25 @@ function Pair() {
   const { data, run, busy, setModal } = useAdmin();
   const [code, setCode] = useState('');
   const [label, setLabel] = useState('');
+  const [screenId, setScreenId] = useState(data?.screen.id || '');
   return (
     <>
       <div className="modal-symbol">
         <Monitor />
       </div>
       <h2>ربط تلفزيون</h2>
+      {data && data.screens.length > 1 && (
+        <label>
+          الشاشة
+          <select value={screenId} onChange={(e) => setScreenId(e.target.value)}>
+            {data.screens.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <p>
         افتح <b dir="ltr">{location.origin}/tv</b> على التلفزيون، ثم أدخل الرمز المكوّن من ستة أرقام الظاهر عليه.
       </p>
@@ -69,7 +82,7 @@ function Pair() {
         اسم الجهاز <small>اختياري</small>
         <input placeholder="تلفزيون البهو" value={label} onChange={(e) => setLabel(e.target.value)} />
       </label>
-      <button disabled={busy || code.length !== 6 || !data} className="button primary" onClick={() => run(() => api.pairDevice(code, data!.screen.id, label || undefined), 'تم ربط الشاشة. ستظهر المحتوى خلال ثوانٍ.').then(() => setModal('setup'))}>
+      <button disabled={busy || code.length !== 6 || !data} className="button primary" onClick={() => run(() => api.pairDevice(code, screenId || data!.screen.id, label || undefined), 'تم ربط الشاشة. ستظهر المحتوى خلال ثوانٍ.').then(() => setModal('setup'))}>
         ربط الشاشة
       </button>
     </>
@@ -172,9 +185,11 @@ function Optional() {
 }
 
 function SettingsModal() {
-  const { data, chooseImage, run, busy } = useAdmin();
+  const { data, chooseImage, run, busy, template, selectScreen, notify } = useAdmin();
   const [name, setName] = useState(data?.school.name || '');
   const [tagline, setTagline] = useState(data?.school.tagline || '');
+  const [newScreen, setNewScreen] = useState('');
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   return (
     <>
       <h2>إعدادات المدرسة</h2>
@@ -196,7 +211,68 @@ function SettingsModal() {
       <button className="button primary" disabled={busy || !name.trim()} onClick={() => run(() => api.saveSchool({ name: name.trim(), tagline: tagline.trim() }), 'تم حفظ الإعدادات.')}>
         حفظ
       </button>
-      <p>
+      <h2 style={{ marginTop: 28 }}>الشاشات</h2>
+      <p>لكل شاشة محتواها وقالبها وأجهزتها. تُربط أجهزة التلفزيون بالشاشة المطلوبة عند الربط.</p>
+      <div className="screen-list">
+        {data?.screens.map((s) => (
+          <div className="list-row" key={s.id}>
+            {renaming?.id === s.id ? (
+              <>
+                <input autoFocus value={renaming.name} onChange={(e) => setRenaming({ id: s.id, name: e.target.value })} />
+                <button className="icon-button" aria-label="حفظ" onClick={() => run(() => api.renameScreen(s.id, renaming.name), 'تمت إعادة التسمية.').then(() => setRenaming(null))}>
+                  <Check size={16} />
+                </button>
+              </>
+            ) : (
+              <>
+                <span>
+                  <b>{s.name}</b>
+                  <small>{s.id === data.screen.id ? 'الشاشة الحالية' : ''}</small>
+                </span>
+                <button className="text-button" onClick={() => setRenaming({ id: s.id, name: s.name })}>
+                  تسمية
+                </button>
+                {s.id !== data.screen.id && (
+                  <button className="text-button" onClick={() => selectScreen(s.id)}>
+                    تحديد
+                  </button>
+                )}
+                <button className="icon-button" aria-label="حذف الشاشة" onClick={() => confirm(`حذف «${s.name}» مع كل منشوراتها وأجهزتها؟`) && run(() => api.deleteScreen(s.id), 'تم حذف الشاشة.')}>
+                  <Trash2 size={16} />
+                </button>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="list-row" style={{ borderBottom: 0 }}>
+        <input placeholder="اسم شاشة جديدة (مثال: شاشة المعلمين)" value={newScreen} onChange={(e) => setNewScreen(e.target.value)} style={{ flex: 1, padding: '9px 10px', border: '1px solid #d6e0d8', borderRadius: 8 }} />
+        <button
+          className="button white"
+          disabled={busy || !newScreen.trim()}
+          onClick={() =>
+            run(() => api.createScreen(newScreen, template), 'تمت إضافة الشاشة.').then((s) => {
+              if (s) {
+                setNewScreen('');
+                selectScreen(s.id);
+              }
+            })
+          }
+        >
+          <Plus size={15} /> إضافة
+        </button>
+      </div>
+
+      <h2 style={{ marginTop: 28 }}>التخزين</h2>
+      <p>يحذف الصور المرفوعة التي لم تعد مستخدمة في أي منشور أو موضوع أو قالب.</p>
+      <button
+        className="button white"
+        disabled={busy}
+        onClick={() => confirm('حذف الصور غير المستخدمة نهائيًا؟') && run(() => api.cleanupMedia()).then((r) => r && notify(`حُذفت ${r.deleted} صورة، وبقيت ${r.kept} مستخدمة.`))}
+      >
+        <Eraser size={15} /> تنظيف الصور غير المستخدمة
+      </button>
+      <p style={{ marginTop: 18 }}>
         المنطقة الزمنية: الرياض
         <br />
         دقة العرض: 4K UHD

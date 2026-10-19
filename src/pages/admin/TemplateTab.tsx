@@ -97,6 +97,14 @@ export function TemplateTab() {
           <input type="range" min="25" max="80" value={template.imageH} onChange={(e) => set('imageH', +e.target.value)} />
         </label>
         <label>
+          التاريخ المعروض
+          <select value={template.calendar || 'gregory'} onChange={(e) => set('calendar', e.target.value as Template['calendar'])}>
+            <option value="gregory">ميلادي</option>
+            <option value="islamic">هجري (أم القرى)</option>
+            <option value="both">ميلادي وهجري</option>
+          </select>
+        </label>
+        <label>
           محاذاة النص
           <select value={template.align || 'right'} onChange={(e) => set('align', e.target.value as Template['align'])}>
             <option value="left">يسار</option>

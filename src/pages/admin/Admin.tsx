@@ -37,7 +37,7 @@ export default function Admin() {
 }
 
 function Layout() {
-  const { data, loadError, tab, setTab, setModal, toast, fileInput } = useAdmin();
+  const { data, loadError, tab, setTab, setModal, toast, fileInput, selectScreen } = useAdmin();
   const { signOut } = useAuth();
   const school = data?.school;
   const tvOnline = data?.devices.some((d) => d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 90_000) ?? false;
@@ -63,6 +63,18 @@ function Layout() {
             <small>مساحة المدرسة</small>
           </span>
         </div>
+        {data && data.screens.length > 1 && (
+          <div className="screen-switch">
+            <div className="nav-label">الشاشة الحالية</div>
+            <select value={data.screen.id} onChange={(e) => selectScreen(e.target.value)} aria-label="اختيار الشاشة">
+              {data.screens.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="nav-label">مساحة العمل</div>
         <nav>
           {nav.map(([label, Icon]) => (

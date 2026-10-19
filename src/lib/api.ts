@@ -24,6 +24,7 @@ export async function notifyScreen(screenId: string) {
 // ---------- قراءة لوحة الإدارة ----------
 export type AdminData = {
   school: School;
+  screens: Screen[];
   screen: Screen;
   current: Post | null;
   history: Post[];
@@ -32,17 +33,18 @@ export type AdminData = {
   devices: Device[];
 };
 
-export async function loadAdmin(): Promise<AdminData> {
+export async function loadAdmin(screenId?: string | null): Promise<AdminData> {
   const today = riyadhToday();
   const [school, screens, presets] = await Promise.all([
     supabase.from('school_settings').select('name,tagline,logo_url').eq('id', 1).single(),
-    supabase.from('screens').select('*').order('created_at').limit(1),
+    supabase.from('screens').select('*').order('created_at'),
     supabase.from('presets').select('*').order('sort_order').order('created_at'),
   ]);
   fail(school.error, 'تعذّر تحميل إعدادات المدرسة');
-  fail(screens.error, 'تعذّر تحميل الشاشة');
+  fail(screens.error, 'تعذّر تحميل الشاشات');
   fail(presets.error);
-  const screen = screens.data?.[0] as Screen | undefined;
+  const all = (screens.data || []) as Screen[];
+  const screen = all.find((s) => s.id === screenId) || all[0];
   if (!screen) throw Error('لا توجد شاشة. شغّل ملف البذور 0002_seed.sql.');
 
   const [history, schedule, devices] = await Promise.all([
@@ -55,6 +57,7 @@ export async function loadAdmin(): Promise<AdminData> {
   fail(devices.error);
   return {
     school: school.data as School,
+    screens: all,
     screen,
     current: (history.data?.[0] as Post) || null,
     history: (history.data || []) as Post[],
@@ -62,6 +65,60 @@ export async function loadAdmin(): Promise<AdminData> {
     presets: (presets.data || []) as Preset[],
     devices: (devices.data || []) as Device[],
   };
+}
+
+// ---------- الشاشات ----------
+export async function createScreen(name: string, template: Partial<Template>): Promise<Screen> {
+  const clean = name.trim().slice(0, 80);
+  if (!clean) throw Error('أدخل اسم الشاشة.');
+  const r = await supabase.from('screens').insert({ name: clean, template }).select().single();
+  fail(r.error);
+  return r.data as Screen;
+}
+export async function renameScreen(id: string, name: string) {
+  const clean = name.trim().slice(0, 80);
+  if (!clean) throw Error('أدخل اسم الشاشة.');
+  fail((await supabase.from('screens').update({ name: clean }).eq('id', id)).error);
+}
+export async function deleteScreen(id: string) {
+  const { count } = await supabase.from('screens').select('id', { count: 'exact', head: true });
+  if ((count ?? 0) <= 1) throw Error('لا يمكن حذف الشاشة الوحيدة.');
+  fail((await supabase.from('screens').delete().eq('id', id)).error);
+}
+
+// ---------- تنظيف الصور غير المستخدمة ----------
+export async function cleanupMedia(): Promise<{ deleted: number; kept: number }> {
+  const [posts, presets, screens, school] = await Promise.all([
+    supabase.from('posts').select('content'),
+    supabase.from('presets').select('content'),
+    supabase.from('screens').select('template,draft'),
+    supabase.from('school_settings').select('logo_url').eq('id', 1).single(),
+  ]);
+  fail(posts.error);
+  fail(presets.error);
+  fail(screens.error);
+  const used = new Set<string>();
+  const collect = (v: unknown) => {
+    if (typeof v === 'string') {
+      const m = v.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
+      if (m) used.add(decodeURIComponent(m[1]));
+    } else if (v && typeof v === 'object') Object.values(v as Record<string, unknown>).forEach(collect);
+  };
+  [posts.data, presets.data, screens.data, school.data].forEach(collect);
+
+  const folders = ['content', 'backgrounds', 'logos', 'legacy'];
+  const all: string[] = [];
+  for (const f of folders) {
+    const r = await supabase.storage.from('media').list(f, { limit: 1000 });
+    if (r.error) continue;
+    for (const o of r.data) if (o.id) all.push(`${f}/${o.name}`);
+  }
+  const unused = all.filter((p) => !used.has(p));
+  if (unused.length) {
+    const r = await supabase.storage.from('media').remove(unused);
+    if (r.error) throw Error('تعذّر حذف بعض الصور: ' + r.error.message);
+  }
+  return { deleted: unused.length, kept: all.length - unused.length };
 }
 
 // ---------- الإجراءات ----------

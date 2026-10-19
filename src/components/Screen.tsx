@@ -35,7 +35,10 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
         </div>
         <div className="screen-date">
           <b>{d.toLocaleDateString('ar-SA-u-ca-gregory', { weekday: 'long', timeZone: 'Asia/Riyadh' })}</b>
-          <span>{d.toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' })}</span>
+          {t.calendar !== 'islamic' && <span>{d.toLocaleDateString('ar-SA-u-ca-gregory', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' })}</span>}
+          {(t.calendar === 'islamic' || t.calendar === 'both') && (
+            <span className="hijri">{d.toLocaleDateString('ar-SA-u-ca-islamic-umalqura-nu-arab', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Riyadh' })}</span>
+          )}
         </div>
       </div>
       <div
