@@ -5,7 +5,7 @@ rem ============================================================
 rem  الشاشة اليومية - تشغيل التلفزيون في وضع العرض فقط (Kiosk)
 rem  غيّر الرابط التالي إلى رابط موقعك على Netlify ثم احفظ الملف
 rem ============================================================
-set "TV_URL=https://YOUR-SITE.netlify.app/tv"
+set "TV_URL=https://schoolpodcast.netlify.app/tv"
 
 rem مجلد بيانات مستقل للمتصفح حتى لا يفتح تبويبات أو جلسات أخرى
 set "PROFILE=%LocalAppData%\DailyScreenTV"
