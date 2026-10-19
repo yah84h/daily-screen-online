@@ -1,25 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
-import { Monitor } from 'lucide-react';
-import { Screen } from '@/components/Screen';
-import { fetchTv, requestPairing, screenChannel } from '@/lib/api';
-import { cacheTvState, readTvCache } from '@/lib/offline';
-import { initialContent, type TvState } from '@/lib/types';
+import { useEffect, useRef, useState } from "react";
+import { Monitor } from "lucide-react";
+import { Screen } from "@/components/Screen";
+import { fetchTv, requestPairing, screenChannel } from "@/lib/api";
+import { cacheTvState, readTvCache } from "@/lib/offline";
+import { initialContent, type TvState } from "@/lib/types";
 
-const TOKEN_KEY = 'tv-token';
+const TOKEN_KEY = "tv-token";
 const POLL_MS = 30_000;
 
-type Paired = Extract<TvState, { status: 'paired' }>;
+type Paired = Extract<TvState, { status: "paired" }>;
 
 export default function Tv() {
   const [state, setState] = useState<TvState | null>(null);
   const [online, setOnline] = useState(true);
   const [settings, setSettings] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [closeHint, setCloseHint] = useState(false);
-  const lastVersion = useRef('');
+  const [confirmStop, setConfirmStop] = useState(false);
+  const lastVersion = useRef("");
 
+  // تأكيد داخل الصفحة (نوافذ confirm قد لا تظهر في وضع Kiosk)
   const stopDisplay = () => {
-    if (!confirm('إيقاف العرض وإغلاق النافذة؟')) return;
+    if (!confirmStop) {
+      setConfirmStop(true);
+      setTimeout(() => setConfirmStop(false), 5000); // يلغى التأكيد تلقائيًا بعد 5 ثوانٍ
+      return;
+    }
     window.close();
     // إن لم يسمح المتصفح بالإغلاق (فُتحت الصفحة يدويًا لا عبر Start-TV) نعرض البديل
     setTimeout(() => setCloseHint(true), 400);
@@ -32,7 +38,7 @@ export default function Tv() {
 
   useEffect(() => {
     let active = true;
-    let token = localStorage.getItem(TOKEN_KEY) || '';
+    let token = localStorage.getItem(TOKEN_KEY) || "";
     let sub: ReturnType<typeof screenChannel> | null = null;
 
     const load = async () => {
@@ -44,23 +50,23 @@ export default function Tv() {
         }
         const data = await fetchTv(token);
         if (!active) return;
-        if (data.status === 'unknown') {
+        if (data.status === "unknown") {
           // الرمز انتهى أو حُذف الجهاز من اللوحة → ابدأ ربطًا جديدًا
           localStorage.removeItem(TOKEN_KEY);
-          token = '';
+          token = "";
           return load();
         }
         setOnline(true);
-        setError('');
+        setError("");
         setState(data);
-        if (data.status === 'paired') {
+        if (data.status === "paired") {
           if (data.version !== lastVersion.current) {
             lastVersion.current = data.version;
             cacheTvState(data);
           }
           if (!sub) {
             sub = screenChannel(data.screen.id);
-            sub.on('broadcast', { event: 'update' }, () => load()).subscribe();
+            sub.on("broadcast", { event: "update" }, () => load()).subscribe();
           }
         }
       } catch (e) {
@@ -73,58 +79,86 @@ export default function Tv() {
     load();
     const timer = setInterval(load, POLL_MS);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 's' || e.key === 'S') setSettings((v) => !v);
-      if (e.key === 'Escape') setSettings(false);
+      if (e.key === "s" || e.key === "S") setSettings((v) => !v);
+      if (e.key === "Escape") setSettings(false);
       // وضع العرض فقط: منع مفاتيح التنقل والتحكم بالمتصفح
-      const nav = e.key === 'Backspace' || (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home')) || (e.ctrlKey && /^[lLtTnNwWoOpPjJhHuUsSdD]$/.test(e.key)) || e.key === 'F1' || e.key === 'F3' || e.key === 'F6' || e.key === 'F7' || e.key === 'F12';
+      const nav =
+        e.key === "Backspace" ||
+        (e.altKey &&
+          (e.key === "ArrowLeft" ||
+            e.key === "ArrowRight" ||
+            e.key === "Home")) ||
+        (e.ctrlKey && /^[lLtTnNwWoOpPjJhHuUsSdD]$/.test(e.key)) ||
+        e.key === "F1" ||
+        e.key === "F3" ||
+        e.key === "F6" ||
+        e.key === "F7" ||
+        e.key === "F12";
       if (nav) e.preventDefault();
     };
     const block = (e: Event) => e.preventDefault();
-    window.addEventListener('keydown', onKey);
-    window.addEventListener('contextmenu', block);
-    window.addEventListener('dragstart', block);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("contextmenu", block);
+    window.addEventListener("dragstart", block);
     return () => {
       active = false;
       clearInterval(timer);
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('contextmenu', block);
-      window.removeEventListener('dragstart', block);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("contextmenu", block);
+      window.removeEventListener("dragstart", block);
       sub?.unsubscribe();
     };
   }, []);
 
-  const paired = state?.status === 'paired' ? (state as Paired) : null;
+  const paired = state?.status === "paired" ? (state as Paired) : null;
 
   return (
     <div className="tv" onDoubleClick={() => setSettings((v) => !v)}>
       {paired ? (
-        <Screen content={paired.post?.content || initialContent} template={paired.screen.template} school={paired.school} large />
+        <Screen
+          content={paired.post?.content || initialContent}
+          template={paired.screen.template}
+          school={paired.school}
+          large
+        />
       ) : (
         <div className="tv-pairing">
           <Monitor size={56} />
           <h1>الشاشة اليومية</h1>
-          {state?.status === 'pending' ? (
+          {state?.status === "pending" ? (
             <>
-              <p>افتح لوحة الإدارة من هاتفك، ثم «إعداد الشاشة»، وأدخل هذا الرمز:</p>
+              <p>
+                افتح لوحة الإدارة من هاتفك، ثم «إعداد الشاشة»، وأدخل هذا الرمز:
+              </p>
               <div className="pair-code" dir="ltr">
                 {state.code}
               </div>
-              <small>ينتهي الرمز بعد ساعة. تبقى هذه الصفحة مفتوحة حتى يتم الربط.</small>
+              <small>
+                ينتهي الرمز بعد ساعة. تبقى هذه الصفحة مفتوحة حتى يتم الربط.
+              </small>
             </>
           ) : (
-            <p>{error || 'جارٍ الاتصال…'}</p>
+            <p>{error || "جارٍ الاتصال…"}</p>
           )}
         </div>
       )}
       {settings && (
         <div className="tv-settings">
-          <b>{online ? 'متصلة' : 'غير متصلة · تُعرض آخر شاشة محفوظة'}</b>
+          <b>{online ? "متصلة" : "غير متصلة · تُعرض آخر شاشة محفوظة"}</b>
           {paired && <span>{paired.screen.name}</span>}
           <button onClick={() => location.reload()}>إعادة تحميل الشاشة</button>
-          <button onClick={() => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen())}>تبديل ملء الشاشة</button>
+          <button
+            onClick={() =>
+              document.fullscreenElement
+                ? document.exitFullscreen()
+                : document.documentElement.requestFullscreen()
+            }
+          >
+            تبديل ملء الشاشة
+          </button>
           <button
             onClick={() => {
-              if (confirm('إلغاء ربط هذا التلفزيون؟')) {
+              if (confirm("إلغاء ربط هذا التلفزيون؟")) {
                 localStorage.removeItem(TOKEN_KEY);
                 location.reload();
               }
@@ -132,11 +166,26 @@ export default function Tv() {
           >
             إلغاء الربط
           </button>
-          <button onClick={stopDisplay} className="danger">
-            إيقاف العرض
+          <button
+            onClick={stopDisplay}
+            className={"danger " + (confirmStop ? "armed" : "")}
+          >
+            {confirmStop ? "اضغط مرة أخرى للتأكيد" : "إيقاف العرض"}
           </button>
-          {closeHint && <small>لم يسمح المتصفح بالإغلاق من الصفحة. اضغط Alt+F4 أو شغّل Stop-TV.bat.</small>}
-          <button onClick={() => setSettings(false)}>إغلاق القائمة</button>
+          {closeHint && (
+            <small>
+              لم يسمح المتصفح بالإغلاق من الصفحة. اضغط Alt+F4 أو شغّل
+              Stop-TV.bat.
+            </small>
+          )}
+          <button
+            onClick={() => {
+              setSettings(false);
+              setConfirmStop(false);
+            }}
+          >
+            إغلاق القائمة
+          </button>
         </div>
       )}
     </div>
