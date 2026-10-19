@@ -29,3 +29,12 @@ html{direction:rtl}body,button,input,textarea,select{font-family:'Noto Sans Arab
 .device-list .list-row{padding:12px 0}
 .admin-link-card input{width:100%}
 .modal label small{color:#8a9690;font-weight:400;margin-inline-start:6px}
+.screen-date span{display:block}
+.screen-date .hijri{opacity:.85}
+.screen-switch{display:grid;gap:8px;margin:0 0 16px}
+.screen-switch select{width:100%;padding:9px 10px;border:1px solid #e7ece8;border-radius:10px;background:#fff;font-size:13px}
+.screen-list{display:grid;gap:8px;margin:12px 0}
+.screen-list .list-row{padding:10px 0}
+.screen-list input{flex:1;padding:8px 10px;border:1px solid #d6e0d8;border-radius:8px}
+.tv-settings button.danger{border-color:#c54848;color:#a32d2d}
+.tv-settings small{max-width:260px;color:#7a3b3b;line-height:1.5}

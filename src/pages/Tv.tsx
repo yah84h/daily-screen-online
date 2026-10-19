@@ -15,7 +15,15 @@ export default function Tv() {
   const [online, setOnline] = useState(true);
   const [settings, setSettings] = useState(false);
   const [error, setError] = useState('');
+  const [closeHint, setCloseHint] = useState(false);
   const lastVersion = useRef('');
+
+  const stopDisplay = () => {
+    if (!confirm('إيقاف العرض وإغلاق النافذة؟')) return;
+    window.close();
+    // إن لم يسمح المتصفح بالإغلاق (فُتحت الصفحة يدويًا لا عبر Start-TV) نعرض البديل
+    setTimeout(() => setCloseHint(true), 400);
+  };
 
   // الحالة المحفوظة تظهر فورًا قبل الاتصال
   useEffect(() => {
@@ -72,20 +80,15 @@ export default function Tv() {
       if (nav) e.preventDefault();
     };
     const block = (e: Event) => e.preventDefault();
-    // قفل التاريخ: أي رجوع يعود إلى الشاشة نفسها
-    history.pushState(null, '', location.href);
-    const onPop = () => history.pushState(null, '', location.href);
     window.addEventListener('keydown', onKey);
     window.addEventListener('contextmenu', block);
     window.addEventListener('dragstart', block);
-    window.addEventListener('popstate', onPop);
     return () => {
       active = false;
       clearInterval(timer);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('contextmenu', block);
       window.removeEventListener('dragstart', block);
-      window.removeEventListener('popstate', onPop);
       sub?.unsubscribe();
     };
   }, []);
@@ -129,7 +132,11 @@ export default function Tv() {
           >
             إلغاء الربط
           </button>
-          <button onClick={() => setSettings(false)}>إغلاق</button>
+          <button onClick={stopDisplay} className="danger">
+            إيقاف العرض
+          </button>
+          {closeHint && <small>لم يسمح المتصفح بالإغلاق من الصفحة. اضغط Alt+F4 أو شغّل Stop-TV.bat.</small>}
+          <button onClick={() => setSettings(false)}>إغلاق القائمة</button>
         </div>
       )}
     </div>
