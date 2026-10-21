@@ -2,13 +2,14 @@ import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Loader2, Maximize2,
 import { Screen } from '@/components/Screen';
 import * as api from '@/lib/api';
 import { WORKSPACE_PHOTO, initialContent, type Preset } from '@/lib/types';
+import { DisplayModes, FullMediaEditor } from './DisplayModes';
 import { useAdmin } from './store';
 
 const topicIcons = [ShieldCheck, BookOpen, GraduationCap, Sun];
 const topicColors = ['mint', 'blue', 'peach', 'yellow'];
 
 export function HomeTab() {
-  const { data, content, edit, setContent, template, dirty, busy, run, setModal, setTab, chooseImage, notify } = useAdmin();
+  const { data, content, edit, setContent, template, dirty, busy, run, setModal, setTab, chooseImage, notify, publishScreen } = useAdmin();
   const presets = data?.presets ?? [];
 
   const usePreset = (p: Preset) => {
@@ -19,7 +20,7 @@ export function HomeTab() {
 
   return (
     <>
-      <div className="overview-grid">
+      <DisplayModes/><div className="overview-grid">
         <section className="preview-section">
           <div className="section-heading">
             <h2>المعروض على شاشتك</h2>
@@ -88,7 +89,7 @@ export function HomeTab() {
             </div>
             <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
           </div>
-          <div className="editor-fields">
+          <div className="editor-fields">{template.displayMode==='media'&&<FullMediaEditor/>}
             <label>
               عنوان اليوم
               <input maxLength={100} value={content.title} onChange={(e) => edit('title', e.target.value)} placeholder="ما موضوع اليوم؟" />
@@ -142,7 +143,7 @@ export function HomeTab() {
             </button>
           </div>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || !content.title.trim() || !data} onClick={() => run(() => api.publish(data!.screen.id, content), 'تم النشر. شاشتك محدثة الآن.').then((r) => r && setContent(content, false))}>
+            <button className="button publish" disabled={busy || (template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>

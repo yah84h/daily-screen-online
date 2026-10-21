@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import * as api from "@/lib/api";
-import { uploadImage } from "@/lib/media";
+import { uploadImage, uploadMedia } from "@/lib/media";
 import { recognitionOf } from "@/lib/loop";
 import {
   defaultTemplate,
@@ -18,6 +18,8 @@ import {
 } from "@/lib/types";
 
 export type Tab =
+  | "الشاشات"
+  | "ومضات تقنية"
   | "الرئيسية"
   | "المواضيع المحفوظة"
   | "الجدولة"
@@ -38,6 +40,8 @@ export type UploadTarget =
   | "secondary"
   | "qr"
   | "logo"
+  | "fullMedia"
+  | "schoolLogoTemplate"
   | "backgroundImage"
   | "schoolLogo"
   | `studentPhoto:${string}`;
@@ -59,6 +63,7 @@ type Store = {
   dirty: boolean;
   templateDirty: boolean;
   saveDesign: () => Promise<boolean>;
+  publishScreen: () => Promise<void>;
   busy: boolean;
   toast: string;
   notify: (m: string) => void;
@@ -83,6 +88,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [templateDirty, setTemplateDirty] = useState(false);
   const templateDirtyRef = useRef(false);
   const templateRevision = useRef(0);
+  const contentRevision = useRef(0);
   const setTemplate: Store["setTemplate"] = (value) => {
     setTemplateState(value);
     templateRevision.current++;
@@ -152,10 +158,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const edit: Store["edit"] = (key, value) => {
+    contentRevision.current++;
     setContentState((c) => ({ ...c, [key]: value }));
     setDirty(true);
   };
   const setContent: Store["setContent"] = (c, d = true) => {
+    contentRevision.current++;
     setContentState(c);
     setDirty(d);
   };
@@ -175,6 +183,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const publishScreen = async () => {
+    if(!data || busy) return;
+    const designRevision=templateRevision.current, textRevision=contentRevision.current;
+    await run(async()=>{
+      await api.publish(data.screen.id,content,template);
+      if(designRevision===templateRevision.current){templateDirtyRef.current=false;setTemplateDirty(false);}
+      if(textRevision===contentRevision.current)setDirty(false);
+    },'تم نشر المحتوى ووضع العرض والإعدادات على الشاشة.');
+  };
   const saveDesign = async () => {
     if (!data) return false;
     const revision = templateRevision.current;
@@ -192,6 +209,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const chooseImage = (t: UploadTarget) => {
     if (busy) return;
     target.current = t;
+    if(fileRef.current) fileRef.current.accept=t==='fullMedia'?'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,.mp4,.webm,.gif':'image/*,.jpg,.jpeg,.png,.webp';
     fileRef.current?.click();
   };
 
@@ -200,7 +218,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setBusy(true);
     try {
       const t = target.current;
-      const url = await uploadImage(
+      const url = await (t==='fullMedia'?uploadMedia:uploadImage)(
         file,
         t === "backgroundImage"
           ? "backgrounds"
@@ -208,7 +226,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             ? "logos"
             : "content",
       );
-      if (t === "backgroundImage")
+      if (t === "fullMedia") {
+        const video=/^video\//.test(file.type)||/\.(mp4|webm)$/i.test(file.name);
+        setContentState(c=>({...c,fullMedia:url,fullType:video?'video':'image'})); setDirty(true);
+      } else if (t === "schoolLogoTemplate") setTemplate(tp=>({...tp,schoolLogo:url}));
+      else if (t === "backgroundImage")
         setTemplate((tp) => ({ ...tp, backgroundImage: url }));
       else if (t === "schoolLogo") {
         await api.saveSchool({ logo_url: url });
@@ -277,6 +299,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         dirty,
         templateDirty,
         saveDesign,
+        publishScreen,
         busy,
         toast,
         notify,

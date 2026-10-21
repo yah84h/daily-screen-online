@@ -1,0 +1,242 @@
+{
+  "school_settings": [
+    {
+      "id": 1,
+      "name": "مدارس الموهوبين التقنيه بجدة",
+      "tagline": "نسخة اختبار محلية",
+      "logo_url": null
+    }
+  ],
+  "screens": [
+    {
+      "id": "local-screen-1",
+      "name": "الشاشة التجريبية",
+      "template": {
+        "background": "#f2f6ff",
+        "color": "#254d80",
+        "accent": "#4b91f7",
+        "font": "SchoolArabic",
+        "fontSize": 100,
+        "radius": 18,
+        "fit": "cover",
+        "imageX": 6,
+        "imageY": 21,
+        "imageW": 38,
+        "imageH": 64,
+        "textX": 49,
+        "textY": 30,
+        "textW": 45,
+        "spacing": 1,
+        "align": "right",
+        "calendar": "gregory",
+        "displayMode": "loop",
+        "loopBranding": "paired",
+        "loopSchoolName": "مدارس الموهوبين التقنيه بجدة",
+        "recognition": {
+          "enabled": true,
+          "title": "نجوم الأسبوع",
+          "subtitle": "بيانات تجريبية — عدّلها من لوحة التحكم",
+          "pageSeconds": 10,
+          "students": [
+            {
+              "id": "demo-1",
+              "name": "طالب تجريبي ١",
+              "achievement": "تميز في البرمجة",
+              "photo": ""
+            },
+            {
+              "id": "demo-2",
+              "name": "طالب تجريبي ٢",
+              "achievement": "تميز في المهارات الرقمية",
+              "photo": ""
+            }
+          ],
+          "width": 27,
+          "height": 35
+        },
+        "schoolX": 55,
+        "schoolY": 6,
+        "schoolW": 39,
+        "schoolScale": 100,
+        "dismissalLabel": "الصلاه / صرفه",
+        "dismissalDetail": "نلقاكم بخير"
+      },
+      "draft": null,
+      "created_at": "2026-10-21T18:11:06.383Z",
+      "updated_at": "2026-10-21T18:11:06.383Z"
+    }
+  ],
+  "posts": [
+    {
+      "id": "local-post-1",
+      "screen_id": "local-screen-1",
+      "content": {
+        "title": "التوعية بالأمن السيبراني",
+        "subtitle": "عادات بسيطة، حماية أكبر.",
+        "body": "احمِ حساباتك، وفكّر قبل أن تضغط.\nحافظ على أمان عالمك الرقمي.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-21",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "publish_at": "2026-10-21",
+      "created_at": "2026-10-21T18:11:06.383Z"
+    }
+  ],
+  "presets": [
+    {
+      "id": "seed0",
+      "name": "الأمن السيبراني",
+      "content": {
+        "title": "التوعية بالأمن السيبراني",
+        "subtitle": "عادات بسيطة، حماية أكبر.",
+        "body": "احمِ حساباتك، وفكّر قبل أن تضغط.\nحافظ على أمان عالمك الرقمي.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 0,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    },
+    {
+      "id": "seed1",
+      "name": "المهارات الرقمية",
+      "content": {
+        "title": "طوّر مهاراتك الرقمية",
+        "subtitle": "تعلّم شيئًا جديدًا كل يوم.",
+        "body": "اكتشف أدوات جديدة، وأبدع بثقة.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 1,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    },
+    {
+      "id": "seed2",
+      "name": "إعلان مدرسي",
+      "content": {
+        "title": "يوم جديد وفرص جديدة",
+        "subtitle": "مدرستك، مجتمعك.",
+        "body": "تعرّف مع معلميك على أخبار اليوم.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 2,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    },
+    {
+      "id": "seed3",
+      "name": "رسالة الصباح",
+      "content": {
+        "title": "اجعل ليومك أثرًا",
+        "subtitle": "بداية جديدة معًا.",
+        "body": "كن لطيفًا، واسأل، وجرّب شيئًا جديدًا.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 3,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    },
+    {
+      "id": "seed4",
+      "name": "اليوم الوطني",
+      "content": {
+        "title": "نحتفل بوطننا",
+        "subtitle": "معًا نبني المستقبل.",
+        "body": "شاركنا الاحتفاء بثقافتنا ومجتمعنا.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 4,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    },
+    {
+      "id": "seed5",
+      "name": "تذكير بالاختبارات",
+      "content": {
+        "title": "استعد، وركّز، وقدّم أفضل ما لديك.",
+        "subtitle": "أنت قادر على النجاح.",
+        "body": "راجع جدول اختباراتك واحضر في الموعد.",
+        "badge": "موضوع اليوم",
+        "footer": "تعلّم باستمرار، وتواصل بأمان.",
+        "image": "/workspace.jpg",
+        "secondary": "",
+        "qr": "",
+        "logo": "",
+        "autoDate": true,
+        "date": "2026-10-07",
+        "showSubtitle": true,
+        "showFooter": true,
+        "showBadge": true,
+        "showSecondary": false,
+        "showQR": false
+      },
+      "sort_order": 5,
+      "created_at": "2026-10-21T18:11:06.383Z"
+    }
+  ],
+  "screen_devices": []
+}

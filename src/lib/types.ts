@@ -1,4 +1,10 @@
 export type Content = {
+  videoSound?: boolean;
+  videoLoop?: boolean;
+  videoControls?: boolean;
+  fullMedia?: string;
+  fullType?: 'image' | 'video';
+  mediaFit?: 'cover' | 'contain' | 'fill';
   title: string;
   subtitle: string;
   body: string;
@@ -18,11 +24,18 @@ export type Content = {
 };
 
 export type RecognitionStudent = { id: string; name: string; achievement: string; photo?: string };
-export type RecognitionBoard = { enabled: boolean; title: string; subtitle: string; pageSeconds: number; students: RecognitionStudent[] };
+export type RecognitionBoard = { enabled: boolean; title: string; subtitle: string; pageSeconds: number; width?: number; height?: number; style?: 'classic' | 'solo' | 'group'; groupSize?: 2 | 3 | 4; students: RecognitionStudent[] };
 export type Timetable = { periods: [string, string][] };
 
 export type Template = {
-  displayMode?: 'daily' | 'loop';
+  displayMode?: 'daily' | 'loop' | 'media';
+  schoolName?: string;
+  schoolTagline?: string;
+  schoolLogo?: string;
+  schoolX?: number; schoolY?: number; schoolW?: number; schoolScale?: number;
+  dismissalLabel?: string;
+  dismissalDetail?: string;
+  loopScale?: number;
   loopBranding?: 'paired' | 'school';
   loopSchoolName?: string;
   showTechQuotes?: boolean;
@@ -111,17 +124,18 @@ export const initialContent: Content = {
 };
 
 export const defaultTemplate: Template = {
-  background: '#e9eee8',
-  color: '#193e35',
-  accent: '#126952',
-  font: 'Noto Sans Arabic',
+  schoolX: 55, schoolY: 6, schoolW: 39, schoolScale: 100,
+  background: '#f2f6ff',
+  color: '#254d80',
+  accent: '#4b91f7',
+  font: 'SchoolArabic',
   fontSize: 100,
-  radius: 8,
+  radius: 18,
   fit: 'cover',
   imageX: 6,
-  imageY: 17,
+  imageY: 21,
   imageW: 38,
-  imageH: 69,
+  imageH: 64,
   textX: 49,
   textY: 30,
   textW: 45,
@@ -130,6 +144,6 @@ export const defaultTemplate: Template = {
   calendar: 'gregory',
 };
 
-export const defaultSchool: School = { name: 'معهد النور', tagline: 'تعلّم، تطوّر، ألهم.', logo_url: null };
+export const defaultSchool: School = { name: 'مدارس الموهوبين التقنيه بجدة', tagline: 'علمٌ ينفع، وأثرٌ يبقى.', logo_url: null };
 
 export const riyadhToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });

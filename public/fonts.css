@@ -102,3 +102,5 @@
   font-display: swap;
   src: url(./arabic-4.ttf) format('truetype');
 }
+
+@font-face{font-family:'SchoolArabic';src:url('/school_font.ttf') format('truetype');font-weight:100 900;font-display:swap}

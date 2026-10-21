@@ -129,12 +129,12 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 }
 
 // ---------- الإجراءات ----------
-export async function publish(screenId: string, content: Content) {
-  if (!content.title?.trim()) throw Error('أضف عنوانًا أولًا.');
+export async function publish(screenId: string, content: Content, template?: Partial<Template>) {
+  if (!content.title?.trim() && !content.fullMedia) throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
   const post = await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id }).select().single();
   fail(post.error);
-  fail((await supabase.from('screens').update({ draft: null }).eq('id', screenId)).error);
+  fail((await supabase.from('screens').update({ draft: null, ...(template?{template}:{}) }).eq('id', screenId)).error);
   await notifyScreen(screenId);
   return post.data as Post;
 }
@@ -150,7 +150,7 @@ export async function saveTemplate(screenId: string, template: Partial<Template>
 
 export async function schedulePost(screenId: string, content: Content, date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < riyadhToday()) throw Error('اختر اليوم أو تاريخًا قادمًا.');
-  if (!content.title?.trim()) throw Error('أضف عنوانًا أولًا.');
+  if (!content.title?.trim() && !content.fullMedia) throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
   fail((await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: date, created_by: user.user?.id })).error);
   if (date === riyadhToday()) await notifyScreen(screenId);
@@ -197,4 +197,14 @@ export async function fetchTv(token: string): Promise<TvState> {
   const { data, error } = await supabase.rpc('get_screen_by_token', { p_token: token });
   fail(error, 'تعذّر الاتصال بالخادم.');
   return data as TvState;
+}
+
+/** Reuse a paired, revocable display-only token. Existing Supabase policies apply. */
+export async function displayLink(screenId: string, index: number): Promise<string> {
+  const label='رابط عرض مباشر';
+  const existing=await supabase.from('screen_devices').select('*').eq('screen_id',screenId).eq('label',label).limit(1);
+  fail(existing.error);
+  let token=(existing.data?.[0] as Device|undefined)?.token;
+  if(!token){const pairing=await requestPairing();await pairDevice(pairing.code,screenId,label);token=pairing.token;}
+  return `${location.origin}/display${index===0?'':index+1}?token=${encodeURIComponent(token)}`;
 }

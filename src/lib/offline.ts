@@ -13,12 +13,12 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-async function store<T>(value?: T): Promise<T | undefined> {
+async function store<T>(value?: T, key = "last"): Promise<T | undefined> {
   const db = await open();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, value ? "readwrite" : "readonly");
     const os = tx.objectStore(STORE);
-    const r = value ? os.put(value, "last") : os.get("last");
+    const r = value ? os.put(value, key) : os.get(key);
     r.onsuccess = () => resolve(value ?? (r.result as T));
     r.onerror = () => reject(r.error);
     tx.oncomplete = () => db.close();
@@ -32,6 +32,8 @@ const MEDIA_KEYS = [
   "logo",
   "backgroundImage",
   "logo_url",
+  "schoolLogo",
+  "fullMedia",
 ] as const;
 
 async function toDataURL(url: string): Promise<string> {
@@ -49,12 +51,13 @@ async function toDataURL(url: string): Promise<string> {
 let generation = 0;
 export async function cacheTvState(
   state: Extract<TvState, { status: "paired" }>,
+  key = "last",
 ) {
   const current = ++generation;
   const copy = structuredClone(state);
   // Save text/layout immediately, even if a photo server is unreachable.
   try {
-    await store(copy);
+    await store(copy,key);
   } catch {
     return;
   }
@@ -74,7 +77,9 @@ export async function cacheTvState(
       return [
         (async () => {
           try {
-            obj[key] = await toDataURL(value);
+            if(key==='fullMedia' && copy.post?.content.fullType==='video') {
+              const response=await fetch(value); if(response.ok) await (await caches.open('daily-screen-media')).put(value,response);
+            } else obj[key] = await toDataURL(value);
           } catch {
             /* retain original URL */
           }
@@ -86,16 +91,16 @@ export async function cacheTvState(
   // A slow download from an older publication must not overwrite a newer screen.
   if (current === generation) {
     try {
-      await store(copy);
+      await store(copy,key);
     } catch {
       /* storage quota/unavailable */
     }
   }
 }
 
-export async function readTvCache() {
+export async function readTvCache(key="last") {
   try {
-    return await store<Extract<TvState, { status: "paired" }>>();
+    return await store<Extract<TvState, { status: "paired" }>>(undefined,key);
   } catch {
     return undefined;
   }

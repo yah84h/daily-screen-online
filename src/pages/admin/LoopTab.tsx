@@ -111,13 +111,15 @@ export function LoopTab() {
         <div className="loop-help">
           <Award />
           <span>
-            لوحة التميز تظهر أعلى اليمين، بجانب الساعة. طالبان في كل صفحة، وبقية
+            لوحة التميز تظهر أعلى اليمين، بجانب الساعة. اختر القائمة أو الطالب المنفرد أو المجموعة؛ بقية
             الأسماء تتبدل بهدوء.
           </span>
         </div>
       </section>
       <section className="editor-card loop-settings">
         <h2>وضع الشاشة</h2>
+        <label>حجم واجهة خلفية الحصص · {template.loopScale||100}%<input aria-label="حجم واجهة خلفية الحصص" type="range" min="75" max="110" step="1" value={template.loopScale||100} onChange={e=>setTemplate(t=>({...t,loopScale:+e.target.value}))}/></label>
+        <p className="field-hint">يغيّر الساعة واللوحة والشعارات والنصوص معًا. الخلفية تبقى ممتدة على الشاشة.</p>
         <label>
           ما الذي يظهر على التلفزيون؟
           <select
@@ -126,11 +128,11 @@ export function LoopTab() {
             onChange={(e) =>
               setTemplate((t) => ({
                 ...t,
-                displayMode: e.target.value as "daily" | "loop",
+                displayMode: e.target.value as "daily" | "loop" | "media",
               }))
             }
           >
-            <option value="daily">المحتوى اليومي</option>
+            <option value="daily">المحتوى اليومي</option><option value="media">صورة / فيديو فقط</option>
             <option value="loop">الخلفية والساعة والحصص</option>
           </select>
         </label>
@@ -199,6 +201,13 @@ export function LoopTab() {
             onChange={(e) => setBoard({ subtitle: e.target.value })}
           />
         </label>
+        <div className="board-style-tabs" role="tablist" aria-label="نمط لوحة التميز">
+          {([['classic','القائمة الحالية'],['solo','طالب واحد'],['group','مجموعة']] as const).map(([id,label])=><button key={id} role="tab" aria-selected={(board.style||'classic')===id} onClick={()=>setBoard({style:id,...(id==='group'?{width:32,height:40}:id==='solo'?{width:27,height:40}:{width:27,height:35})})}>{label}</button>)}
+        </div>
+        {board.style==='group'&&<label>عدد الطلاب في المجموعة<select aria-label="عدد الطلاب في المجموعة" value={board.groupSize||2} onChange={e=>setBoard({groupSize:Number(e.target.value) as 2|3|4})}><option value="2">طالبان</option><option value="3">ثلاثة طلاب</option><option value="4">أربعة طلاب</option></select></label>}
+        <label>عرض لوحة التميز · {board.width}%<input aria-label="عرض لوحة التميز" type="range" min="20" max="34" step="1" value={board.width} onChange={e=>setBoard({width:+e.target.value})}/></label>
+        <label>ارتفاع لوحة التميز · {board.height}%<input aria-label="ارتفاع لوحة التميز" type="range" min={board.style==='group'?38:28} max="43" step="1" value={board.height} onChange={e=>setBoard({height:+e.target.value})}/></label>
+        <p className="field-hint">النسب من مساحة الشاشة. تظهر المعاينة مباشرة؛ احفظ لتطبيق الحجم على التلفزيون.</p>
         <div className="recognition-editor-list">
           {board.students.map((s, i) => (
             <section className="student-editor" key={s.id}>
@@ -289,7 +298,7 @@ export function LoopTab() {
           حتى ٣٠ طالبًا. الاسم مطلوب لكل طالب مضاف، والصورة اختيارية. الصور
           المرفوعة محفوظة في حاوية المدرسة الحالية.
         </p>
-        {board.students.length > 2 && (
+        {board.students.length > (board.style==='solo'?1:board.style==='group'?(board.groupSize||2):2) && (
           <label>
             مدة عرض كل صفحة
             <select
@@ -336,6 +345,8 @@ export function LoopTab() {
         <p className="field-hint">
           انتقال قصير بلا وميض. تُحترم إعدادات تقليل الحركة في الجهاز.
         </p>
+        <label>عبارة نهاية اليوم<input aria-label="عبارة نهاية اليوم" maxLength={70} value={template.dismissalLabel??'الصلاه / صرفه'} onChange={e=>setTemplate(t=>({...t,dismissalLabel:e.target.value}))}/></label>
+        <label>العبارة أسفل نهاية اليوم<input aria-label="العبارة أسفل نهاية اليوم" maxLength={120} value={template.dismissalDetail??'نلقاكم بخير'} onChange={e=>setTemplate(t=>({...t,dismissalDetail:e.target.value}))}/></label>
         <details className="loop-timetable">
           <summary>أوقات الحصص · توقيت جدة</summary>
           <p className="field-hint">

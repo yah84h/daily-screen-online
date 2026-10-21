@@ -1,3 +1,4 @@
+import { MediaVideo } from './MediaVideo';
 import { LoopScreen } from './loop/LoopScreen';
 import { useEffect, useState } from 'react';
 import { GraduationCap } from 'lucide-react';
@@ -15,7 +16,8 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
   }, []);
   if (t.displayMode === 'loop') return <LoopScreen now={now} template={t} school={school} logo={c.logo || school.logo_url || undefined} large={large}/>;
   const d = c.autoDate || !c.date ? now : new Date(c.date + 'T12:00:00+03:00');
-  const logo = c.logo || school.logo_url;
+  const logo = c.logo || t.schoolLogo || school.logo_url;
+  if(t.displayMode==='media') return <div className={'screen screen-media '+(large?'large':'')} style={{background:t.background,'--media-fit':c.mediaFit||'cover'} as import('react').CSSProperties}>{c.fullMedia ? c.fullType==='video' ? <MediaVideo key={c.fullMedia} src={c.fullMedia} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false} controls={large&&!!c.videoControls}/> : <img src={c.fullMedia} alt="وسائط الشاشة" style={{objectFit:c.mediaFit||'cover'}}/> : <div className="media-empty">اختر صورة أو فيديو من لوحة التحكم</div>}</div>;
   return (
     <div
       className={'screen ' + (large ? 'large' : '')}
@@ -28,11 +30,11 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
       }}
     >
       <div className="screen-top">
-        <div className="school">
+        <div className="school" style={{left:(t.schoolX??55)+'%',top:(t.schoolY??6)+'%',width:(t.schoolW??39)+'%',fontSize:((t.schoolScale??100)/100)+'cqw'}}>
           {logo ? <img src={logo} alt="" /> : <GraduationCap />}
           <span>
-            {school.name}
-            <small>{school.tagline}</small>
+            {t.schoolName??school.name}
+            <small>{t.schoolTagline??school.tagline}</small>
           </span>
         </div>
         <div className="screen-date">

@@ -7,8 +7,8 @@ body {
   margin: 0;
   font-family: "DM Sans", sans-serif;
   font-size: 14px;
-  color: #25352f;
-  background: #f7f9f8;
+  color: #24456e;
+  background: #f5f8fe;
 }
 button,
 input,
@@ -38,13 +38,13 @@ button {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid #57b69c;
+  outline: 3px solid #4b91f7;
   outline-offset: 3px;
 }
 input:focus,
 textarea:focus,
 select:focus {
-  outline: 2px solid #30977c;
+  outline: 2px solid #4b91f7;
   border-color: transparent;
 }
 h1,
@@ -61,7 +61,7 @@ aside {
   width: 252px;
   flex-shrink: 0;
   background: #fff;
-  border-right: 1px solid #e8ece9;
+  border-right: 1px solid #e3eaf5;
   position: fixed;
   inset: 0 auto 0 0;
   padding: 34px 22px 20px;
@@ -75,7 +75,7 @@ aside {
   margin: 0 7px 34px;
 }
 .brand > div {
-  background: #11755d;
+  background: #3d82e7;
   color: white;
   border-radius: 11px;
   width: 42px;
@@ -1792,7 +1792,7 @@ h3,
 aside {
   inset: 0 0 0 auto;
   border-right: 0;
-  border-left: 1px solid #e8ece9;
+  border-left: 1px solid #e3eaf5;
 }
 .main {
   margin-left: 0;
@@ -2137,7 +2137,7 @@ label {
   width: 64px;
   height: 64px;
   border-radius: 10px;
-  background: #e8ece9;
+  background: #e3eaf5;
 }
 .tv-pairing {
   color: #eef3ef;

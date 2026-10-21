@@ -25,6 +25,9 @@ export const defaultRecognition: RecognitionBoard = {
   title: "نجوم الأسبوع",
   subtitle: "نحتفي بالتعلم والتميز",
   pageSeconds: 10,
+  style: 'classic', groupSize: 2,
+  width: 27,
+  height: 35,
   students: [],
 };
 export function recognitionOf(template: Partial<Template>): RecognitionBoard {
@@ -32,6 +35,10 @@ export function recognitionOf(template: Partial<Template>): RecognitionBoard {
   return {
     ...defaultRecognition,
     ...r,
+    style: r?.style==='solo'||r?.style==='group'?r.style:'classic',
+    groupSize: r?.groupSize===3||r?.groupSize===4?r.groupSize:2,
+    width: Math.max(20,Math.min(34,Number(r?.width)||27)),
+    height: Math.max(r?.style==='group'?38:28,Math.min(43,Number(r?.height)||35)),
     students: Array.isArray(r?.students) ? r.students : [],
   };
 }
@@ -55,7 +62,7 @@ export function validTimetable(t: Timetable): boolean {
     return true;
   });
 }
-export function periodAt(now: Date, timetable = defaultTimetable) {
+export function periodAt(now: Date, timetable = defaultTimetable, messages: {dismissalLabel?:string;dismissalDetail?:string} = {}) {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Riyadh",
     weekday: "short",
@@ -90,5 +97,5 @@ export function periodAt(now: Date, timetable = defaultTimetable) {
         detail: periods[i][1] + " — " + periods[i + 1][0],
       };
   }
-  return { label: "الصلاه / صرفه", detail: "نلقاكم بخير" };
+  return { label: messages.dismissalLabel?.trim() || "الصلاه / صرفه", detail: messages.dismissalDetail?.trim() || "نلقاكم بخير" };
 }

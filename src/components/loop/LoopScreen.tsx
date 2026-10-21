@@ -18,11 +18,11 @@ export function LoopScreen({
   logo?: string;
   large: boolean;
 }) {
-  const period = periodAt(now, template.timetable),
+  const period = periodAt(now, template.timetable, template),
     entry = techEntryForDay(now),
     animate = template.animateClock !== false;
   return (
-    <div className={"screen screen-loop " + (large ? "large" : "")} dir="rtl">
+    <div className={"screen screen-loop " + (large ? "large" : "") + (recognitionOf(template).enabled && recognitionOf(template).students.some(s=>s.name.trim()) ? " has-recognition" : "")} dir="rtl">
       <NativeBackground
         name={
           template.loopSchoolName?.trim() ||
@@ -32,7 +32,8 @@ export function LoopScreen({
         }
         customLogo={logo}
         pairedBranding={template.loopBranding !== "school"}
-      />
+        uiScale={Math.max(.75,Math.min(1.1,(Number(template.loopScale)||100)/100))}
+      >
       <section className="loop-clock-panel" aria-label="الساعة والحصة الحالية">
         <p>الوقت الآن · جدة</p>
         <AnimatedClock now={now} animate={animate} />
@@ -76,6 +77,7 @@ export function LoopScreen({
           </footer>
         </section>
       )}
+      </NativeBackground>
     </div>
   );
 }

@@ -45,3 +45,14 @@ export async function uploadImage(file: File, folder = 'content'): Promise<strin
   if (error) throw Error('تعذّر رفع الصورة: ' + error.message);
   return supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
 }
+
+/** Native animated GIF / MP4 / WebM: preserve motion, never convert video to a bitmap. */
+export async function uploadMedia(file: File, folder = 'content'): Promise<string> {
+  const extension=file.name.split('.').pop()?.toLowerCase();
+  const mime=({'mp4':'video/mp4','webm':'video/webm','gif':'image/gif'} as Record<string,string>)[extension||''];
+  if(!mime) return uploadImage(file,folder);
+  const path=`${folder}/${crypto.randomUUID()}.${extension}`;
+  const {error}=await supabase.storage.from('media').upload(path,file,{contentType:mime,cacheControl:'31536000',upsert:false});
+  if(error) throw Error('تعذّر الرفع. تحقق من مساحة التخزين وحدود مزوّد الخدمة: '+error.message);
+  return supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
+}

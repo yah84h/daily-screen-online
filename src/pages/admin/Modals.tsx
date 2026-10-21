@@ -1,3 +1,4 @@
+import { MonitorLink } from './MonitorLink';
 import { useState } from 'react';
 import { ArrowUpRight, Copy, Monitor, Plus, Trash2, Upload, X, Eraser, Check } from 'lucide-react';
 import { Screen } from '@/components/Screen';
@@ -40,7 +41,7 @@ function Preview() {
     <>
       <h2>معاينة الشاشة</h2>
       <Screen content={content} template={template} school={data?.school} />
-      <p>3840 × 2160 · 16:9 · توقيت الرياض</p>
+      <p>3840 × 2160 · 16:9 · توقيت جدة</p>
       <a className="button primary" href="/tv" target="_blank">
         فتح صفحة التلفزيون <ArrowUpRight size={16} />
       </a>
@@ -95,7 +96,7 @@ function ScheduleModal() {
   return (
     <>
       <h2>جدولة شاشة</h2>
-      <p>ستُعرض مسودة اليوم عند منتصف الليل بتوقيت الرياض في اليوم الذي تختاره.</p>
+      <p>ستُعرض مسودة اليوم عند منتصف الليل بتوقيت جدة في اليوم الذي تختاره.</p>
       <div className="schedule-subject">{content.title || '— بلا عنوان —'}</div>
       <label>
         تاريخ النشر
@@ -184,7 +185,7 @@ function Optional() {
   );
 }
 
-function SettingsModal() {
+export function SettingsModal() {
   const { data, chooseImage, run, busy, template, selectScreen, notify } = useAdmin();
   const [name, setName] = useState(data?.school.name || '');
   const [tagline, setTagline] = useState(data?.school.tagline || '');
@@ -214,8 +215,8 @@ function SettingsModal() {
       <h2 style={{ marginTop: 28 }}>الشاشات</h2>
       <p>لكل شاشة محتواها وقالبها وأجهزتها. تُربط أجهزة التلفزيون بالشاشة المطلوبة عند الربط.</p>
       <div className="screen-list">
-        {data?.screens.map((s) => (
-          <div className="list-row" key={s.id}>
+        {data?.screens.map((s, index) => (
+          <div className="screen-entry" key={s.id}><div className="list-row">
             {renaming?.id === s.id ? (
               <>
                 <input autoFocus value={renaming.name} onChange={(e) => setRenaming({ id: s.id, name: e.target.value })} />
@@ -242,7 +243,7 @@ function SettingsModal() {
                 </button>
               </>
             )}
-          </div>
+          </div><MonitorLink id={s.id} index={index}/></div>
         ))}
       </div>
       <div className="list-row" style={{ borderBottom: 0 }}>
@@ -273,7 +274,7 @@ function SettingsModal() {
         <Eraser size={15} /> تنظيف الصور غير المستخدمة
       </button>
       <p style={{ marginTop: 18 }}>
-        المنطقة الزمنية: الرياض
+        المنطقة الزمنية: جدة
         <br />
         دقة العرض: 4K UHD
       </p>

@@ -11,7 +11,10 @@
     "import:legacy": "node scripts/import-legacy.mjs",
     "test:loop": "node --test tests/loop.test.mjs",
     "test:browser-loop": "node tests/browser-loop.mjs",
-    "test:pairing": "node tests/pairing-browser.mjs"
+    "test:pairing": "node tests/pairing-browser.mjs",
+    "build:local": "node scripts/build-local.mjs",
+    "test:local": "node tests/local-v16.mjs",
+    "test:media": "node tests/final-media.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

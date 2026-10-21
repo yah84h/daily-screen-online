@@ -97,10 +97,14 @@ export function SchoolMark() {
 }
 export default function NativeLoop({
   name,
+  children,
+  uiScale = 1,
   customLogo,
   pairedBranding = true,
 }: {
   name: string;
+  children?: import("react").ReactNode;
+  uiScale?: number;
   customLogo?: string;
   pairedBranding?: boolean;
 }) {
@@ -243,6 +247,7 @@ export default function NativeLoop({
           </g>
         ))}
       </svg>
+      <div className="loop-ui-layer" style={{transform:`scale(${uiScale})`}}>
       {pairedBranding && (
         <div
           className="native-brand-pair"
@@ -278,6 +283,8 @@ export default function NativeLoop({
         />
       )}
       <div className="native-school-name">{name}</div>
+      {children}
+      </div>
     </div>
   );
 }

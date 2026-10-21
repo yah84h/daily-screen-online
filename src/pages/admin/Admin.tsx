@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Clock, History, LayoutDashboard, Layers, LogOut, Monitor, Settings, Smartphone, Loader2 } from 'lucide-react';
+import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Clock, History, LayoutDashboard, Layers, LogOut, Monitor, Settings, Smartphone, Loader2, Quote } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { AdminProvider, fmtTime, useAdmin, type Tab } from './store';
 import { HomeTab } from './HomeTab';
@@ -7,7 +7,8 @@ import { PresetsTab } from './PresetsTab';
 import { ScheduleTab } from './ScheduleTab';
 import { TemplateTab } from './TemplateTab';
 import { HistoryTab } from './HistoryTab';
-import { Modals } from './Modals';
+import { TechLibraryTab } from './TechLibraryTab';
+import { Modals, SettingsModal } from './Modals';
 import { LoopTab } from './LoopTab';
 
 const nav: [Tab, typeof LayoutDashboard][] = [
@@ -17,13 +18,17 @@ const nav: [Tab, typeof LayoutDashboard][] = [
   ['القوالب', Layers],
   ['خلفية الحصص', Clock],
   ['السجل', History],
+  ['الشاشات', Monitor],
+  ['ومضات تقنية', Quote],
 ];
 
 const subtitles: Record<Tab, string> = {
+  الشاشات: 'كل شاشاتك، في مكان واحد. لكل شاشة محتواها وقالبها.',
+  'ومضات تقنية': 'أفكار عن المعرفة والتقنية، محفوظة وجاهزة بلا إنترنت.',
   الرئيسية: 'يوم جديد ورسالة جديدة. حدّث محتوى اليوم.',
   'المواضيع المحفوظة': 'رسائلك المتكررة، جاهزة للاستخدام من جديد.',
   الجدولة: 'خطط مسبقًا، وستعرض الشاشة المحتوى في موعده.',
-  القوالب: 'صمّم مرة واحدة ليظهر كل تحديث بأفضل صورة.',
+  القوالب: 'اختر قالبًا جاهزًا أو أضف لمستك من الجوال.',
   'خلفية الحصص': 'الساعة، الحصص، وطلاب نفخر بهم — بإعدادات بسيطة.',
   السجل: 'تحديثاتك السابقة محفوظة لتعود إليها متى احتجت.',
 };
@@ -56,7 +61,7 @@ function Layout() {
           </div>
           <span>
             الشاشة<span> اليومية</span>
-            <small>صمّم مرة واحدة، وحدّث يوميًا.</small>
+            <small>مساحة مدرستك</small>
           </span>
         </a>
         <div className="workspace">
@@ -118,7 +123,7 @@ function Layout() {
       <div className="main">
         <header>
           <div className="breadcrumb">
-            مساحة العمل <span>/</span> <b>{tab}</b>
+            <Monitor size={18}/><select aria-label="الشاشة المحددة" value={data?.screen.id||''} onChange={e=>selectScreen(e.target.value)}>{data?.screens.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>
           </div>
           <div className="header-right">
             <span className="timezone">
@@ -135,8 +140,8 @@ function Layout() {
           )}
           <div className="page-heading">
             <div>
-              <div className="eyebrow">يومك على الشاشة</div>
-              <h1>{tab === 'الرئيسية' ? 'صباح الخير' : tab}</h1>
+              <div className="eyebrow">مساحة المدرسة / {data?.screen.name||'الشاشة الرئيسية'}</div>
+              <h1>{tab === 'الرئيسية' ? 'يوم جديد، ورسالة جديدة.' : tab}</h1>
               <p>{subtitles[tab]}</p>
             </div>
             <button className="button white" onClick={() => setModal('setup')}>
@@ -173,6 +178,8 @@ function Layout() {
           {tab === 'القوالب' && <TemplateTab />}
           {tab === 'السجل' && <HistoryTab />}
           {tab === 'خلفية الحصص' && <LoopTab />}
+          {tab === 'الشاشات' && <section className="editor-card screens-page"><SettingsModal/></section>}
+          {tab === 'ومضات تقنية' && <TechLibraryTab/>}
         </main>
         <footer className="app-footer">
           <span>الشاشة اليومية</span>

@@ -77,3 +77,21 @@ test("120 offline tech entries include translated sourced quotes and original ti
     techEntryForDay(new Date("2026-10-21T20:59:59Z")).id,
   );
 });
+
+test("per-screen dismissal text and bounded board dimensions",()=>{
+ assert.equal(periodAt(at("2026-10-21","12:21"),defaultTimetable,{dismissalLabel:"انتهى اليوم",dismissalDetail:"إلى اللقاء"}).label,"انتهى اليوم");
+ assert.equal(periodAt(at("2026-10-22","11:35"),defaultTimetable,{dismissalLabel:"صرف الطلاب"}).label,"صرف الطلاب");
+ assert.equal(periodAt(at("2026-10-21","07:00"),defaultTimetable,{dismissalLabel:"صرف الطلاب"}).label,"الحصة الأولى");
+ assert.equal(periodAt(at("2026-10-21","12:21"),defaultTimetable,{dismissalLabel:"  "}).label,"الصلاه / صرفه");
+ assert.equal(recognitionOf({recognition:{width:999,height:1,students:[]}}).width,34);
+ assert.equal(recognitionOf({recognition:{width:999,height:1,students:[]}}).height,28);
+});
+
+test('recognition styles keep legacy defaults and constrain group layouts',()=>{
+ assert.equal(recognitionOf({}).style,'classic');
+ assert.equal(recognitionOf({recognition:{style:'solo',students:[]}}).style,'solo');
+ const group=recognitionOf({recognition:{style:'group',groupSize:4,height:28,students:[]}});
+ assert.equal(group.groupSize,4);assert.equal(group.height,38);
+ assert.equal(recognitionOf({recognition:{style:'unknown',groupSize:99,students:[]}}).style,'classic');
+ assert.equal(recognitionOf({recognition:{groupSize:99,students:[]}}).groupSize,2);
+});

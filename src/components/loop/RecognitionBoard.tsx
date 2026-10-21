@@ -24,7 +24,8 @@ export function RecognitionBoard({ board }: { board: Board }) {
   const titleId = useId();
   const [page, setPage] = useState(0);
   const students = board.students.filter((s) => s.name.trim()),
-    pages = Math.ceil(students.length / 2),
+    perPage = board.style==='solo'?1:board.style==='group'?(board.groupSize||2):2,
+    pages = Math.ceil(students.length / perPage),
     seconds = Math.max(6, Math.min(30, Number(board.pageSeconds) || 10));
   useEffect(() => {
     if (!board.enabled || pages < 2) return;
@@ -36,9 +37,9 @@ export function RecognitionBoard({ board }: { board: Board }) {
   }, [pages, seconds, board.enabled]);
   if (!board.enabled || !students.length) return null;
   const current = page % pages,
-    items = students.slice(current * 2, current * 2 + 2);
+    items = students.slice(current * perPage, current * perPage + perPage);
   return (
-    <section className="recognition-board" aria-labelledby={titleId}>
+    <section className={"recognition-board recognition-"+(board.style||"classic")+" recognition-count-"+perPage} style={{width:(board.width??27)+'%',height:(board.height??35)+'%'}} aria-labelledby={titleId}>
       <div className="recognition-heading">
         <Award aria-hidden="true" />
         <div>
