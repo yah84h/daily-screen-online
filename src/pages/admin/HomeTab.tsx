@@ -46,6 +46,7 @@ export function HomeTab() {
               </button>
             </div>
           </div>
+          <button className="button white loop-shortcut" onClick={() => setTab('خلفية الحصص')}>خلفية الحصص ولوحة التميز</button>
           <div className="design-note">
             <div>
               <CheckCircle2 size={18} />
@@ -107,7 +108,7 @@ export function HomeTab() {
               <div>
                 <CalendarDays size={19} />
                 <span>
-                  استخدام تاريخ اليوم تلقائيًا<small>اليوم والتاريخ · توقيت الرياض</small>
+                  استخدام تاريخ اليوم تلقائيًا<small>اليوم والتاريخ · توقيت جدة</small>
                 </span>
               </div>
               <button role="switch" aria-checked={content.autoDate} className={'toggle ' + (content.autoDate ? 'on' : '')} onClick={() => edit('autoDate', !content.autoDate)} aria-label="استخدام تاريخ اليوم تلقائيًا">
@@ -141,7 +142,7 @@ export function HomeTab() {
             </button>
           </div>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || !content.title.trim() || !data} onClick={() => run(() => api.publish(data!.screen.id, content, template), 'تم النشر. شاشتك محدثة الآن.').then((r) => r && setContent(content, false))}>
+            <button className="button publish" disabled={busy || !content.title.trim() || !data} onClick={() => run(() => api.publish(data!.screen.id, content), 'تم النشر. شاشتك محدثة الآن.').then((r) => r && setContent(content, false))}>
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>

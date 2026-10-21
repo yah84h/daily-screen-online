@@ -17,8 +17,15 @@ export const screenChannel = (screenId: string) => {
 };
 export async function notifyScreen(screenId: string) {
   const ch = screenChannel(screenId);
-  if (ch.state !== 'joined') await new Promise<void>((resolve) => ch.subscribe((s) => s === 'SUBSCRIBED' && resolve()));
-  await ch.send({ type: 'broadcast', event: 'update', payload: { at: Date.now() } });
+  // The saved database state is authoritative. Polling still works if Broadcast is unavailable.
+  try {
+    if (ch.state !== 'joined') await new Promise<void>((resolve) => {
+      const timer = setTimeout(resolve, 1500);
+      if (ch.state === 'joining') return;
+      ch.subscribe((status) => { if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {clearTimeout(timer); resolve();} });
+    });
+    if (ch.state === 'joined') await ch.send({ type: 'broadcast', event: 'update', payload: { at: Date.now() } });
+  } catch { /* The TV will pick up the saved update on its next poll. */ }
 }
 
 // ---------- قراءة لوحة الإدارة ----------
@@ -122,12 +129,12 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 }
 
 // ---------- الإجراءات ----------
-export async function publish(screenId: string, content: Content, template: Partial<Template>) {
+export async function publish(screenId: string, content: Content) {
   if (!content.title?.trim()) throw Error('أضف عنوانًا أولًا.');
   const { data: user } = await supabase.auth.getUser();
   const post = await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id }).select().single();
   fail(post.error);
-  fail((await supabase.from('screens').update({ template, draft: null }).eq('id', screenId)).error);
+  fail((await supabase.from('screens').update({ draft: null }).eq('id', screenId)).error);
   await notifyScreen(screenId);
   return post.data as Post;
 }

@@ -1,7 +1,7 @@
 // يعمل لصفحة التلفزيون فقط: يحتفظ بآخر نسخة من الصفحة والخطوط لإعادة التحميل دون اتصال.
-const CACHE = 'daily-screen-online-v1';
+const CACHE = 'daily-screen-online-v2';
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/fonts.css', '/workspace.jpg'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/fonts.css', '/workspace.jpg', '/school_font.ttf', '/branding/ministry-of-education.svg', '/branding/tuwaiq-academy.svg'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) =>

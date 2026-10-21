@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/lib/auth';
 import './style.css';
+import './loop.css';
 
 const Admin = lazy(() => import('@/pages/admin/Admin'));
 const Login = lazy(() => import('@/pages/Login'));

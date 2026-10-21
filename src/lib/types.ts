@@ -17,7 +17,18 @@ export type Content = {
   showQR: boolean;
 };
 
+export type RecognitionStudent = { id: string; name: string; achievement: string; photo?: string };
+export type RecognitionBoard = { enabled: boolean; title: string; subtitle: string; pageSeconds: number; students: RecognitionStudent[] };
+export type Timetable = { periods: [string, string][] };
+
 export type Template = {
+  displayMode?: 'daily' | 'loop';
+  loopBranding?: 'paired' | 'school';
+  loopSchoolName?: string;
+  showTechQuotes?: boolean;
+  animateClock?: boolean;
+  recognition?: RecognitionBoard;
+  timetable?: Timetable;
   background: string;
   backgroundImage?: string;
   color: string;

@@ -26,7 +26,7 @@ export function PresetsTab() {
         {presets.map((p) => (
           <div className="preset-card" key={p.id}>
             <div className="preset-cover">
-              <Screen content={{ ...initialContent, ...p.content }} template={template} school={data?.school} />
+              <Screen content={{ ...initialContent, ...p.content }} template={{...template,displayMode:'daily'}} school={data?.school} />
             </div>
             <div className="preset-body">
               <h3>{p.name}</h3>

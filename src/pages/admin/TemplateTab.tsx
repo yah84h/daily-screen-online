@@ -1,12 +1,11 @@
 import type { PointerEvent } from 'react';
 import { Save, Upload } from 'lucide-react';
 import { Screen } from '@/components/Screen';
-import * as api from '@/lib/api';
 import { defaultTemplate, type Template } from '@/lib/types';
 import { useAdmin } from './store';
 
 export function TemplateTab() {
-  const { data, content, template, setTemplate, run, chooseImage, busy } = useAdmin();
+  const { data, content, template, setTemplate, saveDesign, chooseImage, busy } = useAdmin();
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -41,10 +40,10 @@ export function TemplateTab() {
           <span className="edit-tag">16:9 · 4K</span>
         </div>
         <div className="template-canvas" onPointerDown={onPointerDown}>
-          <Screen content={content} template={template} school={data?.school} />
+          <Screen content={content} template={{...template,displayMode:'daily'}} school={data?.school} />
         </div>
         <p className="template-tip">اسحب النص أو الصورة لتغيير موقعهما، واستخدم الإعدادات لضبط التفاصيل.</p>
-        <button className="button primary" disabled={busy || !data} onClick={() => run(() => api.saveTemplate(data!.screen.id, template), 'تم حفظ القالب.')}>
+        <button className="button primary" disabled={busy || !data} onClick={saveDesign}>
           <Save size={17} /> حفظ القالب
         </button>
       </section>
@@ -128,7 +127,7 @@ export function TemplateTab() {
           استدارة الزوايا · {template.radius} بكسل
           <input type="range" min="0" max="50" value={template.radius} onChange={(e) => set('radius', +e.target.value)} />
         </label>
-        <button className="button white" onClick={() => setTemplate(defaultTemplate)}>
+        <button className="button white" onClick={() => setTemplate(t => ({...t, ...defaultTemplate}))}>
           إعادة ضبط التخطيط
         </button>
       </section>
