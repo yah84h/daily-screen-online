@@ -1,3 +1,4 @@
+import { LoopScreen } from './loop/LoopScreen';
 import { useEffect, useState } from 'react';
 import { GraduationCap } from 'lucide-react';
 import { defaultSchool, defaultTemplate, type Content, type School, type Template } from '@/lib/types';
@@ -12,6 +13,7 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
     const i = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(i);
   }, []);
+  if (t.displayMode === 'loop') return <LoopScreen now={now} template={t} school={school} logo={c.logo || school.logo_url || undefined} large={large}/>;
   const d = c.autoDate || !c.date ? now : new Date(c.date + 'T12:00:00+03:00');
   const logo = c.logo || school.logo_url;
   return (
@@ -70,7 +72,7 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
         <span>{c.showFooter ? c.footer : ''}</span>
         <b>
           {now.toLocaleTimeString('ar-SA-u-ca-gregory', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' })}
-          <small>الرياض</small>
+          <small>جدة</small>
         </b>
       </div>
     </div>

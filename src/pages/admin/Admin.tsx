@@ -8,12 +8,14 @@ import { ScheduleTab } from './ScheduleTab';
 import { TemplateTab } from './TemplateTab';
 import { HistoryTab } from './HistoryTab';
 import { Modals } from './Modals';
+import { LoopTab } from './LoopTab';
 
 const nav: [Tab, typeof LayoutDashboard][] = [
   ['الرئيسية', LayoutDashboard],
   ['المواضيع المحفوظة', BookOpen],
   ['الجدولة', CalendarDays],
   ['القوالب', Layers],
+  ['خلفية الحصص', Clock],
   ['السجل', History],
 ];
 
@@ -22,6 +24,7 @@ const subtitles: Record<Tab, string> = {
   'المواضيع المحفوظة': 'رسائلك المتكررة، جاهزة للاستخدام من جديد.',
   الجدولة: 'خطط مسبقًا، وستعرض الشاشة المحتوى في موعده.',
   القوالب: 'صمّم مرة واحدة ليظهر كل تحديث بأفضل صورة.',
+  'خلفية الحصص': 'الساعة، الحصص، وطلاب نفخر بهم — بإعدادات بسيطة.',
   السجل: 'تحديثاتك السابقة محفوظة لتعود إليها متى احتجت.',
 };
 
@@ -119,7 +122,7 @@ function Layout() {
           </div>
           <div className="header-right">
             <span className="timezone">
-              <Clock size={14} /> توقيت الرياض
+              <Clock size={14} /> توقيت جدة
             </span>
             <div className="avatar small">م</div>
           </div>
@@ -169,6 +172,7 @@ function Layout() {
           {tab === 'الجدولة' && <ScheduleTab />}
           {tab === 'القوالب' && <TemplateTab />}
           {tab === 'السجل' && <HistoryTab />}
+          {tab === 'خلفية الحصص' && <LoopTab />}
         </main>
         <footer className="app-footer">
           <span>الشاشة اليومية</span>
