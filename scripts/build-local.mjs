@@ -7,7 +7,8 @@ const out=path.join(root,'dist-local');
 await fs.rm(out,{recursive:true,force:true});
 await fs.mkdir(out,{recursive:true});
 for(const name of await fs.readdir(path.join(root,'local-test'))){
- if(name==='adapter.ts')continue;
+ if(name==='adapter.ts'||name.startsWith('.'))continue;
+ if(!(await fs.stat(path.join(root,'local-test',name))).isFile())continue;
  await fs.copyFile(path.join(root,'local-test',name),path.join(out,name));
  if(name.endsWith('.command')) await fs.chmod(path.join(out,name),0o755);
 }

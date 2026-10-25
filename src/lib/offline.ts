@@ -69,8 +69,11 @@ export async function cacheTvState(
     objects.push(copy.post.content as unknown as Record<string, unknown>);
   for (const student of copy.screen.template.recognition?.students || [])
     objects.push(student as unknown as Record<string, unknown>);
+  for(const image of copy.screen.template.slideshow?.images||[]) objects.push(image as unknown as Record<string,unknown>);
+  for(const image of copy.screen.template.centerSlideshow?.images||[]) objects.push(image as unknown as Record<string,unknown>);
+  for(const image of copy.screen.template.mediaSlideshow?.images||[]) objects.push(image as unknown as Record<string,unknown>);
   const downloads = objects.flatMap((obj) =>
-    [...MEDIA_KEYS, "photo"].flatMap((key) => {
+    [...MEDIA_KEYS, "photo", "url"].flatMap((key) => {
       const value = obj[key];
       if (typeof value !== "string" || !value || value.startsWith("data:"))
         return [];

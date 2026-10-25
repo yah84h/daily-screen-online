@@ -1,3 +1,7 @@
+import {displayClock} from '@/lib/clock';
+import {syncedTheme} from '@/lib/loopAppearance';
+import { mediaSlideshowOf } from '@/lib/slideshow';
+import { BackgroundSlideshow } from './BackgroundSlideshow';
 import { MediaVideo } from './MediaVideo';
 import { LoopScreen } from './loop/LoopScreen';
 import { useEffect, useState } from 'react';
@@ -8,12 +12,13 @@ type Props = { content: Content; template?: Partial<Template>; school?: School; 
 
 /** العرض المشترك بين المعاينة والقالب والتلفزيون — لا تكرره في مكان آخر. */
 export function Screen({ content: c, template, school = defaultSchool, large = false }: Props) {
-  const t: Template = { ...defaultTemplate, ...template };
+  const t: Template = syncedTheme({ ...defaultTemplate, ...template });
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const i = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(i);
   }, []);
+  if(t.displayMode==='slideshow') return <div className={'screen screen-slideshow '+(large?'large':'')} style={{background:t.background}}><BackgroundSlideshow template={{...t,slideshow:{...mediaSlideshowOf(t),enabled:true}}}/>{!mediaSlideshowOf(t).images.length&&<div className="media-empty">أضف صورًا لعرض الشرائح</div>}</div>;
   if (t.displayMode === 'loop') return <LoopScreen now={now} template={t} school={school} logo={c.logo || school.logo_url || undefined} large={large}/>;
   const d = c.autoDate || !c.date ? now : new Date(c.date + 'T12:00:00+03:00');
   const logo = c.logo || t.schoolLogo || school.logo_url;
@@ -26,9 +31,10 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
         backgroundImage: t.backgroundImage ? `url(${t.backgroundImage})` : undefined,
         backgroundSize: 'cover',
         color: t.color,
-        fontFamily: `${t.font || 'Noto Sans Arabic'}, 'Noto Sans Arabic', sans-serif`,
+        fontFamily: `${!t.font || t.font==='SchoolArabic' ? 'Cairo' : t.font}, 'Noto Sans Arabic', sans-serif`,
       }}
     >
+      <BackgroundSlideshow template={t}/>
       <div className="screen-top">
         <div className="school" style={{left:(t.schoolX??55)+'%',top:(t.schoolY??6)+'%',width:(t.schoolW??39)+'%',fontSize:((t.schoolScale??100)/100)+'cqw'}}>
           {logo ? <img src={logo} alt="" /> : <GraduationCap />}
@@ -73,7 +79,7 @@ export function Screen({ content: c, template, school = defaultSchool, large = f
       <div className="screen-footer">
         <span>{c.showFooter ? c.footer : ''}</span>
         <b>
-          {now.toLocaleTimeString('ar-SA-u-ca-gregory', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Riyadh' })}
+          {displayClock(now,false)}
           <small>جدة</small>
         </b>
       </div>

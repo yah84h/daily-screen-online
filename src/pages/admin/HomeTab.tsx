@@ -1,14 +1,17 @@
+import {useAuth} from '@/lib/auth';
+import {mediaSlideshowOf} from '@/lib/slideshow';
 import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Loader2, Maximize2, Monitor, Palette, Plus, Settings, ShieldCheck, Sun, GraduationCap, Upload, X } from 'lucide-react';
 import { Screen } from '@/components/Screen';
 import * as api from '@/lib/api';
 import { WORKSPACE_PHOTO, initialContent, type Preset } from '@/lib/types';
-import { DisplayModes, FullMediaEditor } from './DisplayModes';
+import { DisplayModes, MediaOnlyEditor } from './DisplayModes';
 import { useAdmin } from './store';
 
 const topicIcons = [ShieldCheck, BookOpen, GraduationCap, Sun];
 const topicColors = ['mint', 'blue', 'peach', 'yellow'];
 
 export function HomeTab() {
+  const {permissions}=useAuth();
   const { data, content, edit, setContent, template, dirty, busy, run, setModal, setTab, chooseImage, notify, publishScreen } = useAdmin();
   const presets = data?.presets ?? [];
 
@@ -20,7 +23,7 @@ export function HomeTab() {
 
   return (
     <>
-      <DisplayModes/><div className="overview-grid">
+      {permissions.admin&&<DisplayModes/>}<div className="overview-grid">
         <section className="preview-section">
           <div className="section-heading">
             <h2>المعروض على شاشتك</h2>
@@ -42,12 +45,12 @@ export function HomeTab() {
               <span>
                 <Monitor size={15} /> {data?.screen.name}
               </span>
-              <button className="text-button" onClick={() => setTab('القوالب')}>
+              <button className="text-button" disabled={!permissions.admin} onClick={() => setTab('القوالب')}>
                 <Palette size={14} /> تعديل القالب
               </button>
             </div>
           </div>
-          <button className="button white loop-shortcut" onClick={() => setTab('خلفية الحصص')}>خلفية الحصص ولوحة التميز</button>
+          <button disabled={!permissions.admin} className="button white loop-shortcut" onClick={() => setTab('خلفية الحصص')}>خلفية الحصص ولوحة التميز</button>
           <div className="design-note">
             <div>
               <CheckCircle2 size={18} />
@@ -89,7 +92,7 @@ export function HomeTab() {
             </div>
             <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
           </div>
-          <div className="editor-fields">{template.displayMode==='media'&&<FullMediaEditor/>}
+          <fieldset className="editor-fields" disabled={!data||busy}>{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&<>
             <label>
               عنوان اليوم
               <input maxLength={100} value={content.title} onChange={(e) => edit('title', e.target.value)} placeholder="ما موضوع اليوم؟" />
@@ -140,10 +143,10 @@ export function HomeTab() {
             </div>
             <button className="optional-button" onClick={() => setModal('optional')}>
               <Settings size={15} /> الشارة والتذييل والعناصر الاختيارية <Plus size={15} />
-            </button>
-          </div>
+            </button></>}
+          </fieldset>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || (template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
+            <button className="button publish" disabled={busy || (template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>

@@ -7,3 +7,8 @@ dist
 
 dist-local
 local-test/data
+
+# Persistent local school content and credentials are never source artifacts.
+data/
+.env.*
+!.env.example

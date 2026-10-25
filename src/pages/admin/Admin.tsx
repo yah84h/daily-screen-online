@@ -34,9 +34,12 @@ const subtitles: Record<Tab, string> = {
 };
 
 export default function Admin() {
-  const { session, loading } = useAuth();
+  const { session, loading, permissions, error } = useAuth();
   if (loading) return <div className="loading-page"><Loader2 className="spin" size={28} /></div>;
+  
   if (!session) return <Navigate to="/login" replace />;
+  if(!permissions.admin&&!permissions.daily)return <Navigate to={permissions.news?'/news':'/login'} replace/>;
+  if(error)return <p role="alert">{error}</p>;
   return (
     <AdminProvider>
       <Layout />
@@ -46,7 +49,7 @@ export default function Admin() {
 
 function Layout() {
   const { data, loadError, tab, setTab, setModal, toast, fileInput, selectScreen } = useAdmin();
-  const { signOut } = useAuth();
+  const { signOut,permissions } = useAuth();
   const school = data?.school;
   const tvOnline = data?.devices.some((d) => d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 90_000) ?? false;
   const pairedCount = data?.devices.length ?? 0;
@@ -84,8 +87,8 @@ function Layout() {
           </div>
         )}
         <div className="nav-label">مساحة العمل</div>
-        <nav>
-          {nav.map(([label, Icon]) => (
+        {permissions.news&&<a className="button white" href="/news">إدارة الأخبار</a>}{permissions.admin&&<a className="button white" href="/users">الحسابات والصلاحيات</a>}<a className="text-button" href="/password">تغيير كلمة المرور</a><nav>
+          {nav.filter(([name])=>permissions.admin||['الرئيسية','المواضيع المحفوظة','الجدولة','السجل','ومضات تقنية'].includes(name)).map(([label, Icon]) => (
             <button key={label} className={tab === label ? 'active' : ''} onClick={() => setTab(label)}>
               <Icon size={19} />
               {label}
@@ -109,7 +112,7 @@ function Layout() {
               إعداد الشاشة <ArrowUpRight size={15} />
             </button>
           </div>
-          <button className="settings-nav" onClick={() => setModal('settings')}>
+          <button className="settings-nav" disabled={!permissions.admin} onClick={() => setModal('settings')}>
             <Settings size={19} />
             الإعدادات
           </button>
@@ -175,10 +178,10 @@ function Layout() {
           {tab === 'الرئيسية' && <HomeTab />}
           {tab === 'المواضيع المحفوظة' && <PresetsTab />}
           {tab === 'الجدولة' && <ScheduleTab />}
-          {tab === 'القوالب' && <TemplateTab />}
+          {permissions.admin && tab === 'القوالب' && <TemplateTab />}
           {tab === 'السجل' && <HistoryTab />}
-          {tab === 'خلفية الحصص' && <LoopTab />}
-          {tab === 'الشاشات' && <section className="editor-card screens-page"><SettingsModal/></section>}
+          {permissions.admin && tab === 'خلفية الحصص' && <LoopTab />}
+          {permissions.admin && tab === 'الشاشات' && <section className="editor-card screens-page"><SettingsModal/></section>}
           {tab === 'ومضات تقنية' && <TechLibraryTab/>}
         </main>
         <footer className="app-footer">

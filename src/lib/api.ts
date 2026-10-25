@@ -1,3 +1,4 @@
+import {mediaSlideshowOf} from './slideshow';
 import { supabase } from './supabase';
 import { riyadhToday, type Content, type Device, type Post, type Preset, type School, type Screen, type Template, type TvState } from './types';
 
@@ -130,7 +131,8 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 
 // ---------- الإجراءات ----------
 export async function publish(screenId: string, content: Content, template?: Partial<Template>) {
-  if (!content.title?.trim() && !content.fullMedia) throw Error('أضف عنوانًا أو وسائط أولًا.');
+  if (template?.displayMode==='slideshow' && !mediaSlideshowOf(template).images.length) throw Error('أضف صورًا لعرض الشرائح أولًا.');
+  if (template?.displayMode!=='slideshow' && !content.title?.trim() && !content.fullMedia) throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
   const post = await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id }).select().single();
   fail(post.error);

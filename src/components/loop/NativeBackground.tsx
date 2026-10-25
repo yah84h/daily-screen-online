@@ -181,15 +181,15 @@ export default function NativeLoop({
       >
         <defs>
           <radialGradient id={gradientId + "-blue"}>
-            <stop offset="0" stopColor="#4b91f7" stopOpacity=".035" />
-            <stop offset="1" stopColor="#4b91f7" stopOpacity="0" />
+            <stop offset="0" stopColor="var(--loop-cube1,#4b91f7)" stopOpacity=".035" />
+            <stop offset="1" stopColor="var(--loop-cube1,#4b91f7)" stopOpacity="0" />
           </radialGradient>
           <radialGradient id={gradientId + "-cyan"}>
-            <stop offset="0" stopColor="#30bed6" stopOpacity=".03" />
-            <stop offset="1" stopColor="#30bed6" stopOpacity="0" />
+            <stop offset="0" stopColor="var(--loop-cube2,#30bed6)" stopOpacity=".03" />
+            <stop offset="1" stopColor="var(--loop-cube2,#30bed6)" stopOpacity="0" />
           </radialGradient>
         </defs>
-        <rect width="3840" height="2160" fill="white" />
+        <rect width="3840" height="2160" fill="var(--loop-background,#f5f8fe)" />
         {[
           [-100, 450, 760, 480, "blue"],
           [3700, 1880, 830, 450, "cyan"],
@@ -209,7 +209,7 @@ export default function NativeLoop({
             key={i}
             data-wave={i}
             d={curve(c, 0)}
-            stroke={c.color}
+            stroke={`var(--loop-line${i%3+1},${c.color})`}
             strokeOpacity={c.alpha}
             strokeWidth="4"
             fill="none"
@@ -241,8 +241,8 @@ export default function NativeLoop({
               width={Number(w)}
               height={Number(h)}
               rx={Number(r)}
-              fill={String(color)}
-              fillOpacity=".12"
+              fill={`var(--loop-cube${[1,2,3,2][i]},${color})`}
+              fillOpacity=".20"
             />
           </g>
         ))}
@@ -254,17 +254,8 @@ export default function NativeLoop({
           dir="ltr"
           aria-label="وزارة التعليم وأكاديمية طويق"
         >
-          <img
-            className="ministry-brand"
-            src="/branding/ministry-of-education.svg"
-            alt="وزارة التعليم"
-          />
-          <span className="native-brand-divider" aria-hidden="true" />
-          <img
-            className="tuwaiq-brand"
-            src="/branding/tuwaiq-academy.svg"
-            alt="أكاديمية طويق"
-          />
+          <img className="tuwaiq-brand" src="/branding/tuwaiq-academy.svg" alt="أكاديمية طويق" />
+          <img className="ministry-brand" src="/branding/ministry-of-education.svg" alt="وزارة التعليم" />
         </div>
       )}
       {!pairedBranding && !customLogo && (

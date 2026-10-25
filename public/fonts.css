@@ -104,3 +104,13 @@
 }
 
 @font-face{font-family:'SchoolArabic';src:url('/school_font.ttf') format('truetype');font-weight:100 900;font-display:swap}
+
+/* Cairo supplied in the reference HTML; self-hosted for offline use. */
+@font-face{font-family:'Cairo';font-weight:400;font-display:block;src:url(/cairo-673b09d876a8.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E,U+2010-2011,U+204F,U+2E41}
+@font-face{font-family:'Cairo';font-weight:400;font-display:block;src:url(/cairo-cc8b30e9bfe6.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Cairo';font-weight:600;font-display:block;src:url(/cairo-7db1f16449e8.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E,U+2010-2011,U+204F,U+2E41}
+@font-face{font-family:'Cairo';font-weight:600;font-display:block;src:url(/cairo-26400cd1ea38.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Cairo';font-weight:700;font-display:block;src:url(/cairo-09147def57e5.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E,U+2010-2011,U+204F,U+2E41}
+@font-face{font-family:'Cairo';font-weight:700;font-display:block;src:url(/cairo-2fdd535e5cf8.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:'Cairo';font-weight:800;font-display:block;src:url(/cairo-75f1a0a8fb96.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E,U+2010-2011,U+204F,U+2E41}
+@font-face{font-family:'Cairo';font-weight:800;font-display:block;src:url(/cairo-4a74c5425b3b.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}

@@ -8,6 +8,9 @@ import './reference-ui.css';
 
 const Admin = lazy(() => import('@/pages/admin/Admin'));
 const Login = lazy(() => import('@/pages/Login'));
+const Password=lazy(()=>import('@/pages/Password'));
+const Users=lazy(()=>import('@/pages/Users'));
+const News = lazy(()=>import('@/pages/News'));
 const Tv = lazy(() => import('@/pages/Tv'));
 
 // Service Worker لصفحة التلفزيون فقط (إعادة تحميل دون اتصال)
@@ -23,6 +26,9 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<Navigate to="/admin" replace />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/password" element={<Password/>}/>
+            <Route path="/users" element={<Users/>}/>
+            <Route path="/news" element={<News/>}/>
             <Route path="/login" element={<Login />} />
             <Route path="/tv" element={<Tv />} />
             <Route path="/display" element={<Tv />} />

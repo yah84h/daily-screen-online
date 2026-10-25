@@ -1,3 +1,4 @@
+import {displayClock} from '@/lib/clock';
 import { useLayoutEffect, useState } from "react";
 /** Changes only when the value changes; polling/one-second clock ticks do not restart it. */
 export function SoftTransition({
@@ -59,12 +60,7 @@ export function AnimatedClock({
   now: Date;
   animate?: boolean;
 }) {
-  const time = new Intl.DateTimeFormat("en-GB", {
-    timeZone: "Asia/Riyadh",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).format(now);
+  const time = displayClock(now);
   return (
     <span className="animated-clock" dir="ltr" role="timer" aria-label={time}>
       {time.split("").map((digit, i) =>

@@ -1,3 +1,4 @@
+import {syncedTheme} from '@/lib/loopAppearance';
 import {
   createContext,
   useCallback,
@@ -90,7 +91,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const templateRevision = useRef(0);
   const contentRevision = useRef(0);
   const setTemplate: Store["setTemplate"] = (value) => {
-    setTemplateState(value);
+    setTemplateState(prev=>syncedTheme(typeof value==='function'?value(prev):value));
     templateRevision.current++;
     templateDirtyRef.current = true;
     setTemplateDirty(true);
@@ -119,7 +120,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         loadedFor.current = d.screen.id;
         screenId.current = d.screen.id;
         localStorage.setItem("admin-screen", d.screen.id);
-        setTemplateState({ ...defaultTemplate, ...d.screen.template });
+        setTemplateState(syncedTheme({ ...defaultTemplate, ...d.screen.template }));
         templateDirtyRef.current = false;
         setTemplateDirty(false);
         setContentState({
@@ -128,7 +129,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         });
         setDirty(!!d.screen.draft);
       } else if (!templateDirtyRef.current) {
-        setTemplateState({ ...defaultTemplate, ...d.screen.template });
+        setTemplateState(syncedTheme({ ...defaultTemplate, ...d.screen.template }));
       }
     } catch (e) {
       setLoadError((e as Error).message);

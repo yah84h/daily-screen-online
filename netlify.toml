@@ -2,8 +2,17 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  node_bundler = "esbuild"
+
 [build.environment]
   NODE_VERSION = "24"
+
+[[redirects]]
+  from = "/api/tech-news"
+  to = "/.netlify/functions/tech-news"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
@@ -20,3 +29,14 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

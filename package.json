@@ -14,7 +14,12 @@
     "test:pairing": "node tests/pairing-browser.mjs",
     "build:local": "node scripts/build-local.mjs",
     "test:local": "node tests/local-v16.mjs",
-    "test:media": "node tests/final-media.mjs"
+    "test:media": "node tests/final-media.mjs",
+    "test:slideshow": "node --test tests/slideshow.test.mjs",
+    "test:slideshow-browser": "node tests/slideshow-browser.mjs",
+    "dev:local": "node scripts/dev-local.mjs",
+    "test:news": "node --test tests/accounts.test.mjs tests/news.test.mjs",
+    "test:news-browser": "node tests/v32-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

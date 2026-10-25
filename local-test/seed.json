@@ -2,7 +2,7 @@
   "school_settings": [
     {
       "id": 1,
-      "name": "مدارس الموهوبين التقنيه بجدة",
+      "name": "الموهوبين التقنية الثانوية بجدة - بنين",
       "tagline": "نسخة اختبار محلية",
       "logo_url": null
     }
@@ -15,7 +15,7 @@
         "background": "#f2f6ff",
         "color": "#254d80",
         "accent": "#4b91f7",
-        "font": "SchoolArabic",
+        "font": "Cairo",
         "fontSize": 100,
         "radius": 18,
         "fit": "cover",
@@ -31,7 +31,7 @@
         "calendar": "gregory",
         "displayMode": "loop",
         "loopBranding": "paired",
-        "loopSchoolName": "مدارس الموهوبين التقنيه بجدة",
+        "loopSchoolName": "الموهوبين التقنية الثانوية بجدة - بنين",
         "recognition": {
           "enabled": true,
           "title": "نجوم الأسبوع",
@@ -52,7 +52,7 @@
             }
           ],
           "width": 27,
-          "height": 35
+          "height": 50
         },
         "schoolX": 55,
         "schoolY": 6,

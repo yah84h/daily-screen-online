@@ -1,0 +1,1 @@
+Cairo font files were extracted without modification from the user-supplied شاشة-البهو.html reference for self-hosted, offline rendering. Original CSS weight and Unicode-range declarations are preserved in fonts.css.

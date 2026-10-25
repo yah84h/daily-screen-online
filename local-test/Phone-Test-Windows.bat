@@ -1,4 +1,2 @@
 @echo off
-cd /d "%~dp0"
-node server.mjs --lan
-pause
+call "%~dp0Start-Windows.bat"

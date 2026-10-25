@@ -1,0 +1,7 @@
+-- Existing accounts and passwords are unchanged. Only a brand-new empty project may bootstrap.
+alter table public.staff_profiles add column must_change_password boolean not null default false;
+create or replace function public.staff_can(p_permission text) returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from staff_profiles where user_id=auth.uid() and active and not must_change_password and (permissions->>'admin'='true' or permissions->>p_permission='true')) $$;
+create or replace function public.current_staff() returns jsonb language sql stable security definer set search_path=public as $$ select jsonb_build_object('id',user_id,'username',username,'permissions',case when permissions->>'admin'='true' then '{"admin":true,"news":true,"daily":true}'::jsonb else permissions end,'active',active,'owner',lower(username)='3looolyyy@gmail.com','mustChangePassword',must_change_password) from staff_profiles where user_id=auth.uid() and active $$;
+create or replace function public.first_owner_bootstrap_allowed() returns boolean language sql stable security definer set search_path=public as $$ select not exists(select 1 from auth.users) and not exists(select 1 from public.staff_profiles) $$;
+revoke all on function public.first_owner_bootstrap_allowed() from public,anon,authenticated;
+grant execute on function public.first_owner_bootstrap_allowed() to service_role;

@@ -28,7 +28,7 @@ export type RecognitionBoard = { enabled: boolean; title: string; subtitle: stri
 export type Timetable = { periods: [string, string][] };
 
 export type Template = {
-  displayMode?: 'daily' | 'loop' | 'media';
+  displayMode?: 'daily' | 'loop' | 'media' | 'slideshow';
   schoolName?: string;
   schoolTagline?: string;
   schoolLogo?: string;
@@ -36,14 +36,23 @@ export type Template = {
   dismissalLabel?: string;
   dismissalDetail?: string;
   loopScale?: number;
+  clockScale?: number;
+  boardScale?: number;
   loopBranding?: 'paired' | 'school';
   loopSchoolName?: string;
   showTechQuotes?: boolean;
+  news?: import('./news').NewsSettings;
   animateClock?: boolean;
   recognition?: RecognitionBoard;
   timetable?: Timetable;
+  timetableSeason?: 'summer'|'winter'|'custom';
   background: string;
   backgroundImage?: string;
+  slideshow?: import('./slideshow').Slideshow;
+  loopAppearance?: import('./loopAppearance').LoopAppearance;
+  centerPhoto?: {ratio?:string;shape?:string;width?:number};
+  mediaSlideshow?: import('./slideshow').Slideshow;
+  centerSlideshow?: import('./slideshow').Slideshow;
   color: string;
   accent: string;
   font: string;
@@ -128,7 +137,7 @@ export const defaultTemplate: Template = {
   background: '#f2f6ff',
   color: '#254d80',
   accent: '#4b91f7',
-  font: 'SchoolArabic',
+  font: 'Cairo',
   fontSize: 100,
   radius: 18,
   fit: 'cover',
@@ -144,6 +153,6 @@ export const defaultTemplate: Template = {
   calendar: 'gregory',
 };
 
-export const defaultSchool: School = { name: 'مدارس الموهوبين التقنيه بجدة', tagline: 'علمٌ ينفع، وأثرٌ يبقى.', logo_url: null };
+export const defaultSchool: School = { name: 'الموهوبين التقنية الثانوية بجدة - بنين', tagline: 'علمٌ ينفع، وأثرٌ يبقى.', logo_url: null };
 
 export const riyadhToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
