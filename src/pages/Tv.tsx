@@ -1,4 +1,4 @@
-import DisplayControls from '@/components/DisplayControls';
+import DisplayControls from "@/components/DisplayControls";
 import { useEffect, useRef, useState } from "react";
 import { Monitor } from "lucide-react";
 import { Screen } from "@/components/Screen";
@@ -6,9 +6,11 @@ import { fetchTv, requestPairing, screenChannel } from "@/lib/api";
 import { cacheTvState, readTvCache } from "@/lib/offline";
 import { initialContent, type TvState } from "@/lib/types";
 
-const TOKEN_KEY = location.pathname==='/tv'?'tv-token':'tv-token:'+location.pathname;
-const urlToken=new URLSearchParams(location.search).get('token')||'';
-const CACHE_KEY=urlToken||(location.pathname==='/tv'?'last':TOKEN_KEY);
+const TOKEN_KEY =
+  location.pathname === "/tv" ? "tv-token" : "tv-token:" + location.pathname;
+const urlToken = new URLSearchParams(location.search).get("token") || "";
+const CACHE_KEY =
+  urlToken || (location.pathname === "/tv" ? "last" : TOKEN_KEY);
 const POLL_MS = 5_000;
 
 type Paired = Extract<TvState, { status: "paired" }>;
@@ -22,7 +24,7 @@ export default function Tv() {
   const [confirmStop, setConfirmStop] = useState(false);
   const lastVersion = useRef("");
 
-  // تأكيد داخل الصفحة (نوافذ confirm قد لا تظهر في وضع Kiosk)
+  //تأكيد داخل الصفحة (نوافذ confirm قد لا تظهر في وضع Kiosk)
   const stopDisplay = () => {
     if (!confirmStop) {
       setConfirmStop(true);
@@ -44,9 +46,9 @@ export default function Tv() {
     let token = urlToken || localStorage.getItem(TOKEN_KEY) || "";
     let sub: ReturnType<typeof screenChannel> | null = null;
 
-    let requestId=0;
+    let requestId = 0;
     const load = async () => {
-      const request=++requestId;
+      const request = ++requestId;
       try {
         if (!token) {
           const p = await requestPairing();
@@ -54,7 +56,7 @@ export default function Tv() {
           localStorage.setItem(TOKEN_KEY, token);
         }
         const data = await fetchTv(token);
-        if (!active || request!==requestId) return;
+        if (!active || request !== requestId) return;
         if (data.status === "unknown") {
           // الرمز انتهى أو حُذف الجهاز من اللوحة → ابدأ ربطًا جديدًا
           localStorage.removeItem(TOKEN_KEY);
@@ -67,7 +69,7 @@ export default function Tv() {
         if (data.status === "paired") {
           if (data.version !== lastVersion.current) {
             lastVersion.current = data.version;
-            cacheTvState(data,CACHE_KEY);
+            cacheTvState(data, CACHE_KEY);
           }
           if (!sub) {
             sub = screenChannel(data.screen.id);
@@ -75,7 +77,7 @@ export default function Tv() {
           }
         }
       } catch (e) {
-        if (!active || request!==requestId) return;
+        if (!active || request !== requestId) return;
         setOnline(false);
         setError((e as Error).message);
       }
@@ -147,7 +149,7 @@ export default function Tv() {
           )}
         </div>
       )}
-      <DisplayControls/>
+      <DisplayControls />
       {settings && (
         <div className="tv-settings">
           <b>{online ? "متصلة" : "غير متصلة · تُعرض آخر شاشة محفوظة"}</b>
