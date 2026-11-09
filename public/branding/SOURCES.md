@@ -6,3 +6,5 @@
 - أكاديمية طويق: https://tuwaiq.edu.sa/img/logo.svg
 
 المصدر الثاني يحتوي صورة PNG أصلية بعرض 3037 بكسل داخل حاوية SVG؛ حجمها كافٍ للعرض المصغر في شاشة 4K. العلامات تعود لأصحابها، ومرفقة هنا لاستخدام الشاشة المدرسية الذي طلبه المستخدم.
+
+- qudrat-pro.png: supplied by the project owner for the Qudrat Pro leaderboard integration; preserved without alteration.

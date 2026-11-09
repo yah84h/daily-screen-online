@@ -1,3 +1,4 @@
+import {QudratProBoard} from './QudratProBoard';
 import { useEffect, useId, useState } from "react";
 import { Award } from "lucide-react";
 import type {
@@ -20,7 +21,11 @@ function StudentPhoto({ student }: { student: RecognitionStudent }) {
     </span>
   );
 }
-export function RecognitionBoard({ board }: { board: Board }) {
+export function RecognitionBoard({board}:{board:Board}) {
+  if(!board.enabled)return null;
+  return board.source==='qudrat-pro'?<QudratProBoard board={board}/>:<ManualRecognitionBoard board={board}/>;
+}
+function ManualRecognitionBoard({ board }: { board: Board }) {
   const titleId = useId();
   const [page, setPage] = useState(0);
   const students = board.students.filter((s) => s.name.trim()),

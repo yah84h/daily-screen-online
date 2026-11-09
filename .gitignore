@@ -12,3 +12,12 @@ local-test/data
 data/
 .env.*
 !.env.example
+
+# Native iOS local build state
+ios/.build/
+ios/.swiftpm/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+/work/

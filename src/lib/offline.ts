@@ -1,3 +1,4 @@
+import {parseDriveLink} from './driveVideo';
 import type { TvState } from "./types";
 
 /** تخزين آخر حالة للتلفزيون في IndexedDB مع تحويل الصور إلى data URLs لتعمل دون اتصال */
@@ -81,6 +82,7 @@ export async function cacheTvState(
         (async () => {
           try {
             if(key==='fullMedia' && copy.post?.content.fullType==='video') {
+              if(parseDriveLink(value))return; // Drive caching is explicitly controlled by the video player.
               const response=await fetch(value); if(response.ok) await (await caches.open('daily-screen-media')).put(value,response);
             } else obj[key] = await toDataURL(value);
           } catch {

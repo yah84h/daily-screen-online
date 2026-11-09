@@ -19,7 +19,14 @@
     "test:slideshow-browser": "node tests/slideshow-browser.mjs",
     "dev:local": "node scripts/dev-local.mjs",
     "test:news": "node --test tests/accounts.test.mjs tests/news.test.mjs",
-    "test:news-browser": "node tests/v32-browser.mjs"
+    "test:news-browser": "node tests/v32-browser.mjs",
+    "test:qudrat": "node --test tests/qudrat-pro.test.mjs",
+    "test:qudrat-browser": "node tests/qudrat-browser.mjs",
+    "start:mac": "node scripts/start-mac.mjs",
+    "test:drive": "node --test tests/drive-video.test.mjs",
+    "test:drive-browser": "node tests/drive-video-browser.mjs",
+    "test:presentation": "node --test tests/presentation.test.mjs",
+    "test:presentation-browser": "node tests/presentation-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

@@ -1,3 +1,4 @@
+import {leaderboardOptions} from '../../local-test/qudrat-data.mjs';
 export const defaultLoopSchoolName = "الموهوبين التقنية الثانوية بجدة - بنين";
 import type { RecognitionBoard, Template, Timetable } from "./types";
 export const periodNames = [
@@ -38,6 +39,8 @@ export function recognitionOf(template: Partial<Template>): RecognitionBoard {
   return {
     ...defaultRecognition,
     ...r,
+    source: r?.source==='qudrat-pro'?'qudrat-pro':'manual',
+    qudratPro: leaderboardOptions(r?.qudratPro),
     style: r?.style==='solo'||r?.style==='group'?r.style:'classic',
     groupSize: r?.groupSize===3||r?.groupSize===4?r.groupSize:2,
     width: Math.max(20,Math.min(34,Number(r?.width)||27)),

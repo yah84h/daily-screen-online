@@ -1,3 +1,4 @@
+import {BackgroundAudio} from '@/components/BackgroundAudio';
 import DisplayControls from "@/components/DisplayControls";
 import { useEffect, useRef, useState } from "react";
 import { Monitor } from "lucide-react";
@@ -127,6 +128,7 @@ export default function Tv() {
           template={paired.screen.template}
           school={paired.school}
           large
+          presentationContext={{screenId:paired.screen.id,token:urlToken||localStorage.getItem(TOKEN_KEY)||''}}
         />
       ) : (
         <div className="tv-pairing">
@@ -149,6 +151,7 @@ export default function Tv() {
           )}
         </div>
       )}
+      <BackgroundAudio source={paired?.post?.content.backgroundAudio} controls={settings}/>
       <DisplayControls />
       {settings && (
         <div className="tv-settings">

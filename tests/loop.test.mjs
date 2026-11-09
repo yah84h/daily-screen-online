@@ -10,8 +10,9 @@ async function load(path) {
       target: ts.ScriptTarget.ES2022,
     },
   });
+  const executable = outputText.replace(/(from\s*)(['"])(\.[^'"]+)\2/g, (_, prefix, quote, relative) => prefix + quote + new URL(relative, new URL(path, import.meta.url)).href + quote);
   return import(
-    "data:text/javascript;base64," + Buffer.from(outputText).toString("base64")
+    "data:text/javascript;base64," + Buffer.from(executable).toString("base64")
   );
 }
 const { periodAt, lessonCountdown, validTimetable, defaultTimetable, winterTimetable, timetableFor, timetableSeasonOf, recognitionOf } =
