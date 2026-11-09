@@ -1,3 +1,4 @@
+import {PresentationEditor} from './PresentationEditor';
 import {useAuth} from '@/lib/auth';
 import {mediaSlideshowOf} from '@/lib/slideshow';
 import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Loader2, Maximize2, Monitor, Palette, Plus, Settings, ShieldCheck, Sun, GraduationCap, Upload, X } from 'lucide-react';
@@ -40,7 +41,7 @@ export function HomeTab() {
                 16:9 <span className="divider">|</span> جاهزة لدقة 4K
               </span>
             </div>
-            <Screen content={content} template={template} school={data?.school} />
+            <Screen content={content} template={template} school={data?.school} presentationContext={template.displayMode==='presentation'&&data?{screenId:data.screen.id}:undefined} />
             <div className="preview-bottom">
               <span>
                 <Monitor size={15} /> {data?.screen.name}
@@ -92,7 +93,7 @@ export function HomeTab() {
             </div>
             <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
           </div>
-          <fieldset className="editor-fields" disabled={!data||busy}>{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&<>
+          <fieldset className="editor-fields" disabled={!data||busy}>{template.displayMode==='presentation'&&<PresentationEditor/>}{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&template.displayMode!=='presentation'&&<>
             <label>
               عنوان اليوم
               <input maxLength={100} value={content.title} onChange={(e) => edit('title', e.target.value)} placeholder="ما موضوع اليوم؟" />
@@ -146,7 +147,7 @@ export function HomeTab() {
             </button></>}
           </fieldset>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || (template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
+            <button className="button publish" disabled={busy || (template.displayMode==='presentation'?!content.presentation?.slides.length:template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>

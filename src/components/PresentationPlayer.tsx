@@ -1,0 +1,9 @@
+import {useEffect,useRef} from 'react';import {usePresentation,type Presentation,type PresentationContext} from '@/lib/presentation';
+export function PresentationPlayer({deck,context,large}:{deck:Presentation;context?:PresentationContext;large:boolean}){
+ const state=usePresentation(deck,context),command=useRef(state.command);command.current=state.command;
+ useEffect(()=>{if(!large)return;const handle=(e:KeyboardEvent)=>{if(e.repeat||e.ctrlKey||e.altKey||e.metaKey||(e.target as HTMLElement)?.closest('input,textarea,select,[contenteditable="true"]'))return;
+ const actions:Record<string,string>={ArrowRight:'next',ArrowDown:'next',PageDown:'next',Enter:'next',' ':'next',ArrowLeft:'previous',ArrowUp:'previous',PageUp:'previous',Backspace:'previous',Home:'first',End:'last',b:'black',B:'black','.':'black'};
+ if(e.key==='F5'){e.preventDefault();document.documentElement.requestFullscreen?.().catch(()=>{});return;}const action=actions[e.key];if(action){e.preventDefault();void command.current(action);}};window.addEventListener('keydown',handle);return()=>window.removeEventListener('keydown',handle);},[large]);
+ useEffect(()=>{for(const index of [state.slide+1,state.slide-1])if(deck.slides[index]){const image=new Image();image.src=deck.slides[index];}},[state.slide,deck.id]);
+ return <div className="presentation-player" data-slide={state.slide} data-black={state.black} aria-label={deck.name}>{!state.black&&<img src={deck.slides[state.slide]||deck.slides[0]} alt={'الشريحة '+(state.slide+1)} draggable={false}/>}{large&&<div className="presentation-display-controls"><button onClick={()=>void state.command('previous')} aria-label="الشريحة السابقة">السابق</button><span>{state.slide+1} / {deck.slides.length}</span><button onClick={()=>void state.command('next')} aria-label="الشريحة التالية">التالي</button></div>}{state.error&&large&&<small className="presentation-connection">{state.error}</small>}</div>;
+}

@@ -1,0 +1,124 @@
+[
+  {
+    "name": "متوازن · الصورة يسار",
+    "description": "النص يمين والصورة يسار",
+    "patch": {
+      "textX": 49,
+      "textY": 30,
+      "textW": 45,
+      "imageX": 6,
+      "imageY": 21,
+      "imageW": 38,
+      "imageH": 64,
+      "fontSize": 100,
+      "align": "right"
+    }
+  },
+  {
+    "name": "متوازن · الصورة يمين",
+    "description": "نفس التوازن باتجاه معاكس",
+    "patch": {
+      "textX": 6,
+      "textY": 30,
+      "textW": 40,
+      "imageX": 51,
+      "imageY": 21,
+      "imageW": 43,
+      "imageH": 64,
+      "fontSize": 95,
+      "align": "right"
+    }
+  },
+  {
+    "name": "الصورة بطلة المشهد",
+    "description": "صورة كبيرة ورسالة جانبية",
+    "patch": {
+      "textX": 67,
+      "textY": 30,
+      "textW": 28,
+      "imageX": 5,
+      "imageY": 21,
+      "imageW": 57,
+      "imageH": 64,
+      "fontSize": 75,
+      "align": "right"
+    }
+  },
+  {
+    "name": "رسالة بارزة",
+    "description": "نص أكبر وصورة جانبية صغيرة",
+    "patch": {
+      "textX": 37,
+      "textY": 28,
+      "textW": 57,
+      "imageX": 6,
+      "imageY": 28,
+      "imageW": 26,
+      "imageH": 52,
+      "fontSize": 110,
+      "align": "right"
+    }
+  },
+  {
+    "name": "الصورة بالأعلى",
+    "description": "صورة عريضة والتعليق أسفلها",
+    "patch": {
+      "textX": 8,
+      "textY": 57,
+      "textW": 84,
+      "imageX": 6,
+      "imageY": 19,
+      "imageW": 88,
+      "imageH": 33,
+      "fontSize": 70,
+      "spacing": 0.6,
+      "align": "center"
+    }
+  },
+  {
+    "name": "الصورة بالأسفل",
+    "description": "رسالة فوق شريط الصور",
+    "patch": {
+      "textX": 8,
+      "textY": 24,
+      "textW": 84,
+      "imageX": 6,
+      "imageY": 60,
+      "imageW": 88,
+      "imageH": 25,
+      "fontSize": 70,
+      "spacing": 0.6,
+      "align": "center"
+    }
+  },
+  {
+    "name": "رسالة في المنتصف",
+    "description": "الكلمات وحدها دون صورة",
+    "patch": {
+      "textX": 12,
+      "textY": 28,
+      "textW": 76,
+      "imageX": 6,
+      "imageY": 21,
+      "imageW": 0,
+      "imageH": 0,
+      "fontSize": 110,
+      "align": "center"
+    }
+  },
+  {
+    "name": "صورة مربعة",
+    "description": "صورة مدمجة ومساحة أوسع للنص",
+    "patch": {
+      "textX": 48,
+      "textY": 28,
+      "textW": 46,
+      "imageX": 8,
+      "imageY": 26,
+      "imageW": 32,
+      "imageH": 57,
+      "fontSize": 95,
+      "align": "right"
+    }
+  }
+]

@@ -1,0 +1,97 @@
+{
+  "template": {
+    "schoolX": 55,
+    "schoolY": 6,
+    "schoolW": 39,
+    "schoolScale": 100,
+    "background": "#f2f6ff",
+    "color": "#254d80",
+    "accent": "#4b91f7",
+    "font": "Cairo",
+    "fontSize": 100,
+    "radius": 18,
+    "fit": "cover",
+    "imageX": 6,
+    "imageY": 21,
+    "imageW": 38,
+    "imageH": 64,
+    "textX": 49,
+    "textY": 30,
+    "textW": 45,
+    "spacing": 1,
+    "align": "right",
+    "calendar": "gregory"
+  },
+  "appearance": {
+    "background": "#f5f8fe",
+    "widget": "#ffffff",
+    "text": "#2b5389",
+    "muted": "#8299ba",
+    "accent": "#3e7fe0",
+    "border": "#e3edff",
+    "meterFill": "#3e7fe0",
+    "meterTrack": "#e3edff",
+    "line1": "#4b91f7",
+    "line2": "#30bed6",
+    "line3": "#a497d7",
+    "cube1": "#4b91f7",
+    "cube2": "#30bed6",
+    "cube3": "#a497d7"
+  },
+  "slideshow": {
+    "enabled": false,
+    "playing": true,
+    "loop": true,
+    "seconds": 8,
+    "effect": "fade",
+    "transitionMs": 800,
+    "overlayColor": "#000000",
+    "overlayOpacity": 0,
+    "blur": 0,
+    "saturation": 100,
+    "images": []
+  },
+  "recognition": {
+    "enabled": false,
+    "title": "نجوم الأسبوع",
+    "subtitle": "نحتفي بالتعلم والتميز",
+    "pageSeconds": 10,
+    "style": "classic",
+    "groupSize": 2,
+    "width": 27,
+    "height": 50,
+    "students": []
+  },
+  "timetable": {
+    "periods": [
+      [
+        "07:00",
+        "07:45"
+      ],
+      [
+        "07:46",
+        "08:31"
+      ],
+      [
+        "08:32",
+        "09:17"
+      ],
+      [
+        "09:18",
+        "10:03"
+      ],
+      [
+        "10:04",
+        "10:49"
+      ],
+      [
+        "10:50",
+        "11:35"
+      ],
+      [
+        "11:36",
+        "12:21"
+      ]
+    ]
+  }
+}

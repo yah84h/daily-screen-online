@@ -1,7 +1,7 @@
 // يعمل لصفحة التلفزيون فقط: يحتفظ بآخر نسخة من الصفحة والخطوط لإعادة التحميل دون اتصال.
-const CACHE = 'daily-screen-online-v33';
+const CACHE = 'daily-screen-online-v36';
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/fonts.css', '/workspace.jpg', '/school_font.ttf', '/branding/ministry-of-education.svg', '/branding/tuwaiq-academy.svg'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/fonts.css', '/workspace.jpg', '/school_font.ttf', '/branding/ministry-of-education.svg', '/branding/tuwaiq-academy.svg', '/branding/qudrat-pro.png'])));
   self.skipWaiting();
 });
 self.addEventListener('activate', (e) =>
@@ -14,7 +14,7 @@ self.addEventListener('activate', (e) =>
 );
 self.addEventListener('fetch', (e) => {
   const u = new URL(e.request.url);
-  if (u.pathname.startsWith('/local/')) return;
+  if (u.pathname.startsWith('/local/') || u.pathname.startsWith('/api/')) return;
   if (/\.(mp4|webm)$/i.test(u.pathname)) {
     e.respondWith(fetch(e.request).catch(async()=>{
       const cached=await (await caches.open('daily-screen-media')).match(e.request.url);

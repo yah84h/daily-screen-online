@@ -1,8 +1,11 @@
+import {loopLayout} from '@/lib/loopLayouts';
+import {LoopCanvas} from './LoopCanvas';
+import {LoopLayoutPicker} from './LoopLayoutPicker';
+import {QudratProSettings} from './QudratProSettings';
 import {withDisplayMode} from '@/lib/slideshow';
 import {defaultLoopAppearance,loopAppearance,loopPalettePresets} from '@/lib/loopAppearance';
 import { SlideshowEditor } from './SlideshowEditor';
 import { Award, ImagePlus, Plus, Save, Trash2, X } from "lucide-react";
-import { Screen } from "@/components/Screen";
 import {
   timetableFor,
   timetableSeasonOf,
@@ -59,7 +62,6 @@ function TimeField({
 export function LoopTab() {
   const {
     data,
-    content,
     template,
     setTemplate,
     saveDesign,
@@ -90,7 +92,7 @@ export function LoopTab() {
     ) as Timetable["periods"];
     setTemplate((t) => ({ ...t, timetableSeason:'custom',timetable: { periods } }));
   };
-  const validStudents =
+  const validStudents = board.source==='qudrat-pro'||
     !board.enabled || board.students.every((s) => s.name.trim());
   return (
     <div className="loop-admin-grid">
@@ -102,11 +104,7 @@ export function LoopTab() {
           </span>
         </div>
         <div className="preview-card">
-          <Screen
-            content={content}
-            template={{ ...template, displayMode: "loop" }}
-            school={data?.school}
-          />
+          <LoopCanvas/>
         </div>
         <p className="template-tip">
           المعاينة تعرض الخلفية دائمًا. اختر وضع العرض واحفظه لتطبيقه على
@@ -121,11 +119,21 @@ export function LoopTab() {
         </div>
       </section>
       <section className="editor-card loop-settings">
+        <LoopLayoutPicker template={template} onChange={id=>setTemplate(t=>({...t,loopLayout:id,loopPositions:undefined,loopHidePhoto:loopLayout(id).showPhoto===false||id==='no-photo'||id==='no-photo-reverse'}))}/>
+        <label><input type="checkbox" aria-label="إخفاء صور الوسط" checked={!!template.loopHidePhoto} onChange={e=>setTemplate(t=>({...t,loopHidePhoto:e.target.checked}))}/>بدون صورة في الوسط</label>
+        <h2>تنويعات خلفية الحصص</h2>
+        <label>نمط الخلفية<select aria-label="نمط خلفية الحصص" value={template.loopBackdrop||'waves'} onChange={e=>setTemplate(t=>({...t,loopBackdrop:e.target.value as typeof t.loopBackdrop}))}>{([['waves','الخطوط المتحركة الأصلية'],['aurora','شفق ناعم'],['dots','نقاط هادئة'],['grid','شبكة تقنية'],['orbits','دوائر مدارية'],['plain','خلفية بسيطة']] as const).map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
+        <label>مظهر البطاقات<select aria-label="مظهر بطاقات الحصص" value={template.loopCardStyle||'soft'} onChange={e=>setTemplate(t=>({...t,loopCardStyle:e.target.value as typeof t.loopCardStyle}))}><option value="soft">ناعم</option><option value="glass">زجاجي</option><option value="outlined">بإطار</option></select></label>
+        <h2>إضافات الشاشة</h2><p className="field-hint">تظهر أسفل الساعة ولوحة التميز. موضوع اليوم ورمز QR يستخدمان محتوى الشاشة اليومية نفسه.</p>
+        {([['topic','بطاقة موضوع اليوم'],['announcement','بطاقة إعلان المدرسة'],['qr','رمز QR من محتوى اليوم'],['schedule','جدول حصص اليوم'],['hijri','التاريخ الهجري']] as const).map(([key,label])=><label key={key}><input type="checkbox" aria-label={label} checked={!!template.loopExtras?.[key]} onChange={e=>setTemplate(t=>({...t,loopExtras:{...t.loopExtras,[key]:e.target.checked}}))}/>{label}</label>)}
+        {template.loopExtras?.announcement&&<><label>عنوان الإعلان<input maxLength={80} value={template.loopExtras.announcementTitle||''} onChange={e=>setTemplate(t=>({...t,loopExtras:{...t.loopExtras,announcementTitle:e.target.value}}))}/></label><label>نص الإعلان<textarea maxLength={240} value={template.loopExtras.announcementText||''} onChange={e=>setTemplate(t=>({...t,loopExtras:{...t.loopExtras,announcementText:e.target.value}}))}/></label></>}
+        {template.loopExtras?.qr&&<label>عنوان رمز QR<input maxLength={60} value={template.loopExtras.qrLabel||''} onChange={e=>setTemplate(t=>({...t,loopExtras:{...t.loopExtras,qrLabel:e.target.value}}))}/></label>}
         <button className="button white" onClick={()=>setTemplate(t=>({...t,slideshow:t.slideshow?{...t.slideshow,enabled:false}:undefined}))}>استعادة الخلفية المتحركة</button><p className="field-hint">يوقف صور الخلفية فقط، ويحافظ على ألوانك وصور الوسط والطلاب. احفظ أو انشر لتطبيقه.</p><SlideshowEditor center/>
+        {(template.loopLayout&&template.loopLayout!=='classic')&&<p className="field-hint">التوزيع الجاهز يحدد أحجام العناصر لمنع التداخل. اختر التوزيع الأصلي لاستخدام منزلقات الأحجام بحرية.</p>}
         <h2>أحجام عناصر الشاشة</h2><p className="field-hint">كبّر الصورة وصغّر الساعة ولوحة التميز بشكل مستقل. تتكيف الصورة مع المساحة المتاحة لمنع التداخل. المعاينة تتحدث مباشرة؛ احفظ أو انشر للتطبيق.</p>
-        <label>حجم الساعة والحصة · {template.clockScale??100}%<input aria-label="حجم الساعة والحصة" type="range" min="65" max="115" value={template.clockScale??100} onChange={e=>setTemplate(t=>({...t,clockScale:+e.target.value}))}/></label>
-        <label>حجم لوحة التميز · {template.boardScale??100}%<input aria-label="حجم لوحة التميز" type="range" min="65" max="115" value={template.boardScale??100} onChange={e=>setTemplate(t=>({...t,boardScale:+e.target.value}))}/></label>
-        <label>عرض صورة الوسط · {template.centerPhoto?.width??34}%<input aria-label="عرض صورة الوسط" type="range" min="18" max="60" value={template.centerPhoto?.width??34} onChange={e=>setTemplate(t=>({...t,centerPhoto:{...t.centerPhoto,width:+e.target.value}}))}/></label>
+        <label>حجم الساعة والحصة · {template.clockScale??100}%<input aria-label="حجم الساعة والحصة" disabled={!!template.loopLayout&&template.loopLayout!=='classic'} type="range" min="65" max="115" value={template.clockScale??100} onChange={e=>setTemplate(t=>({...t,clockScale:+e.target.value}))}/></label>
+        <label>حجم لوحة التميز · {template.boardScale??100}%<input aria-label="حجم لوحة التميز" disabled={!!template.loopLayout&&template.loopLayout!=='classic'} type="range" min="65" max="115" value={template.boardScale??100} onChange={e=>setTemplate(t=>({...t,boardScale:+e.target.value}))}/></label>
+        <label>عرض صورة الوسط · {template.centerPhoto?.width??34}%<input aria-label="عرض صورة الوسط" disabled={!!template.loopLayout&&template.loopLayout!=='classic'} type="range" min="18" max="60" value={template.centerPhoto?.width??34} onChange={e=>setTemplate(t=>({...t,centerPhoto:{...t.centerPhoto,width:+e.target.value}}))}/></label>
         <div className="button-row"><button className="button white" onClick={()=>setTemplate(t=>({...t,clockScale:70,boardScale:70,centerPhoto:{...t.centerPhoto,width:50}}))}>صورة كبيرة وبطاقات أصغر</button><button className="button white" onClick={()=>setTemplate(t=>({...t,clockScale:100,boardScale:100,centerPhoto:{...t.centerPhoto,width:34}}))}>استعادة الأحجام</button></div>
         <h2>شكل صور الوسط</h2><label>نسبة أبعاد الصورة<select aria-label="نسبة أبعاد صور الوسط" value={template.centerPhoto?.ratio||'16:9'} disabled={template.centerPhoto?.shape==='circle'} onChange={e=>setTemplate(t=>({...t,centerPhoto:{...t.centerPhoto,ratio:e.target.value}}))}>{['16:9','4:3','3:2','1:1','9:16'].map(r=><option key={r} value={r}>{r}</option>)}</select></label>
         <label>شكل الإطار<select aria-label="شكل صور الوسط" value={template.centerPhoto?.shape||'rounded'} onChange={e=>setTemplate(t=>({...t,centerPhoto:{...t.centerPhoto,shape:e.target.value}}))}><option value="rounded">مستطيل بزوايا ناعمة</option><option value="rectangle">مستطيل مستقيم</option><option value="circle">دائرة · نسبة ١:١</option><option value="oval">بيضاوي</option></select></label>
@@ -194,6 +202,9 @@ export function LoopTab() {
         <p className="field-hint">
           أخفِ اللوحة متى أردت؛ الأسماء والصور تبقى محفوظة.
         </p>
+        <label>مصدر لوحة التميز<select aria-label="مصدر لوحة التميز" value={board.source||'manual'} onChange={event=>setBoard({source:event.target.value as 'manual'|'qudrat-pro',...(event.target.value==='qudrat-pro'?{width:32,height:53}:{})})}><option value="manual">إدخال الطلاب يدويًا</option><option value="qudrat-pro">قدرات برو</option></select></label>
+        {board.source==='qudrat-pro'&&<QudratProSettings board={board} onChange={setBoard}/>}
+        {board.source!=='qudrat-pro'&&<>
         <label>
           عنوان اللوحة
           <input
@@ -215,9 +226,11 @@ export function LoopTab() {
           {([['classic','القائمة الحالية'],['solo','طالب واحد'],['group','مجموعة']] as const).map(([id,label])=><button key={id} role="tab" aria-selected={(board.style||'classic')===id} onClick={()=>setBoard({style:id,...(id==='group'?{width:32,height:50}:id==='solo'?{width:27,height:50}:{width:27,height:50})})}>{label}</button>)}
         </div>
         {board.style==='group'&&<label>عدد الطلاب في المجموعة<select aria-label="عدد الطلاب في المجموعة" value={board.groupSize||2} onChange={e=>setBoard({groupSize:Number(e.target.value) as 2|3|4})}><option value="2">طالبان</option><option value="3">ثلاثة طلاب</option><option value="4">أربعة طلاب</option></select></label>}
+        </>}
         <label>عرض لوحة التميز · {board.width}%<input aria-label="عرض لوحة التميز" type="range" min="20" max="34" step="1" value={board.width} onChange={e=>setBoard({width:+e.target.value})}/></label>
         <label>ارتفاع لوحة التميز · {board.height}%<input aria-label="ارتفاع لوحة التميز" type="range" min="44" max="53" step="1" value={board.height} onChange={e=>setBoard({height:+e.target.value})}/></label>
         <p className="field-hint">النسب من مساحة الشاشة. تظهر المعاينة مباشرة؛ احفظ لتطبيق الحجم على التلفزيون.</p>
+        {board.source!=='qudrat-pro'&&<>
         <div className="recognition-editor-list">
           {board.students.map((s, i) => (
             <section className="student-editor" key={s.id}>
@@ -326,6 +339,7 @@ export function LoopTab() {
             </select>
           </label>
         )}
+        </>}
         {!board.enabled && board.students.length > 0 && (
           <p className="loop-info">
             اللوحة مخفية على التلفزيون. بيانات الطلاب محفوظة عند حفظ الإعدادات.

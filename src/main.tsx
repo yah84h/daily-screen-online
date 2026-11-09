@@ -5,6 +5,8 @@ import { AuthProvider } from '@/lib/auth';
 import './style.css';
 import './loop.css';
 import './reference-ui.css';
+import './qudrat.css';
+import './loop-variants.css';
 
 const Admin = lazy(() => import('@/pages/admin/Admin'));
 const Login = lazy(() => import('@/pages/Login'));
@@ -39,3 +41,5 @@ createRoot(document.getElementById('root')!).render(
     </AuthProvider>
   </StrictMode>,
 );
+
+import './presentation.css';
