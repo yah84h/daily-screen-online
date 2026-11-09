@@ -60,7 +60,7 @@ function rpc({name,args={},options=''},staff){
  if(name==='get_screen_by_token'){const device=db.screen_devices.find(d=>d.token===args.p_token);if(!device)return{status:'unknown'};if(!device.screen_id)return{status:'pending',code:device.code};device.last_seen_at=now();const screen=db.screens.find(s=>s.id===device.screen_id);if(!screen)return{status:'unknown'};const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Riyadh'});const post=db.posts.filter(p=>p.screen_id===screen.id&&p.publish_at<=today).sort((a,b)=>b.publish_at.localeCompare(a.publish_at)||b.created_at.localeCompare(a.created_at))[0]||null;return{status:'paired',screen,school:db.school_settings[0],post,version:screen.updated_at+':'+(post?.created_at||'')}}
  throw Error('Unknown operation');
 }
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ttf':'font/ttf','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.jpeg':'image/jpeg','.json':'application/json','.mp4':'video/mp4','.webm':'video/webm','.gif':'image/gif'};
+const types={'.mp3':'audio/mpeg','.m4a':'audio/mp4','.wav':'audio/wav','.ogg':'audio/ogg','.flac':'audio/flac','.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.ttf':'font/ttf','.png':'image/png','.webp':'image/webp','.jpg':'image/jpeg','.jpeg':'image/jpeg','.json':'application/json','.mp4':'video/mp4','.webm':'video/webm','.gif':'image/gif'};
 const server=http.createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');

@@ -1,3 +1,4 @@
+import {BackgroundAudioEditor} from './BackgroundAudioEditor';
 import {PresentationEditor} from './PresentationEditor';
 import {useAuth} from '@/lib/auth';
 import {mediaSlideshowOf} from '@/lib/slideshow';
@@ -93,7 +94,7 @@ export function HomeTab() {
             </div>
             <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
           </div>
-          <fieldset className="editor-fields" disabled={!data||busy}>{template.displayMode==='presentation'&&<PresentationEditor/>}{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&template.displayMode!=='presentation'&&<>
+          <fieldset className="editor-fields" disabled={!data||busy}><BackgroundAudioEditor/>{template.displayMode==='presentation'&&<PresentationEditor/>}{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&template.displayMode!=='presentation'&&<>
             <label>
               عنوان اليوم
               <input maxLength={100} value={content.title} onChange={(e) => edit('title', e.target.value)} placeholder="ما موضوع اليوم؟" />

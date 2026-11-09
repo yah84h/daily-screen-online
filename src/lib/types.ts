@@ -1,4 +1,5 @@
 export type Content = {
+  backgroundAudio?: {url:string;name:string};
   presentation?: import('./presentation').Presentation;
   videoPreparation?: 'stream'|'buffer'|'cache';
   videoSound?: boolean;

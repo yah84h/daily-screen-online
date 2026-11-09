@@ -18,3 +18,5 @@ test('rejects multiple/invalid ranges and preserves unsatisfiable-range status',
  for(const range of ['bytes=0-2,4-6','bytes=9-1','bytes=-100','bytes=9007199254740992-'])await assert.rejects(driveVideoResponse(request(range),{fetcher:()=>{throw Error('must not fetch');}}),e=>e.code==='INVALID_RANGE');
  const r=await driveVideoResponse(request('bytes=100-'),{fetcher:async()=>new Response(null,{status:416,headers:{'Content-Range':'bytes */100'}})});assert.equal(r.status,416);assert.equal(r.headers.get('Content-Range'),'bytes */100');
 });
+
+test('audio links accept audio MIME only with explicit audio mode',async()=>{const options={fetcher:async()=>new Response(new Uint8Array(4),{status:206,headers:{'Content-Type':'audio/mpeg','Content-Range':'bytes 0-3/4'}})};await assert.rejects(driveVideoResponse(request('bytes=0-3'),options),e=>e.code==='DRIVE_NOT_PUBLIC');const r=await driveVideoResponse(new Request('http://local/api/drive-video?id='+id+'&audio=1'),options);assert.equal(r.headers.get('Content-Type'),'audio/mpeg');assert.equal((await r.arrayBuffer()).byteLength,4);});
