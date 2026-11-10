@@ -26,10 +26,13 @@
     "test:drive": "node --test tests/drive-video.test.mjs",
     "test:drive-browser": "node tests/drive-video-browser.mjs",
     "test:presentation": "node --test tests/presentation.test.mjs",
-    "test:presentation-browser": "node tests/presentation-browser.mjs"
+    "test:presentation-browser": "node tests/presentation-browser.mjs",
+    "test:cloud-presentation": "node --test tests/cloud-presentation.test.mjs",
+    "test:cloud-presentation-browser": "node tests/cloud-presentation-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
+    "@web-ppt/core": "0.8.0",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

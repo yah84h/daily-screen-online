@@ -1,6 +1,10 @@
+## PowerPoint دون خادم محلي
+
+رفع PPTX متاح من الموقع الإلكتروني مباشرة: تجهيز في المتصفح، ورفع الشرائح إلى Supabase، وتنقل من الهاتف والمؤشر عبر Netlify. يظل Windows المحلي اختياريًا. [دليل PowerPoint والتحكم بالصوت](docs/POWERPOINT-ar.md).
+
 ## تشغيل PowerPoint على Windows
 
-Windows هو جهاز التشغيل في المدرسة؛ Mac للاختبار فقط. ابدأ من `Start-Windows.bat`، مع تثبيت Node.js وPowerPoint لسطح المكتب وتفعيله. يدعم الرفع والتحويل والتحكم من الهاتف ومؤشر العروض دون Python أو LibreOffice على Windows. [دليل الإعداد](docs/WINDOWS-SETUP-ar.md).
+الموقع الإلكتروني لا يحتاج هذا الخادم؛ هذا مسار محلي اختياري لاستخدام Office على Windows. ابدأ من `Start-Windows.bat`، مع تثبيت Node.js وPowerPoint لسطح المكتب وتفعيله. يدعم الرفع والتحويل والتحكم من الهاتف ومؤشر العروض دون Python أو LibreOffice على Windows. [دليل الإعداد](docs/WINDOWS-SETUP-ar.md).
 
 ## تحريك عناصر خلفية الحصص من الجوال
 

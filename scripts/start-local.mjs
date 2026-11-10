@@ -24,7 +24,7 @@ async function run(command,args){
  });
 }
 try{
- if(!fs.existsSync(path.join(root,'node_modules/vite/package.json'))){console.log('Preparing local dependencies (first run only)…');if(process.platform==='win32'){const npm=path.join(path.dirname(process.execPath),'node_modules','npm','bin','npm-cli.js');if(!fs.existsSync(npm))throw Error('Install the standard Node.js LTS Windows installer, then retry.');await run(process.execPath,[npm,'ci','--no-fund','--no-audit']);}else await run('npm',['ci','--no-fund','--no-audit']);}
+ if(!fs.existsSync(path.join(root,'node_modules/vite/package.json'))||!fs.existsSync(path.join(root,'node_modules/@web-ppt/core/package.json'))){console.log('Preparing local dependencies (first run only)…');if(process.platform==='win32'){const npm=path.join(path.dirname(process.execPath),'node_modules','npm','bin','npm-cli.js');if(!fs.existsSync(npm))throw Error('Install the standard Node.js LTS Windows installer, then retry.');await run(process.execPath,[npm,'ci','--no-fund','--no-audit']);}else await run('npm',['ci','--no-fund','--no-audit']);}
  console.log('Building the school website. Existing data folders are preserved.');
  await run(process.execPath,['scripts/build-local.mjs']);
  if(!stopping&&existing?.instance===instance){console.log('The existing local server can now serve its built website: '+origin+'/admin');openAdmin();}

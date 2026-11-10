@@ -10,7 +10,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: node --test tests/accounts.test.mjs tests/news.test.mjs tests/loop.test.mjs tests/qudrat-pro.test.mjs tests/drive-video.test.mjs tests/presentation.test.mjs
+      - run: node --test tests/accounts.test.mjs tests/news.test.mjs tests/loop.test.mjs tests/qudrat-pro.test.mjs tests/drive-video.test.mjs tests/presentation.test.mjs tests/cloud-presentation.test.mjs
       - run: npm run build
       - run: npm run build:local
 
