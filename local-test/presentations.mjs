@@ -1,3 +1,4 @@
+import {runWindowsPresentation} from './presentation-platform.mjs';
 import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import {randomUUID} from 'node:crypto';import {execFile} from 'node:child_process';import {promisify} from 'node:util';import {pipeline} from 'node:stream/promises';import {Transform} from 'node:stream';import {pathToFileURL} from 'node:url';
 const exec=promisify(execFile),jobs=new Map();let converting=false;
 function program(env,name,candidates=[]){if(process.env[env])return process.env[env];for(const p of candidates)if(fs.existsSync(p))return p;return name;}
@@ -10,7 +11,8 @@ export async function uploadPresentation(req,name,dataDir,mediaDir){
  if(!/\.pptx$/i.test(name||''))throw fail('اختر ملف PowerPoint بصيغة PPTX.');
  converting=true;const id=randomUUID(),folder=path.join(dataDir,'presentations',id),out=path.join(mediaDir,'presentations',id);fs.mkdirSync(folder,{recursive:true});
  try{let bytes=0;await pipeline(req,new Transform({transform(chunk,_encoding,callback){bytes+=chunk.length;callback(bytes>100*1024*1024?fail('الحد الأقصى لملف PowerPoint هو ١٠٠ ميجابايت.'):null,chunk);}}),fs.createWriteStream(path.join(folder,'source.pptx')));
- await exec('python3',['-c',`import zipfile,sys,re,xml.etree.ElementTree as ET
+ if(process.platform==='win32')await runWindowsPresentation('Validate',path.join(folder,'source.pptx'),undefined,exec);
+ else await exec('python3',['-c',`import zipfile,sys,re,xml.etree.ElementTree as ET
 with zipfile.ZipFile(sys.argv[1]) as z:
  infos=z.infolist()
  assert len(infos)<10000 and sum(i.file_size for i in infos)<500*1024*1024,'PPTX is too large after decompression'
@@ -26,12 +28,13 @@ with zipfile.ZipFile(sys.argv[1]) as z:
 `,path.join(folder,'source.pptx')],{timeout:15000});
  const job={id,name:path.basename(name).slice(0,160),status:'converting',slides:[],error:''};jobs.set(id,job);
  void(async()=>{try{
-  await exec(office(),['-env:UserInstallation='+pathToFileURL(path.join(folder,'profile')).href,'--headless','--norestore','--convert-to','pdf:impress_pdf_Export','--outdir',folder,path.join(folder,'source.pptx')],{timeout:120000,maxBuffer:1024*1024});
+  if(process.platform==='win32')await runWindowsPresentation('Convert',path.join(folder,'source.pptx'),out,exec);
+  else {await exec(office(),['-env:UserInstallation='+pathToFileURL(path.join(folder,'profile')).href,'--headless','--norestore','--convert-to','pdf:impress_pdf_Export','--outdir',folder,path.join(folder,'source.pptx')],{timeout:120000,maxBuffer:1024*1024});
   if(!fs.existsSync(path.join(folder,'source.pdf')))throw Error('conversion');
-  fs.mkdirSync(out,{recursive:true});await exec(raster(),['-jpeg','-jpegopt','quality=90','-scale-to','1920','-f','1','-l','200',path.join(folder,'source.pdf'),path.join(out,'slide')],{timeout:120000,maxBuffer:1024*1024});
+  fs.mkdirSync(out,{recursive:true});await exec(raster(),['-jpeg','-jpegopt','quality=90','-scale-to','1920','-f','1','-l','200',path.join(folder,'source.pdf'),path.join(out,'slide')],{timeout:120000,maxBuffer:1024*1024});}
   const files=fs.readdirSync(out).filter(f=>/^slide-\d+\.jpg$/.test(f)).sort((a,b)=>Number(a.match(/\d+/)[0])-Number(b.match(/\d+/)[0]));if(!files.length)throw Error('empty');
   job.slides=files.map(f=>'/storage/v1/object/public/media/presentations/'+id+'/'+f);job.status='ready';fs.writeFileSync(path.join(folder,'manifest.json'),JSON.stringify(job));
- }catch(error){job.status='error';job.error=error.code==='ENOENT'?'أداة التحويل غير متوفرة. يلزم LibreOffice و pdftoppm على خادم Mac.':'تعذر تحويل العرض. جرّب ملف PPTX دون كلمة مرور.';fs.rmSync(out,{recursive:true,force:true});}
+ }catch(error){job.status='error';job.error=process.platform==='win32'?'تعذر تحويل العرض. تأكد من تثبيت PowerPoint لسطح المكتب وتفعيله على Windows، وافتحه مرة واحدة ثم جرّب ملف PPTX دون كلمة مرور.':error.code==='ENOENT'?'أداة التحويل غير متوفرة. يلزم LibreOffice و pdftoppm على خادم الاختبار.':'تعذر تحويل العرض. جرّب ملف PPTX دون كلمة مرور.';fs.rmSync(out,{recursive:true,force:true});}
  finally{converting=false;for(const f of ['source.pptx','source.pdf','profile'])fs.rmSync(path.join(folder,f),{recursive:true,force:true});}
  })();return job;
  }catch(error){converting=false;fs.rmSync(folder,{recursive:true,force:true});if(error.status)throw error;throw fail('ملف PPTX غير صالح، أو يتجاوز ٢٠٠ شريحة.');}

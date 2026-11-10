@@ -13,5 +13,10 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-node server.mjs --lan --open
+if exist adapter.ts if exist ..\scripts\start-local.mjs (
+  node ..\scripts\start-local.mjs
+  pause
+  exit /b
+)
+node start-server.mjs --lan --open
 pause
