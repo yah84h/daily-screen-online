@@ -40,8 +40,4 @@ with zipfile.ZipFile(sys.argv[1]) as z:
  }catch(error){converting=false;fs.rmSync(folder,{recursive:true,force:true});if(error.status)throw error;throw fail('ملف PPTX غير صالح، أو يتجاوز ٢٠٠ شريحة.');}
 }
 export function presentationJob(id,dataDir){if(!/^[a-f0-9-]{36}$/.test(id))throw fail('العرض غير موجود',404);if(jobs.has(id))return jobs.get(id);const f=path.join(dataDir,'presentations',id,'manifest.json');if(fs.existsSync(f))return JSON.parse(fs.readFileSync(f,'utf8'));throw fail('العرض غير موجود',404);}
-export function presentationStep(state,action,count,index){
- let slide=Math.max(0,Math.min(count-1,Number(state?.slide)||0)),black=!!state?.black;
- if(action==='next')slide=Math.min(count-1,slide+1);else if(action==='previous')slide=Math.max(0,slide-1);else if(action==='first')slide=0;else if(action==='last')slide=count-1;else if(action==='goto'){if(!Number.isInteger(index)||index<0||index>=count)throw fail('رقم الشريحة غير صالح');slide=index;}else if(action==='black')black=!black;else throw fail('أمر غير صالح');
- return{slide,black};
-}
+export {presentationStep} from './presentation-state.mjs';

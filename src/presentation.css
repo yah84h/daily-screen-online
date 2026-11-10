@@ -4,3 +4,5 @@ html[data-pointer-ui="true"] .presentation-display-controls{opacity:1}
 html[data-pointer-ui="false"] .tv{cursor:none}html[data-pointer-ui="false"] .tv-settings,html[data-pointer-ui="false"] .device-audio-controls{cursor:auto}
 .background-audio-editor{border:1px solid var(--line,#e3eaf5);border-radius:12px;padding:16px;margin:0 0 18px}.background-audio-editor h3{font-size:16px;margin:0 0 10px}.background-audio-editor input[type=url]{width:100%}
 .device-audio-controls{position:fixed;left:18px;top:18px;z-index:46;display:flex;flex-direction:column;gap:12px;background:#fff;color:#254d80;border:1px solid #dce8fa;padding:18px;border-radius:12px;width:300px;max-width:calc(100vw - 36px);font:14px Cairo,sans-serif}.device-audio-controls button{min-height:46px;border:1px solid #dce8fa;border-radius:8px;background:#edf4ff;color:#254d80}.device-audio-controls input{width:100%}.device-audio-controls small{line-height:1.7}
+
+.audio-seek-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}.background-audio-editor audio{display:block;max-width:100%;width:100%;margin-top:8px}.device-audio-controls{max-height:calc(100vh - 36px);overflow:auto}
