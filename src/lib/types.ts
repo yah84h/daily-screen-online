@@ -6,7 +6,7 @@ export type Content = {
   videoLoop?: boolean;
   videoControls?: boolean;
   fullMedia?: string;
-  fullType?: 'image' | 'video';
+  fullType?: 'image' | 'video' | 'audio';
   mediaFit?: 'cover' | 'contain' | 'fill';
   title: string;
   subtitle: string;
@@ -31,6 +31,7 @@ export type RecognitionBoard = { source?: 'manual' | 'qudrat-pro'; qudratPro?: i
 export type Timetable = { periods: [string, string][] };
 
 export type Template = {
+  rotation?: import('../../local-test/rotation.mjs').DisplayRotation;
   displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation';
   schoolName?: string;
   schoolTagline?: string;

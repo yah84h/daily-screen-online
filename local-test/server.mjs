@@ -99,9 +99,9 @@ const server=http.createServer(async(req,res)=>{
    const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Riyadh'}),post=db.posts.filter(p=>p.screen_id===screen.id&&p.publish_at<=today).sort((a,b)=>b.publish_at.localeCompare(a.publish_at)||b.created_at.localeCompare(a.created_at))[0];
    const deck=post?.content?.presentation;if(screen.template?.displayMode!=='presentation'||!deck?.slides?.length||deck.id!==input.deck)throw Object.assign(Error('انشر هذا العرض على الشاشة أولًا.'),{status:409});
    const key=screen.id+':'+deck.id;let state=presentationStates.get(key)||{slide:0,black:false};
-   if(req.method==='POST'){state=presentationStep(state,input.action,deck.slides.length,input.index);presentationStates.set(key,state);for(const response of streams)try{response.write('data: update\n\n');}catch{streams.delete(response);}}
+   if(req.method==='POST'){state={...presentationStep(state,input.action,deck.slides.length,input.index,input.black),revision:(state.revision||0)+1};presentationStates.set(key,state);for(const response of streams)try{response.write('data: update\n\n');}catch{streams.delete(response);}}
    else if(req.method!=='GET')throw Object.assign(Error('Method not allowed'),{status:405});
-   return reply(res,{...state,count:deck.slides.length,deck:deck.id});
+   return reply(res,{...state,revision:state.revision||0,count:deck.slides.length,deck:deck.id});
   }
   if(url.pathname.startsWith('/local/auth/')){const action=url.pathname.slice('/local/auth/'.length),input=req.method==='POST'?JSON.parse((await body(req)).toString()||'{}'):{};
    if(action==='status')return reply(res,accounts.status());
