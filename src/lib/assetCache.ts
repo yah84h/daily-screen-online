@@ -99,6 +99,7 @@ export async function prepareAsset(
   url: string,
   signal: AbortSignal,
   onProgress: (loaded: number, total: number) => void,
+  kind?: 'audio',
 ) {
   let saved: Saved | undefined;
   try {
@@ -113,7 +114,11 @@ export async function prepareAsset(
   }
   let blob: Blob;
   if (parseDriveLink(url))
-    blob = await downloadDriveMedia(drivePlaybackURL(url), signal, onProgress);
+    blob = await downloadDriveMedia(
+      drivePlaybackURL(url) + (kind === 'audio' ? '&audio=1' : ''),
+      signal,
+      onProgress,
+    );
   else {
     blob = await downloadDirectAsset(url, signal, onProgress);
   }

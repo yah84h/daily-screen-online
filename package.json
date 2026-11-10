@@ -32,7 +32,8 @@
     "typecheck": "tsc -b --force --pretty",
     "test": "node --test tests/*.test.mjs",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"local-test/*.{ts,mjs,mts}\" \"netlify/**/*.mjs\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.{ts,json,html}\" \".vscode/*.json\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"local-test/*.{ts,mjs,mts}\" \"netlify/**/*.mjs\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.{ts,json,html}\" \".vscode/*.json\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"local-test/*.{ts,mjs,mts}\" \"netlify/**/*.mjs\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.{ts,json,html}\" \".vscode/*.json\"",
+    "test:todo-browser": "node tests/todo-media-browser.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

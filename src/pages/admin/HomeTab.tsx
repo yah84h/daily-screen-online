@@ -1,3 +1,6 @@
+import { DailyMediaEditor } from './DailyMediaEditor';
+import { CropEditor } from './CropEditor';
+import { DailyMedia } from '@/components/DailyMedia';
 import { BackgroundAudioEditor } from './BackgroundAudioEditor';
 import { PresentationEditor } from './PresentationEditor';
 import { useAuth } from '@/lib/auth';
@@ -208,12 +211,27 @@ export function HomeTab() {
                     />
                   </label>
                 )}
+                <DailyMediaEditor />
+                {content.image && (
+                  <CropEditor
+                    value={content.imageCrop}
+                    onChange={(value) => edit('imageCrop', value)}
+                    label="قص وسائط الشاشة اليومية"
+                  />
+                )}
                 <div className="image-label">
-                  الصورة الرئيسية <span>JPG أو PNG أو WEBP</span>
+                  وسائط الشاشة اليومية <span>صورة / GIF / MP4 / WEBM</span>
                 </div>
                 <div className="image-control">
                   {content.image ? (
-                    <img src={content.image} alt="" />
+                    <div className="daily-media-preview">
+                      <DailyMedia
+                        src={content.image}
+                        type={content.imageType}
+                        large={false}
+                        crop={content.imageCrop}
+                      />
+                    </div>
                   ) : (
                     <div className="image-empty" />
                   )}
@@ -227,7 +245,7 @@ export function HomeTab() {
                     </b>
                     <span>مهيّأة لشاشتك</span>
                     <button className="text-button" onClick={() => chooseImage('image')}>
-                      <Upload size={13} /> تغيير الصورة
+                      <Upload size={13} /> تغيير الصورة أو الفيديو
                     </button>
                   </div>
                   <button

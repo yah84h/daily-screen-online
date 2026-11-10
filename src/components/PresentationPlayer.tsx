@@ -1,3 +1,4 @@
+import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { preparePresentation } from '@/lib/presentationCache';
 import { useEffect, useRef, useState } from 'react';
@@ -11,6 +12,9 @@ export function PresentationPlayer({
   context?: PresentationContext;
   large: boolean;
 }) {
+  const { downloadsPaused } = useDevicePlayback();
+  const activeRelease = useRef(() => {});
+  useEffect(() => () => activeRelease.current(), []);
   const deckKey = JSON.stringify([deck.id, deck.slides]);
   const [prepared, setPrepared] = useState<{
     key: string;
@@ -25,8 +29,8 @@ export function PresentationPlayer({
     prepared.urls.length === deck.slides.length &&
     deck.slides.length > 0;
   useEffect(() => {
+    if (ready || downloadsPaused) return;
     const controller = new AbortController();
-    let release = () => {};
     setPrepared({ key: deckKey, urls: [], loaded: 0, persistent: true, error: '' });
     preparePresentation(deck, controller.signal, (loaded) => {
       if (!controller.signal.aborted) setPrepared((s) => ({ ...s, loaded }));
@@ -36,7 +40,8 @@ export function PresentationPlayer({
           result.release();
           return;
         }
-        release = result.release;
+        activeRelease.current();
+        activeRelease.current = result.release;
         setPrepared({
           key: deckKey,
           urls: result.urls,
@@ -56,13 +61,12 @@ export function PresentationPlayer({
       });
     return () => {
       controller.abort();
-      release();
     };
-  }, [deckKey, retry]);
+  }, [deckKey, retry, downloadsPaused]);
   useCacheTask(
     !ready
       ? {
-          label: 'تجهيز شرائح PowerPoint',
+          label: downloadsPaused ? 'تنزيل الشرائح متوقف مؤقتًا' : 'تجهيز شرائح PowerPoint',
           loaded: prepared.loaded,
           total: deck.slides.length,
           error: prepared.error || undefined,
@@ -80,7 +84,7 @@ export function PresentationPlayer({
         e.ctrlKey ||
         e.altKey ||
         e.metaKey ||
-        (e.target as HTMLElement)?.closest('input,textarea,select,[contenteditable="true"]')
+        (e.target as HTMLElement)?.closest('input,textarea,select,button,[contenteditable="true"]')
       )
         return;
       const actions: Record<string, string> = {

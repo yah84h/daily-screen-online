@@ -1,3 +1,4 @@
+import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Screen } from './Screen';
 import { waitForMediaReady } from '@/lib/mediaReadiness';
@@ -13,9 +14,10 @@ type Props = {
   presentationContext: PresentationContext;
 };
 type Display = { props: Props; release: () => void };
-type PreparationStatus = { loaded: number; total: number; error?: string };
+type PreparationStatus = { loaded: number; total: number; error?: string; name?: string };
 
 export function PreparedDisplay(props: Props) {
+  const { downloadsPaused } = useDevicePlayback();
   // Select the media to prepare; ordinary content stays visible in the meantime.
   const queue = props.content.videoPlaylist?.enabled ? props.content.videoPlaylist.items : [];
   const sources = getPreparationSources(props.content);
@@ -23,6 +25,7 @@ export function PreparedDisplay(props: Props) {
     sources,
     queue.map((item) => item.type),
     props.content.fullType,
+    props.content.imageType,
   ]);
   const latest = useRef(props);
   latest.current = props;
@@ -33,11 +36,18 @@ export function PreparedDisplay(props: Props) {
   const visible = useRef<Props | null>(null);
   const active = useRef<Display | null>(null);
   const preparedKey = useRef('');
+  const pendingStatus: PreparationStatus | null =
+    status ||
+    (downloadsPaused && preparedKey.current !== signature && sources.length
+      ? { loaded: 0, total: sources.length }
+      : null);
   useCacheTask(
-    status
+    pendingStatus
       ? {
-          label: 'تجهيز وسائط العرض · ' + (queue.length ? 'قائمة التشغيل' : 'الملف التالي'),
-          ...status,
+          label:
+            (downloadsPaused ? 'التنزيل متوقف · ' : 'تجهيز وسائط العرض · ') +
+            (pendingStatus.name || (queue.length ? 'قائمة التشغيل' : 'الملف التالي')),
+          ...pendingStatus,
         }
       : note
         ? { label: note, loaded: 1, total: 1 }
@@ -50,6 +60,7 @@ export function PreparedDisplay(props: Props) {
   }, [note]);
   // Prepare a replacement without interrupting the currently adopted display.
   useEffect(() => {
+    if (downloadsPaused || (preparedKey.current === signature && active.current)) return;
     const controller = new AbortController();
     const urls: string[] = [];
     let adopted = false;
@@ -58,19 +69,22 @@ export function PreparedDisplay(props: Props) {
     setStatus(sources.length ? { loaded: 0, total: sources.length } : null);
     async function prepare() {
       try {
-        if (sources.length > 30) throw Error('الحد الأقصى للقائمة ٣٠ ملفًا.');
+        if (queue.length > 30) throw Error('الحد الأقصى للقائمة ٣٠ ملفًا.');
         const mapping = new Map<string, string>();
         let bytes = 0;
         let persistent = true;
         for (let i = 0; i < sources.length; i++) {
           const source = sources[i];
+          const name =
+            queue.find((item) => item.url === source)?.name ||
+            (source === props.content.image ? 'وسائط الشاشة اليومية' : 'الملف التالي');
           if (mapping.has(source)) {
-            setStatus({ loaded: i + 1, total: sources.length });
+            setStatus({ loaded: i + 1, total: sources.length, name });
             continue;
           }
           const result = await prepareAsset(source, controller.signal, (loaded, total) => {
             if (!controller.signal.aborted)
-              setStatus({ loaded: i + (total ? loaded / total : 0), total: sources.length });
+              setStatus({ loaded: i + (total ? loaded / total : 0), total: sources.length, name });
           });
           persistent = persistent && result.persistent;
           bytes += result.blob.size;
@@ -81,7 +95,11 @@ export function PreparedDisplay(props: Props) {
           mapping.set(source, url);
           // Decode images and check video metadata before replacing the on-screen content.
           const item = queue.find((item) => item.url === source);
-          const type = item?.type || props.content.fullType;
+          const type =
+            item?.type ||
+            (source === props.content.image
+              ? props.content.imageType || 'image'
+              : props.content.fullType);
           try {
             await waitForMediaReady(url, type, controller.signal);
           } catch (error) {
@@ -89,7 +107,7 @@ export function PreparedDisplay(props: Props) {
             throw error;
           }
           controller.signal.throwIfAborted();
-          setStatus({ loaded: i + 1, total: sources.length });
+          setStatus({ loaded: i + 1, total: sources.length, name });
         }
         controller.signal.throwIfAborted();
         const current = latest.current;
@@ -102,6 +120,7 @@ export function PreparedDisplay(props: Props) {
               url: mapping.get(item.url) || item.url,
             })),
           };
+        if (content.image) content.image = mapping.get(content.image) || content.image;
         if (content.fullMedia)
           content.fullMedia = mapping.get(content.fullMedia) || content.fullMedia;
         const next = { props: { ...current, content }, release };
@@ -132,7 +151,7 @@ export function PreparedDisplay(props: Props) {
       controller.abort();
       if (!adopted) release();
     };
-  }, [signature, retry]);
+  }, [signature, retry, downloadsPaused]);
   useEffect(() => () => active.current?.release(), []);
   // Non-media edits (colors, titles, mode changes) don't require downloading the queue again.
   const view =
@@ -141,8 +160,21 @@ export function PreparedDisplay(props: Props) {
           ...props,
           content: {
             ...props.content,
-            fullMedia: display.props.content.fullMedia,
-            videoPlaylist: display.props.content.videoPlaylist,
+            fullMedia: sources.includes(props.content.fullMedia || '')
+              ? display.props.content.fullMedia
+              : props.content.fullMedia,
+            image: sources.includes(props.content.image)
+              ? display.props.content.image
+              : props.content.image,
+            videoPlaylist: props.content.videoPlaylist
+              ? {
+                  ...props.content.videoPlaylist,
+                  items: props.content.videoPlaylist.items.map((item, index) => ({
+                    ...item,
+                    url: display.props.content.videoPlaylist?.items[index]?.url || item.url,
+                  })),
+                }
+              : undefined,
           },
         }
       : visible.current || display?.props;
@@ -151,6 +183,10 @@ export function PreparedDisplay(props: Props) {
   }, [view, display, signature]);
   const fallback = {
     ...props,
+    content: {
+      ...props.content,
+      image: props.content.imageType === 'video' ? '' : props.content.image,
+    },
     template: { ...props.template, displayMode: 'daily' as const, rotation: undefined },
   };
   return (
@@ -166,14 +202,12 @@ export function PreparedDisplay(props: Props) {
 }
 
 function getPreparationSources(content: Content): string[] {
-  if (content.videoPlaylist?.enabled && content.videoPlaylist.items.length) {
-    return content.videoPlaylist.items.map((item) => item.url);
-  }
-
-  if (!content.fullMedia) return [];
-
-  const shouldPrepareSingleFile =
-    content.fullType === 'image' || content.videoPreparation === 'cache';
-
-  return shouldPrepareSingleFile ? [content.fullMedia] : [];
+  const sources = content.videoPlaylist?.enabled
+    ? content.videoPlaylist.items.map((item) => item.url)
+    : [];
+  if (content.image && (content.imageType === 'video' || /\.gif(?:[?#]|$)/i.test(content.image)))
+    sources.push(content.image);
+  if (content.fullMedia && (content.fullType === 'image' || content.videoPreparation === 'cache'))
+    sources.push(content.fullMedia);
+  return [...new Set(sources)];
 }

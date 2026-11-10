@@ -202,7 +202,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     target.current = t;
     if (fileRef.current)
       fileRef.current.accept =
-        t === 'fullMedia'
+        t === 'fullMedia' || t === 'image'
           ? 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,.mp4,.webm,.gif'
           : 'image/*,.jpg,.jpeg,.png,.webp';
     fileRef.current?.click();
@@ -213,7 +213,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setBusy(true);
     try {
       const t = target.current;
-      const url = await (t === 'fullMedia' ? uploadMedia : uploadImage)(
+      const url = await (t === 'fullMedia' || t === 'image' ? uploadMedia : uploadImage)(
         file,
         t === 'backgroundImage'
           ? 'backgrounds'
@@ -224,6 +224,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (t === 'fullMedia') {
         const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
         setContentState((c) => ({ ...c, fullMedia: url, fullType: video ? 'video' : 'image' }));
+        setDirty(true);
+      } else if (t === 'image') {
+        const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
+        setContentState((c) => ({ ...c, image: url, imageType: video ? 'video' : 'image' }));
         setDirty(true);
       } else if (t === 'schoolLogoTemplate') setTemplate((tp) => ({ ...tp, schoolLogo: url }));
       else if (t === 'backgroundImage') setTemplate((tp) => ({ ...tp, backgroundImage: url }));

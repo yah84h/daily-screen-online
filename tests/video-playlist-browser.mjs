@@ -151,6 +151,9 @@ try {
   assert.equal(unexpected, 0);
   assert.deepEqual(errors, []);
   await tv.screenshot({ path: 'work/video-playlist-ready.png' });
+  await admin
+    .locator('.video-playlist-editor')
+    .screenshot({ path: 'work/todo-playlist-stack.png' });
   console.log('PASS failure retry without replacing the current show.');
   console.log(
     'PASS multi-video preparation behind normal screen, glass status, cached mode switch, ordered looping, admin append, uninterrupted old show during new download, and offline-media reload of all four cached media files.',

@@ -1,3 +1,4 @@
+import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useEffect, useState, useRef } from 'react';
 import { slideshowOf, type BackgroundSlide } from '@/lib/slideshow';
 import type { Template } from '@/lib/types';
@@ -8,6 +9,7 @@ export function BackgroundSlideshow({
   template: Partial<Template>;
   startIndex?: number;
 }) {
+  const device = useDevicePlayback();
   const visibleRef = useRef<BackgroundSlide | null>(null);
   const s = slideshowOf(template);
   const [cursor, setCursor] = useState(startIndex);
@@ -51,6 +53,7 @@ export function BackgroundSlideshow({
     if (
       !s.enabled ||
       !s.playing ||
+      device.paused ||
       images.length < 2 ||
       !shown ||
       shown.id !== target?.id ||
@@ -62,7 +65,18 @@ export function BackgroundSlideshow({
       (shown.seconds || s.seconds) * 1000,
     );
     return () => clearTimeout(timer);
-  }, [s.enabled, s.playing, s.loop, s.seconds, shown?.id, shown?.seconds, target?.id, key, cursor]);
+  }, [
+    s.enabled,
+    s.playing,
+    s.loop,
+    s.seconds,
+    shown?.id,
+    shown?.seconds,
+    target?.id,
+    key,
+    cursor,
+    device.paused,
+  ]);
   useEffect(() => {
     const timer = setTimeout(() => setPrevious(null), s.effect === 'none' ? 0 : duration);
     return () => clearTimeout(timer);

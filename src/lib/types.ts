@@ -2,8 +2,18 @@ export type Content = {
   videoPlaylist?: {
     enabled: boolean;
     loop: boolean;
-    items: { id: string; url: string; name: string; type: 'video' | 'image'; seconds?: number }[];
+    items: {
+      id: string;
+      url: string;
+      name: string;
+      type: 'video' | 'image';
+      seconds?: number;
+      crop?: import('./mediaCrop').MediaCrop;
+    }[];
   };
+  imageType?: 'image' | 'video';
+  imageCrop?: import('./mediaCrop').MediaCrop;
+  fullCrop?: import('./mediaCrop').MediaCrop;
   backgroundAudio?: { url: string; name: string };
   presentation?: import('./presentation').Presentation;
   videoPreparation?: 'stream' | 'buffer' | 'cache';

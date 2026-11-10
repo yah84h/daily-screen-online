@@ -1,3 +1,4 @@
+import { CropEditor } from './CropEditor';
 import { VideoPlaylistEditor } from './VideoPlaylistEditor';
 import { RotationEditor } from './RotationEditor';
 import { DriveVideoEditor } from './DriveVideoEditor';
@@ -54,6 +55,13 @@ export function FullMediaEditor() {
     <section className="full-media-editor">
       <h2>صورة / فيديو بملء الشاشة</h2>
       <DriveVideoEditor />
+      {content.fullMedia && (
+        <CropEditor
+          value={content.fullCrop}
+          onChange={(value) => edit('fullCrop', value)}
+          label="قص وسائط ملء الشاشة"
+        />
+      )}
       <VideoPlaylistEditor />
       <p className="field-hint">
         MP4 أو WEBM أو GIF متحرك، أو صورة PNG / JPG / WEBP. بلا حد حجم ثابت داخل التطبيق؛ حدود

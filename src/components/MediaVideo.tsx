@@ -1,3 +1,4 @@
+import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { useEffect, useRef, useState } from 'react';
 export function MediaVideo({
@@ -15,12 +16,16 @@ export function MediaVideo({
   bufferBeforePlay?: boolean;
   onEnded?: () => void;
 }) {
+  const device = useDevicePlayback();
   const ref = useRef<HTMLVideoElement>(null);
   const [action, setAction] = useState(false);
   const [waiting, setWaiting] = useState(bufferBeforePlay);
   const [error, setError] = useState('');
   const [attempt, setAttempt] = useState(0);
   useCacheTask(waiting ? { label: 'تجهيز أول ١٠ ثوانٍ من الفيديو', loaded: 0, total: 0 } : null);
+  useEffect(() => {
+    if (ref.current) ref.current.volume = device.volume;
+  }, [device.volume]);
   useEffect(() => {
     let active = true;
     let started = false;
@@ -30,8 +35,9 @@ export function MediaVideo({
     setError('');
     setWaiting(bufferBeforePlay);
     v.muted = !sound;
+    v.volume = device.volume;
     const play = () => {
-      if (started || !active) return;
+      if (started || !active || device.paused) return;
       started = true;
       setWaiting(false);
       v.play().catch(async () => {
@@ -60,6 +66,7 @@ export function MediaVideo({
     v.addEventListener('progress', check);
     v.addEventListener('canplaythrough', check);
     v.addEventListener('error', failed);
+    if (device.paused) v.pause();
     if (!bufferBeforePlay) play();
     else check();
     const timer = setInterval(check, 250);
@@ -77,10 +84,13 @@ export function MediaVideo({
       v.removeEventListener('canplaythrough', check);
       v.removeEventListener('error', failed);
     };
-  }, [src, sound, loop, bufferBeforePlay, attempt]);
+  }, [src, sound, loop, bufferBeforePlay, attempt, device.paused]);
   return (
     <>
       <video
+        onPlay={() => {
+          if (device.paused) ref.current?.pause();
+        }}
         onEnded={onEnded}
         ref={ref}
         src={src}

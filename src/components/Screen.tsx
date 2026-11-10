@@ -1,3 +1,5 @@
+import { DailyMedia } from './DailyMedia';
+import { mediaCropStyle } from '@/lib/mediaCrop';
 import { VideoPlaylist } from './VideoPlaylist';
 import { MediaAudio } from './MediaAudio';
 import { rotationOptions, rotationPhase } from '../../local-test/rotation.mjs';
@@ -168,6 +170,9 @@ export function Screen({
           {
             background: t.background,
             '--media-fit': c.mediaFit || 'cover',
+            '--crop-x': (c.fullCrop?.x ?? 50) + '%',
+            '--crop-y': (c.fullCrop?.y ?? 50) + '%',
+            '--crop-zoom': (c.fullCrop?.zoom ?? 100) / 100,
           } as import('react').CSSProperties
         }
       >
@@ -189,6 +194,9 @@ export function Screen({
           {
             background: t.background,
             '--media-fit': c.mediaFit || 'cover',
+            '--crop-x': (c.fullCrop?.x ?? 50) + '%',
+            '--crop-y': (c.fullCrop?.y ?? 50) + '%',
+            '--crop-zoom': (c.fullCrop?.zoom ?? 100) / 100,
           } as import('react').CSSProperties
         }
       >
@@ -224,7 +232,7 @@ export function Screen({
             <img
               src={c.fullMedia}
               alt="وسائط الشاشة"
-              style={{ objectFit: c.mediaFit || 'cover' }}
+              style={{ objectFit: c.mediaFit || 'cover', ...mediaCropStyle(c.fullCrop) }}
             />
           )
         ) : (
@@ -312,19 +320,26 @@ export function Screen({
         {c.showQR && c.qr && <img className="qr" src={c.qr} alt="QR" />}
       </div>
       {c.image && (
-        <img
+        <div
           className="screen-image"
-          src={c.image}
-          alt=""
           style={{
             left: t.imageX + '%',
             top: t.imageY + '%',
             width: t.imageW + '%',
             height: t.imageH + '%',
             borderRadius: t.radius + 'px',
-            objectFit: t.fit,
+            overflow: 'hidden',
           }}
-        />
+        >
+          <DailyMedia
+            src={c.image}
+            type={c.imageType}
+            large={large}
+            sound={c.videoSound !== false}
+            fit={t.fit}
+            crop={c.imageCrop}
+          />
+        </div>
       )}
       {c.showSecondary && c.secondary && <img className="secondary" src={c.secondary} alt="" />}
       <div className="screen-footer">

@@ -1,6 +1,8 @@
+import { prepareAsset } from '@/lib/assetCache';
+import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { useEffect, useRef, useState } from 'react';
-import { drivePlaybackURL, parseDriveLink, downloadDriveMedia } from '@/lib/driveVideo';
+import { drivePlaybackURL, parseDriveLink } from '@/lib/driveVideo';
 const key = 'daily-screen-audio-device:' + location.pathname;
 function saved() {
   try {
@@ -20,6 +22,9 @@ export function BackgroundAudio({
   source?: { url: string; name: string };
   controls: boolean;
 }) {
+  const device = useDevicePlayback();
+  const ownedURL = useRef('');
+  const [progress, setProgress] = useState({ loaded: 0, total: 0 });
   const audio = useRef<HTMLAudioElement>(null);
   const [prefs, setPrefs] = useState(saved);
   const [error, setError] = useState('');
@@ -41,7 +46,15 @@ export function BackgroundAudio({
       : source.url
     : '';
   // Download the whole sound before mounting it as a playable source.
+  useEffect(
+    () => () => {
+      if (ownedURL.current) URL.revokeObjectURL(ownedURL.current);
+    },
+    [],
+  );
   useEffect(() => {
+    if (prepared.url === url && prepared.src) return;
+    if (device.downloadsPaused) return;
     const controller = new AbortController();
     let objectURL = '';
     setPrepared({ url, src: '', loading: !!url });
@@ -52,17 +65,19 @@ export function BackgroundAudio({
     if (!url) return () => controller.abort();
     async function prepare() {
       try {
-        let blob: Blob;
-        if (parseDriveLink(source?.url || ''))
-          blob = await downloadDriveMedia(url, controller.signal, () => {});
-        else {
-          const response = await fetch(url, { signal: controller.signal });
-          if (!response.ok || response.status === 206) throw Error('Incomplete audio download');
-          blob = await response.blob();
-        }
+        const { blob } = await prepareAsset(
+          source!.url,
+          controller.signal,
+          (loaded, total) => {
+            if (!controller.signal.aborted) setProgress({ loaded, total });
+          },
+          'audio',
+        );
         controller.signal.throwIfAborted();
         if (!blob.size) throw Error('Empty audio file');
+        if (ownedURL.current) URL.revokeObjectURL(ownedURL.current);
         objectURL = URL.createObjectURL(blob);
+        ownedURL.current = objectURL;
         setPrepared({ url, src: objectURL, loading: false });
       } catch {
         if (!controller.signal.aborted) {
@@ -74,15 +89,17 @@ export function BackgroundAudio({
     void prepare();
     return () => {
       controller.abort();
-      if (objectURL) URL.revokeObjectURL(objectURL);
     };
-  }, [url]);
+  }, [url, device.downloadsPaused]);
   // Matching the URL prevents playback of the previous sound during a source change.
   const preparedURL = prepared.url === url ? prepared.src : '';
   const preparing = !!url && (prepared.url !== url || prepared.loading);
   useCacheTask(
     preparing
-      ? { label: 'تجهيز صوت الخلفية', loaded: 0, total: 0 }
+      ? {
+          label: device.downloadsPaused ? 'تنزيل الصوت متوقف مؤقتًا' : 'تجهيز صوت الخلفية',
+          ...progress,
+        }
       : error
         ? { label: 'صوت الخلفية', loaded: 0, total: 0, error }
         : null,
@@ -91,21 +108,25 @@ export function BackgroundAudio({
     try {
       localStorage.setItem(key, JSON.stringify(prefs));
     } catch {}
-    if (audio.current) audio.current.volume = prefs.volume;
-  }, [prefs.enabled, prefs.volume, url]);
+    if (audio.current) audio.current.volume = prefs.volume * device.volume;
+  }, [prefs.enabled, prefs.volume, url, device.volume]);
   useEffect(() => {
     const el = audio.current;
     if (!el || !preparedURL) return;
     setError('');
-    if (prefs.enabled) el.play().catch(() => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'));
+    if (prefs.enabled && !device.paused)
+      el.play().catch(() => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'));
     else el.pause();
     return () => el.pause();
-  }, [preparedURL, prefs.enabled]);
+  }, [preparedURL, prefs.enabled, device.paused]);
 
   if (!url) return controls ? <p>لا يوجد صوت خلفية منشور. أضفه من لوحة الإدارة.</p> : null;
   return (
     <>
       <audio
+        onPlay={() => {
+          if (device.paused) audio.current?.pause();
+        }}
         ref={audio}
         src={preparedURL || undefined}
         loop
@@ -143,7 +164,7 @@ export function BackgroundAudio({
                 el.pause();
                 setPrefs((p) => ({ ...p, enabled: false }));
               } else {
-                el.volume = prefs.volume;
+                el.volume = prefs.volume * device.volume;
                 el.play()
                   .then(() => setError(''))
                   .catch(() => setError('تعذر تشغيل الصوت. تحقق من الاتصال أو صيغة الملف.'));
