@@ -21,6 +21,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/qudrat-source"
+  to = "/.netlify/functions/qudrat-source"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/drive-video"
   to = "/.netlify/functions/drive-video"
   status = 200

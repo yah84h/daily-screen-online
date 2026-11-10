@@ -46,3 +46,5 @@
 .screen-loop .qudrat-footer{justify-content:flex-end;border:0;padding-top:.2cqw}
 .qudrat-podium-score{direction:ltr;unicode-bidi:isolate}
 .qudrat-ranking li>b{direction:ltr;unicode-bidi:isolate}
+.qudrat-source-editor{display:grid;gap:8px;padding:12px;border:1px dashed color-mix(in srgb,currentColor 25%,transparent);border-radius:12px}
+.qudrat-source-editor input{font-size:13px}

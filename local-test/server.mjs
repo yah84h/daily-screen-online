@@ -1,7 +1,7 @@
 import {uploadPresentation,presentationJob,presentationStep} from './presentations.mjs';
 import {driveVideoResponse} from './drive-video.mjs';
 import {Readable} from 'node:stream';
-import {fetchQudratLeaderboard} from './qudrat-pro.mjs';
+import {fetchQudratLeaderboard,checkedSource,sourceSummary} from './qudrat-pro.mjs';
 import {cleanupMedia} from './media-cleanup.mjs';
 import {saveTemplatePatch} from './template-patch.mjs';
 import {publishFromIphone,scheduleFromIphone} from './native-publish.mjs';
@@ -23,6 +23,8 @@ const serverInstance=createHash('sha256').update(path.resolve(root)).digest('hex
 const localOnly=process.env.DAILY_SCREEN_LOCAL_ONLY==='1'||(fs.existsSync(path.join(root,'runtime.json'))&&JSON.parse(fs.readFileSync(path.join(root,'runtime.json'),'utf8')).offlineOnly===true);
 const dataDir=path.join(root,'data'),mediaDir=path.join(dataDir,'media');fs.mkdirSync(mediaDir,{recursive:true});
 const stateFile=path.join(dataDir,'state.json');
+const qudratSourceFile=path.join(dataDir,'qudrat-source.json');
+function qudratSource(){try{const url=JSON.parse(fs.readFileSync(qudratSourceFile,'utf8')).url;return typeof url==='string'?url:'';}catch{return '';}}
 const db=JSON.parse(fs.readFileSync(fs.existsSync(stateFile)?stateFile:path.join(root,'seed.json'),'utf8'));
 const accounts=createAccounts(dataDir);
 const oldSchoolNames=['مدارس الموهوبين التقنيه بجدة','مدارس الموهوبين التقنية بجدة','ثانوية الموهوبين التقنية'];
@@ -70,7 +72,22 @@ const server=http.createServer(async(req,res)=>{
    const abort=new AbortController();res.on('close',()=>abort.abort());
    try{const result=await driveVideoResponse(new Request('http://localhost'+req.url,{method:req.method,headers:{...(req.headers.range?{Range:req.headers.range}:{})},signal:abort.signal}));res.writeHead(result.status,Object.fromEntries(result.headers));if(result.body)await pipeline(Readable.fromWeb(result.body),res);else res.end();}catch(error){if(res.headersSent)res.destroy();else reply(res,{error:error.code||'DRIVE_UNAVAILABLE'},error.status||502);}return;
   }
-  if(url.pathname==='/api/qudrat-pro'){if(req.method!=='GET')return reply(res,{error:'METHOD_NOT_ALLOWED'},405);if(localOnly)return reply(res,{error:'OFFLINE_ONLY'},503);try{return reply(res,await fetchQudratLeaderboard({cacheFile:path.join(dataDir,'qudrat-pro.json')}));}catch(error){return reply(res,{error:error.code==='NOT_CONFIGURED'?'NOT_CONFIGURED':'UPSTREAM_UNAVAILABLE'},503);}}
+  if(url.pathname==='/api/qudrat-source'){
+   // Admin-only: the leaderboard link (with its key) stays in data/ on this computer and is never sent back.
+   if(req.method!=='POST')return reply(res,{error:{message:'Method not allowed'}},405);
+   try{
+    accounts.requireUser(req,'admin');const input=JSON.parse(await body(req)||'{}');
+    if(input.action==='status')return reply(res,sourceSummary(qudratSource(),process.env.QUDRAT_PRO_LEADERBOARD_URL));
+    if(input.action==='clear'){fs.rmSync(qudratSourceFile,{force:true});return reply(res,sourceSummary('',process.env.QUDRAT_PRO_LEADERBOARD_URL));}
+    if(input.action!=='save')throw Error('عملية غير معروفة');
+    if(localOnly)throw Error('الخادم في وضع دون اتصال؛ مصدر قدرات برو يحتاج إلى الإنترنت.');
+    const source=checkedSource(input.url);let data;
+    try{data=await fetchQudratLeaderboard({url:source,cacheFile:path.join(dataDir,'qudrat-pro.json')});}catch{throw Error('الرابط صحيح الشكل لكن المصدر لم يُعد نتائج. تحقق من المفتاح والاتصال ثم أعد المحاولة.');}
+    fs.writeFileSync(qudratSourceFile,JSON.stringify({url:source}),{mode:0o600});
+    return reply(res,{...sourceSummary(source,process.env.QUDRAT_PRO_LEADERBOARD_URL),exams:data.exams.map(exam=>({label:exam.kind_label,count:exam.leaders.length}))});
+   }catch(error){return reply(res,{error:{message:error.message||'تعذر حفظ مصدر قدرات برو'}},error.status||403);}
+  }
+  if(url.pathname==='/api/qudrat-pro'){if(req.method!=='GET')return reply(res,{error:'METHOD_NOT_ALLOWED'},405);if(localOnly)return reply(res,{error:'OFFLINE_ONLY'},503);try{return reply(res,await fetchQudratLeaderboard({url:qudratSource()||undefined,cacheFile:path.join(dataDir,'qudrat-pro.json')}));}catch(error){return reply(res,{error:error.code==='NOT_CONFIGURED'?'NOT_CONFIGURED':'UPSTREAM_UNAVAILABLE'},503);}}
   if(url.pathname==='/api/tech-news'){if(localOnly)return reply(res,{items:[],stale:false,localOnly:true});const feed=await fetchHeadlines({cacheFile:path.join(dataDir,'headlines.json')});return reply(res,feed);}
   if(req.method!=='GET'&&req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Object.assign(Error('Origin rejected'),{status:403});
   if(url.pathname==='/local/presentations'&&req.method==='POST'){accounts.requireUser(req,'daily');const job=await uploadPresentation(req,url.searchParams.get('name'),dataDir,mediaDir);return reply(res,job,202);}

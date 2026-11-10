@@ -36,3 +36,15 @@ export async function fetchQudratLeaderboard({url=process.env.QUDRAT_PRO_LEADERB
  inflight=task;inflightSource=source;
  try{return await task;}finally{if(inflight===task){inflight=null;inflightSource=null;}}
 }
+/** Validates a link typed by an admin and returns it in canonical form. */
+export function checkedSource(value){
+ if(typeof value!=='string'||value.length>2000)throw Error('أدخل رابط قدرات برو كاملًا.');
+ try{return leaderboardURL(value.trim()).href;}
+ catch{throw Error('الرابط غير صالح. المطلوب رابط public-leaderboard الكامل على supabase.co مع المفتاح key.');}
+}
+/** What the admin panel may know about the source. Never includes the key. */
+export function sourceSummary(saved,environment){
+ const active=saved||environment||'';let host='';
+ try{host=active?new URL(active).hostname:'';}catch{}
+ return{configured:!!active,origin:saved?'panel':environment?'environment':'none',host};
+}

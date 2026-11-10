@@ -1,4 +1,5 @@
 import {useCallback,useEffect,useState} from 'react';
+import {supabase,isLocalBackend} from './supabase';
 import {normalizeLeaderboard,type QudratData} from '../../local-test/qudrat-data.mjs';
 export {leaderboardOptions,leaderboardPages} from '../../local-test/qudrat-data.mjs';
 export type {QudratData,QudratLeader,QudratOptions} from '../../local-test/qudrat-data.mjs';
@@ -36,4 +37,14 @@ export function useLeaderboard(enabled=true){
   return()=>{active=false;window.removeEventListener('offline',offline);window.removeEventListener('qudrat-pro-refresh',force);};
  },[enabled]);
  return{...state,refresh};
+}
+export type QudratSource={configured:boolean;origin:'panel'|'environment'|'none';host:string;exams?:{label:string;count:number}[]};
+/** Admin-only. The saved link carries a key, so the server never returns it; only its status. */
+export async function qudratSource(action:'status'|'save'|'clear',url?:string):Promise<QudratSource>{
+ const headers:Record<string,string>={'Content-Type':'application/json'};
+ if(!isLocalBackend){const session=await supabase.auth.getSession();headers.Authorization='Bearer '+session.data.session?.access_token;}
+ const response=await fetch('/api/qudrat-source',{method:'POST',headers,body:JSON.stringify({action,url}),signal:AbortSignal.timeout(20000)});
+ let data;try{data=await response.json();}catch{throw Error('تعذر الاتصال بالخادم. تأكد من نشر آخر تحديث.');}
+ if(!response.ok||data.error)throw Error(data.error?.message||'تعذر حفظ مصدر قدرات برو');
+ return data;
 }
