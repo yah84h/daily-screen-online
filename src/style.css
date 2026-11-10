@@ -1,11 +1,11 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 /* تصميم النسخة المحلية كما هو — أي إضافات جديدة في الأسفل */
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  font-family: "DM Sans", sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 14px;
   color: #24456e;
   background: #f5f8fe;
@@ -94,7 +94,7 @@ aside {
 }
 .brand small {
   display: block;
-  font-family: "DM Sans";
+  font-family: 'DM Sans';
   font-size: 8px;
   letter-spacing: 1.5px;
   color: #8a9690;
@@ -152,7 +152,7 @@ nav button.active {
   font-weight: 650;
 }
 nav button.active:before {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
   height: 25px;
@@ -1059,11 +1059,11 @@ textarea {
 .template-controls label {
   font-size: 12px;
 }
-.template-controls input[type="color"] {
+.template-controls input[type='color'] {
   height: 38px;
   padding: 3px;
 }
-.template-controls input[type="range"] {
+.template-controls input[type='range'] {
   padding: 0;
   accent-color: #11765b;
 }
@@ -1647,7 +1647,7 @@ textarea {
   .template-controls label {
     font-size: 14px;
   }
-  .template-controls input[type="range"] {
+  .template-controls input[type='range'] {
     height: 24px;
   }
   .toast {
@@ -1779,14 +1779,14 @@ button,
 input,
 textarea,
 select {
-  font-family: "Noto Sans Arabic", sans-serif;
+  font-family: 'Noto Sans Arabic', sans-serif;
 }
 h1,
 h2,
 h3,
 .brand > span,
 .brand small {
-  font-family: "Noto Sans Arabic", sans-serif;
+  font-family: 'Noto Sans Arabic', sans-serif;
   letter-spacing: 0;
 }
 aside {
@@ -1896,13 +1896,13 @@ nav button.active:before {
 .school > svg {
   flex-shrink: 0;
 }
-input[type="date"],
-input[inputmode="numeric"],
-input[placeholder^="http"],
+input[type='date'],
+input[inputmode='numeric'],
+input[placeholder^='http'],
 .timezone {
   direction: ltr;
 }
-input[placeholder^="http"] {
+input[placeholder^='http'] {
   text-align: left;
 }
 .modal ol {
@@ -2146,7 +2146,7 @@ label {
   gap: 18px;
   justify-items: center;
   padding: 40px;
-  font-family: "Noto Sans Arabic", sans-serif;
+  font-family: 'Noto Sans Arabic', sans-serif;
 }
 .tv-pairing h1 {
   font-size: 34px;
@@ -2170,7 +2170,7 @@ label {
   border-radius: 20px;
   padding: 18px 40px 18px 54px;
   color: #8fe3c0;
-  font-family: Manrope, "DM Sans", monospace;
+  font-family: Manrope, 'DM Sans', monospace;
 }
 .device-list {
   margin-top: 22px;

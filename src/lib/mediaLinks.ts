@@ -1,1 +1,1 @@
-export {mediaLink,audioPlaybackURL} from '../../local-test/media-links.mjs';
+export { mediaLink, audioPlaybackURL } from '../../local-test/media-links.mjs';

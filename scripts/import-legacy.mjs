@@ -11,7 +11,9 @@ const [, , legacyDir] = process.argv;
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!legacyDir || !url || !key) {
-  console.error('الاستخدام: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import-legacy.mjs <مجلد النسخة المحلية>');
+  console.error(
+    'الاستخدام: SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... node scripts/import-legacy.mjs <مجلد النسخة المحلية>',
+  );
   process.exit(1);
 }
 
@@ -39,14 +41,18 @@ async function migrateMedia(value) {
   }
   const bytes = fs.readFileSync(file);
   if (bytes.length > 5 * 1024 * 1024) {
-    console.warn(`الصورة ${name} أكبر من 5MB (${(bytes.length / 1e6).toFixed(1)}MB) — ارفعها من اللوحة ليُضغط حجمها.`);
+    console.warn(
+      `الصورة ${name} أكبر من 5MB (${(bytes.length / 1e6).toFixed(1)}MB) — ارفعها من اللوحة ليُضغط حجمها.`,
+    );
     uploaded.set(name, '');
     return '';
   }
   const ext = path.extname(name).slice(1).toLowerCase();
   const contentType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
   const dest = `legacy/${name}`;
-  const { error } = await sb.storage.from('media').upload(dest, bytes, { contentType, upsert: true, cacheControl: '31536000' });
+  const { error } = await sb.storage
+    .from('media')
+    .upload(dest, bytes, { contentType, upsert: true, cacheControl: '31536000' });
   if (error) throw error;
   const publicUrl = sb.storage.from('media').getPublicUrl(dest).data.publicUrl;
   uploaded.set(name, publicUrl);
@@ -63,14 +69,19 @@ async function migrateContent(c) {
   return out;
 }
 
-const { data: screens, error: se } = await sb.from('screens').select('id').order('created_at').limit(1);
+const { data: screens, error: se } = await sb
+  .from('screens')
+  .select('id')
+  .order('created_at')
+  .limit(1);
 if (se) throw se;
 const screenId = screens?.[0]?.id;
 if (!screenId) throw Error('لا توجد شاشة. شغّل 0002_seed.sql أولًا.');
 
 // القالب والمسودة
 const template = { ...state.template };
-if (template.backgroundImage) template.backgroundImage = await migrateMedia(template.backgroundImage);
+if (template.backgroundImage)
+  template.backgroundImage = await migrateMedia(template.backgroundImage);
 const draft = await migrateContent(state.draft);
 {
   const { error } = await sb.from('screens').update({ template, draft }).eq('id', screenId);
@@ -82,7 +93,8 @@ const draft = await migrateContent(state.draft);
 {
   await sb.from('presets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   const rows = [];
-  for (const [i, p] of (state.presets || []).entries()) rows.push({ name: p.name, content: await migrateContent(p.content), sort_order: i });
+  for (const [i, p] of (state.presets || []).entries())
+    rows.push({ name: p.name, content: await migrateContent(p.content), sort_order: i });
   const { error } = await sb.from('presets').insert(rows);
   if (error) throw error;
   console.log('المواضيع:', rows.length);
@@ -92,7 +104,12 @@ const draft = await migrateContent(state.draft);
 {
   const rows = [];
   for (const h of (state.history || []).slice().reverse()) {
-    rows.push({ screen_id: screenId, content: await migrateContent(h.content), publish_at: new Date(h.createdAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' }), created_at: h.createdAt });
+    rows.push({
+      screen_id: screenId,
+      content: await migrateContent(h.content),
+      publish_at: new Date(h.createdAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' }),
+      created_at: h.createdAt,
+    });
   }
   if (rows.length) {
     const { error } = await sb.from('posts').insert(rows);
@@ -104,7 +121,12 @@ const draft = await migrateContent(state.draft);
 // الجدولة
 {
   const rows = [];
-  for (const s of state.schedule || []) rows.push({ screen_id: screenId, content: await migrateContent(s.content), publish_at: s.date });
+  for (const s of state.schedule || [])
+    rows.push({
+      screen_id: screenId,
+      content: await migrateContent(s.content),
+      publish_at: s.date,
+    });
   if (rows.length) {
     const { error } = await sb.from('posts').insert(rows);
     if (error) throw error;

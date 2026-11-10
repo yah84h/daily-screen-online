@@ -1,7 +1,125 @@
-import {mediaLink,audioPlaybackURL} from '@/lib/mediaLinks';
-import {useRef,useState} from 'react';import {supabase} from '@/lib/supabase';import {useAdmin} from './store';
-export function BackgroundAudioEditor(){
- const {content,edit}=useAdmin(),file=useRef<HTMLInputElement>(null),[link,setLink]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
- async function upload(f:File){const ext=f.name.split('.').pop()?.toLowerCase(),mime=({mp3:'audio/mpeg',m4a:'audio/mp4',wav:'audio/wav',ogg:'audio/ogg',flac:'audio/flac'} as Record<string,string>)[ext||''];if(!mime||f.size>100*1024*1024){setMessage('اختر ملف صوت MP3 / M4A / WAV / OGG / FLAC حتى ١٠٠ ميجابايت.');return;}setBusy(true);setMessage('جارٍ رفع الصوت…');try{const path='backgrounds/audio/'+crypto.randomUUID()+'.'+ext;const {error}=await supabase.storage.from('media').upload(path,f,{contentType:mime});if(error)throw Error(error.message);edit('backgroundAudio',{url:supabase.storage.from('media').getPublicUrl(path).data.publicUrl,name:f.name});setMessage('الصوت جاهز. انشره ثم شغّله من إعدادات جهاز العرض.');}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}
- return <section className="background-audio-editor"><h3>صوت / موسيقى الخلفية</h3><p className="field-hint">يتكرر الصوت باستمرار. التشغيل والإيقاف ومستوى الصوت محفوظة لكل جهاز عرض على حدة. افتح إعدادات جهاز العرض بالمفتاح S أو بالنقر المزدوج لتشغيله.</p><input ref={file} hidden type="file" accept=".mp3,.m4a,.wav,.ogg,.flac" onChange={e=>{const f=e.target.files?.[0];if(f)void upload(f);e.target.value='';}}/><button type="button" className="button white" disabled={busy} onClick={()=>file.current?.click()}>رفع ملف صوت</button><label>رابط صوت مباشر أو Drive<input aria-label="رابط صوت مباشر أو Drive" type="url" dir="ltr" value={link} onChange={e=>setLink(e.target.value)} placeholder="https://drive.google.com/file/d/…/view"/></label><button type="button" className="button white" disabled={busy} onClick={()=>{const parsed=mediaLink(link,'audio');if(!parsed||parsed.kind!=='audio'){setMessage('أدخل رابط ملف صوت HTTPS مباشر مثل MP3، أو رابط Drive عام.');return;}edit('backgroundAudio',{url:parsed.url,name:parsed.drive?'صوت Google Drive':'صوت من رابط مباشر'});setMessage('تم اختيار الصوت. انشره لتطبيقه.');}}>استخدام رابط الصوت</button>{content.backgroundAudio&&<><p>{content.backgroundAudio.name} <button type="button" className="text-button" onClick={()=>edit('backgroundAudio',undefined)}>إزالة صوت الخلفية</button></p><label>معاينة الصوت على هذا الجهاز<audio controls preload="metadata" src={audioPlaybackURL(content.backgroundAudio.url)}/></label></>}{message&&<p role="status">{message}</p>}</section>;
+import { mediaLink, audioPlaybackURL } from '@/lib/mediaLinks';
+import { useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAdmin } from './store';
+export function BackgroundAudioEditor() {
+  const { content, edit } = useAdmin();
+  const file = useRef<HTMLInputElement>(null);
+  const [link, setLink] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState('');
+  async function upload(f: File) {
+    const ext = f.name.split('.').pop()?.toLowerCase();
+    const mime = (
+      {
+        mp3: 'audio/mpeg',
+        m4a: 'audio/mp4',
+        wav: 'audio/wav',
+        ogg: 'audio/ogg',
+        flac: 'audio/flac',
+      } as Record<string, string>
+    )[ext || ''];
+    if (!mime || f.size > 100 * 1024 * 1024) {
+      setMessage('اختر ملف صوت MP3 / M4A / WAV / OGG / FLAC حتى ١٠٠ ميجابايت.');
+      return;
+    }
+    setBusy(true);
+    setMessage('جارٍ رفع الصوت…');
+    try {
+      const path = 'backgrounds/audio/' + crypto.randomUUID() + '.' + ext;
+      const { error } = await supabase.storage.from('media').upload(path, f, { contentType: mime });
+      if (error) throw Error(error.message);
+      edit('backgroundAudio', {
+        url: supabase.storage.from('media').getPublicUrl(path).data.publicUrl,
+        name: f.name,
+      });
+      setMessage('الصوت جاهز. انشره ثم شغّله من إعدادات جهاز العرض.');
+    } catch (e) {
+      setMessage((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <section className="background-audio-editor">
+      <h3>صوت / موسيقى الخلفية</h3>
+      <p className="field-hint">
+        يُنزّل الصوت كاملًا قبل التشغيل ويُحفظ على متصفح جهاز العرض للتحديث القادم. يتكرر الصوت
+        باستمرار. التشغيل والإيقاف ومستوى الصوت محفوظة لكل جهاز عرض على حدة. افتح إعدادات جهاز العرض
+        بالمفتاح S أو بالنقر المزدوج لتشغيله.
+      </p>
+      <input
+        ref={file}
+        hidden
+        type="file"
+        accept=".mp3,.m4a,.wav,.ogg,.flac"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void upload(f);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        className="button white"
+        disabled={busy}
+        onClick={() => file.current?.click()}
+      >
+        رفع ملف صوت
+      </button>
+      <label>
+        رابط صوت مباشر أو Drive
+        <input
+          aria-label="رابط صوت مباشر أو Drive"
+          type="url"
+          dir="ltr"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          placeholder="https://drive.google.com/file/d/…/view"
+        />
+      </label>
+      <button
+        type="button"
+        className="button white"
+        disabled={busy}
+        onClick={() => {
+          const parsed = mediaLink(link, 'audio');
+          if (!parsed || parsed.kind !== 'audio') {
+            setMessage('أدخل رابط ملف صوت HTTPS مباشر مثل MP3، أو رابط Drive عام.');
+            return;
+          }
+          edit('backgroundAudio', {
+            url: parsed.url,
+            name: parsed.drive ? 'صوت Google Drive' : 'صوت من رابط مباشر',
+          });
+          setMessage('تم اختيار الصوت. انشره لتطبيقه.');
+        }}
+      >
+        استخدام رابط الصوت
+      </button>
+      {content.backgroundAudio && (
+        <>
+          <p>
+            {content.backgroundAudio.name}{' '}
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => edit('backgroundAudio', undefined)}
+            >
+              إزالة صوت الخلفية
+            </button>
+          </p>
+          <label>
+            معاينة الصوت على هذا الجهاز
+            <audio
+              controls
+              preload="metadata"
+              src={audioPlaybackURL(content.backgroundAudio.url)}
+            />
+          </label>
+        </>
+      )}
+      {message && <p role="status">{message}</p>}
+    </section>
+  );
 }

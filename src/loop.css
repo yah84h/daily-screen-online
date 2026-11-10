@@ -1,14 +1,14 @@
 /* Native school loop: SVG remains sharp at 4K; all overlay sizes follow the preview. */
 @font-face {
   font-family: SchoolArabic;
-  src: url("/school_font.ttf") format("truetype");
+  src: url('/school_font.ttf') format('truetype');
   font-display: swap;
 }
 .screen.screen-loop {
   background: #fff;
   color: #2b5389;
   border-radius: 0;
-  font-family: SchoolArabic, "Noto Sans Arabic", sans-serif;
+  font-family: SchoolArabic, 'Noto Sans Arabic', sans-serif;
   isolation: isolate;
 }
 .tv:has(.screen-loop) {
@@ -319,7 +319,7 @@
   font-size: 14px;
   min-width: 0;
 }
-.loop-settings input:not([type="checkbox"]),
+.loop-settings input:not([type='checkbox']),
 .loop-settings select {
   width: 100%;
   min-height: 48px;

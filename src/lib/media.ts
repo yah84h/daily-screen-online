@@ -5,15 +5,21 @@ const MAX_BYTES = 5 * 1024 * 1024; // حد الحاوية في Supabase
 
 /** يضغط الصورة في المتصفح إلى WebP (أو PNG/JPEG حين لا يدعم المتصفح WebP) */
 export async function compressImage(file: File): Promise<Blob> {
-  const supported = /^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) || /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
-  if (!supported) throw Error('اختر صورة JPG أو PNG أو WEBP. إذا تعذّر فتح صورة HEIC من الآيفون، صدّرها بصيغة JPEG.');
+  const supported =
+    /^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) ||
+    /\.(jpe?g|png|webp|heic|heif)$/i.test(file.name);
+  if (!supported)
+    throw Error(
+      'اختر صورة JPG أو PNG أو WEBP. إذا تعذّر فتح صورة HEIC من الآيفون، صدّرها بصيغة JPEG.',
+    );
 
   const objectURL = URL.createObjectURL(file);
   try {
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = () => reject(Error('لا يستطيع هذا المتصفح فتح هذه الصورة. صدّرها بصيغة JPEG ثم ارفعها.'));
+      img.onerror = () =>
+        reject(Error('لا يستطيع هذا المتصفح فتح هذه الصورة. صدّرها بصيغة JPEG ثم ارفعها.'));
       img.src = objectURL;
     });
     const scale = Math.min(1, MAX_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
@@ -26,7 +32,9 @@ export async function compressImage(file: File): Promise<Blob> {
 
     // جرّب جودات متناقصة حتى تصبح الصورة أقل من الحد
     for (const quality of [0.86, 0.75, 0.62, 0.5]) {
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/webp', quality),
+      );
       if (!blob) break;
       if (blob.size <= MAX_BYTES) return blob;
     }
@@ -41,18 +49,24 @@ export async function uploadImage(file: File, folder = 'content'): Promise<strin
   const blob = await compressImage(file);
   const ext = blob.type === 'image/png' ? 'png' : blob.type === 'image/jpeg' ? 'jpg' : 'webp';
   const path = `${folder}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from('media').upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false });
+  const { error } = await supabase.storage
+    .from('media')
+    .upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false });
   if (error) throw Error('تعذّر رفع الصورة: ' + error.message);
   return supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
 }
 
 /** Native animated GIF / MP4 / WebM: preserve motion, never convert video to a bitmap. */
 export async function uploadMedia(file: File, folder = 'content'): Promise<string> {
-  const extension=file.name.split('.').pop()?.toLowerCase();
-  const mime=({'mp4':'video/mp4','webm':'video/webm','gif':'image/gif'} as Record<string,string>)[extension||''];
-  if(!mime) return uploadImage(file,folder);
-  const path=`${folder}/${crypto.randomUUID()}.${extension}`;
-  const {error}=await supabase.storage.from('media').upload(path,file,{contentType:mime,cacheControl:'31536000',upsert:false});
-  if(error) throw Error('تعذّر الرفع. تحقق من مساحة التخزين وحدود مزوّد الخدمة: '+error.message);
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  const mime = (
+    { mp4: 'video/mp4', webm: 'video/webm', gif: 'image/gif' } as Record<string, string>
+  )[extension || ''];
+  if (!mime) return uploadImage(file, folder);
+  const path = `${folder}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage
+    .from('media')
+    .upload(path, file, { contentType: mime, cacheControl: '31536000', upsert: false });
+  if (error) throw Error('تعذّر الرفع. تحقق من مساحة التخزين وحدود مزوّد الخدمة: ' + error.message);
   return supabase.storage.from('media').getPublicUrl(path).data.publicUrl;
 }

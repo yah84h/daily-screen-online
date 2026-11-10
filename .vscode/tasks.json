@@ -1,0 +1,80 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Website: start fast development",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev:local"],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "daily-screen",
+        "pattern": {
+          "regexp": "^(.+):(\\d+): (.+)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting fast local development",
+          "endsPattern": "Local:.*5173"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Website: type check",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "typecheck"],
+      "problemMatcher": "$tsc",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Website: production build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "Website: local release build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build:local"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Website: unit tests",
+      "type": "shell",
+      "command": "npm",
+      "args": ["test"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Website: lint",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "lint"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Website: format code",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "format"],
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,8 +1,28 @@
-import {BackgroundAudioEditor} from './BackgroundAudioEditor';
-import {PresentationEditor} from './PresentationEditor';
-import {useAuth} from '@/lib/auth';
-import {mediaSlideshowOf} from '@/lib/slideshow';
-import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Loader2, Maximize2, Monitor, Palette, Plus, Settings, ShieldCheck, Sun, GraduationCap, Upload, X } from 'lucide-react';
+import { RemoteMediaPanel } from './RemoteMediaPanel';
+import { DailyMediaEditor } from './DailyMediaEditor';
+import { CropEditor } from './CropEditor';
+import { DailyMedia } from '@/components/DailyMedia';
+import { BackgroundAudioEditor } from './BackgroundAudioEditor';
+import { PresentationEditor } from './PresentationEditor';
+import { useAuth } from '@/lib/auth';
+import { mediaSlideshowOf } from '@/lib/slideshow';
+import {
+  ArrowUpRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Loader2,
+  Maximize2,
+  Monitor,
+  Palette,
+  Plus,
+  Settings,
+  ShieldCheck,
+  Sun,
+  GraduationCap,
+  Upload,
+  X,
+} from 'lucide-react';
 import { Screen } from '@/components/Screen';
 import * as api from '@/lib/api';
 import { WORKSPACE_PHOTO, initialContent, type Preset } from '@/lib/types';
@@ -13,8 +33,22 @@ const topicIcons = [ShieldCheck, BookOpen, GraduationCap, Sun];
 const topicColors = ['mint', 'blue', 'peach', 'yellow'];
 
 export function HomeTab() {
-  const {permissions}=useAuth();
-  const { data, content, edit, setContent, template, dirty, busy, run, setModal, setTab, chooseImage, notify, publishScreen } = useAdmin();
+  const { permissions } = useAuth();
+  const {
+    data,
+    content,
+    edit,
+    setContent,
+    template,
+    dirty,
+    busy,
+    run,
+    setModal,
+    setTab,
+    chooseImage,
+    notify,
+    publishScreen,
+  } = useAdmin();
   const presets = data?.presets ?? [];
 
   const usePreset = (p: Preset) => {
@@ -25,7 +59,9 @@ export function HomeTab() {
 
   return (
     <>
-      {permissions.admin&&<DisplayModes/>}<div className="overview-grid">
+      {permissions.admin && <DisplayModes />}
+      <RemoteMediaPanel />
+      <div className="overview-grid">
         <section className="preview-section">
           <div className="section-heading">
             <h2>المعروض على شاشتك</h2>
@@ -42,17 +78,36 @@ export function HomeTab() {
                 16:9 <span className="divider">|</span> جاهزة لدقة 4K
               </span>
             </div>
-            <Screen content={content} template={template} school={data?.school} presentationContext={template.displayMode==='presentation'&&data?{screenId:data.screen.id}:undefined} />
+            <Screen
+              content={content}
+              template={template}
+              school={data?.school}
+              presentationContext={
+                template.displayMode === 'presentation' && data
+                  ? { screenId: data.screen.id }
+                  : undefined
+              }
+            />
             <div className="preview-bottom">
               <span>
                 <Monitor size={15} /> {data?.screen.name}
               </span>
-              <button className="text-button" disabled={!permissions.admin} onClick={() => setTab('القوالب')}>
+              <button
+                className="text-button"
+                disabled={!permissions.admin}
+                onClick={() => setTab('القوالب')}
+              >
                 <Palette size={14} /> تعديل القالب
               </button>
             </div>
           </div>
-          <button disabled={!permissions.admin} className="button white loop-shortcut" onClick={() => setTab('خلفية الحصص')}>خلفية الحصص ولوحة التميز</button>
+          <button
+            disabled={!permissions.admin}
+            className="button white loop-shortcut"
+            onClick={() => setTab('خلفية الحصص')}
+          >
+            خلفية الحصص ولوحة التميز
+          </button>
           <div className="design-note">
             <div>
               <CheckCircle2 size={18} />
@@ -94,66 +149,150 @@ export function HomeTab() {
             </div>
             <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
           </div>
-          <fieldset className="editor-fields" disabled={!data||busy}><BackgroundAudioEditor/>{template.displayMode==='presentation'&&<PresentationEditor/>}{(template.displayMode==='media'||template.displayMode==='slideshow')&&<MediaOnlyEditor/>}{template.displayMode!=='slideshow'&&template.displayMode!=='presentation'&&<>
-            <label>
-              عنوان اليوم
-              <input maxLength={100} value={content.title} onChange={(e) => edit('title', e.target.value)} placeholder="ما موضوع اليوم؟" />
-            </label>
-            <label>
-              <span>
-                العنوان الفرعي <small>اختياري</small>
-              </span>
-              <input maxLength={160} value={content.subtitle} onChange={(e) => edit('subtitle', e.target.value)} />
-            </label>
-            <label>
-              الرسالة الرئيسية
-              <textarea maxLength={700} rows={3} value={content.body} onChange={(e) => edit('body', e.target.value)} />
-              <span className="field-hint">اجعلها مختصرة وسهلة القراءة من مسافة بعيدة.</span>
-            </label>
-            <div className="date-control">
-              <div>
-                <CalendarDays size={19} />
-                <span>
-                  استخدام تاريخ اليوم تلقائيًا<small>اليوم والتاريخ · توقيت جدة</small>
-                </span>
-              </div>
-              <button role="switch" aria-checked={content.autoDate} className={'toggle ' + (content.autoDate ? 'on' : '')} onClick={() => edit('autoDate', !content.autoDate)} aria-label="استخدام تاريخ اليوم تلقائيًا">
-                <i />
-              </button>
-            </div>
-            {!content.autoDate && (
-              <label>
-                التاريخ
-                <input type="date" value={content.date} onChange={(e) => edit('date', e.target.value)} />
-              </label>
+          <fieldset className="editor-fields" disabled={!data || busy}>
+            <BackgroundAudioEditor />
+            {template.displayMode === 'presentation' && <PresentationEditor />}
+            {(template.displayMode === 'media' || template.displayMode === 'slideshow') && (
+              <MediaOnlyEditor />
             )}
-            <div className="image-label">
-              الصورة الرئيسية <span>JPG أو PNG أو WEBP</span>
-            </div>
-            <div className="image-control">
-              {content.image ? <img src={content.image} alt="" /> : <div className="image-empty" />}
-              <div>
-                <b>{content.image === WORKSPACE_PHOTO ? 'مساحة رقمية' : content.image ? 'صورة الشاشة' : 'بدون صورة'}</b>
-                <span>مهيّأة لشاشتك</span>
-                <button className="text-button" onClick={() => chooseImage('image')}>
-                  <Upload size={13} /> تغيير الصورة
+            {template.displayMode !== 'slideshow' && template.displayMode !== 'presentation' && (
+              <>
+                <label>
+                  عنوان اليوم
+                  <input
+                    maxLength={100}
+                    value={content.title}
+                    onChange={(e) => edit('title', e.target.value)}
+                    placeholder="ما موضوع اليوم؟"
+                  />
+                </label>
+                <label>
+                  <span>
+                    العنوان الفرعي <small>اختياري</small>
+                  </span>
+                  <input
+                    maxLength={160}
+                    value={content.subtitle}
+                    onChange={(e) => edit('subtitle', e.target.value)}
+                  />
+                </label>
+                <label>
+                  الرسالة الرئيسية
+                  <textarea
+                    maxLength={700}
+                    rows={3}
+                    value={content.body}
+                    onChange={(e) => edit('body', e.target.value)}
+                  />
+                  <span className="field-hint">اجعلها مختصرة وسهلة القراءة من مسافة بعيدة.</span>
+                </label>
+                <div className="date-control">
+                  <div>
+                    <CalendarDays size={19} />
+                    <span>
+                      استخدام تاريخ اليوم تلقائيًا<small>اليوم والتاريخ · توقيت جدة</small>
+                    </span>
+                  </div>
+                  <button
+                    role="switch"
+                    aria-checked={content.autoDate}
+                    className={'toggle ' + (content.autoDate ? 'on' : '')}
+                    onClick={() => edit('autoDate', !content.autoDate)}
+                    aria-label="استخدام تاريخ اليوم تلقائيًا"
+                  >
+                    <i />
+                  </button>
+                </div>
+                {!content.autoDate && (
+                  <label>
+                    التاريخ
+                    <input
+                      type="date"
+                      value={content.date}
+                      onChange={(e) => edit('date', e.target.value)}
+                    />
+                  </label>
+                )}
+                <DailyMediaEditor />
+                {content.image && (
+                  <CropEditor
+                    value={content.imageCrop}
+                    onChange={(value) => edit('imageCrop', value)}
+                    label="قص وسائط الشاشة اليومية"
+                  />
+                )}
+                <div className="image-label">
+                  وسائط الشاشة اليومية <span>صورة / GIF / MP4 / WEBM</span>
+                </div>
+                <div className="image-control">
+                  {content.image ? (
+                    <div className="daily-media-preview">
+                      <DailyMedia
+                        src={content.image}
+                        type={content.imageType}
+                        large={false}
+                        crop={content.imageCrop}
+                      />
+                    </div>
+                  ) : (
+                    <div className="image-empty" />
+                  )}
+                  <div>
+                    <b>
+                      {content.image === WORKSPACE_PHOTO
+                        ? 'مساحة رقمية'
+                        : content.image
+                          ? 'صورة الشاشة'
+                          : 'بدون صورة'}
+                    </b>
+                    <span>مهيّأة لشاشتك</span>
+                    <button className="text-button" onClick={() => chooseImage('image')}>
+                      <Upload size={13} /> تغيير الصورة أو الفيديو
+                    </button>
+                  </div>
+                  <button
+                    className="icon-button"
+                    aria-label="إزالة الصورة"
+                    onClick={() => edit('image', '')}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <button className="optional-button" onClick={() => setModal('optional')}>
+                  <Settings size={15} /> الشارة والتذييل والعناصر الاختيارية <Plus size={15} />
                 </button>
-              </div>
-              <button className="icon-button" aria-label="إزالة الصورة" onClick={() => edit('image', '')}>
-                <X size={15} />
-              </button>
-            </div>
-            <button className="optional-button" onClick={() => setModal('optional')}>
-              <Settings size={15} /> الشارة والتذييل والعناصر الاختيارية <Plus size={15} />
-            </button></>}
+              </>
+            )}
           </fieldset>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || (template.displayMode==='presentation'?!content.presentation?.slides.length:template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
+            <button
+              className="button publish"
+              disabled={
+                busy ||
+                (template.displayMode === 'presentation'
+                  ? !content.presentation?.slides.length
+                  : template.displayMode === 'slideshow'
+                    ? !mediaSlideshowOf(template).images.length
+                    : template.displayMode === 'media'
+                      ? !(
+                          content.fullMedia ||
+                          (content.videoPlaylist?.enabled && content.videoPlaylist.items.length)
+                        )
+                      : !content.title.trim()) ||
+                !data
+              }
+              onClick={publishScreen}
+            >
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>
             <div>
-              <button disabled={busy || !data} onClick={() => run(() => api.saveDraft(data!.screen.id, content), 'تم حفظ المسودة.')}>
+              <button
+                disabled={busy || !data}
+                onClick={() =>
+                  run(() => api.saveDraft(data!.screen.id, content), 'تم حفظ المسودة.')
+                }
+              >
                 حفظ المسودة
               </button>
               <span>
@@ -164,7 +303,8 @@ export function HomeTab() {
         </section>
       </div>
       <div className="bottom-note">
-        <ShieldCheck size={14} /> تحتفظ الشاشة بآخر محتوى حتى عند انقطاع الاتصال.<span>لتحديث يومي بسيط.</span>
+        <ShieldCheck size={14} /> تحتفظ الشاشة بآخر محتوى حتى عند انقطاع الاتصال.
+        <span>لتحديث يومي بسيط.</span>
       </div>
     </>
   );

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist-local/
+local-test/data/
+work/
+.env*
+package-lock.json
+ios/
+tests/fixtures/

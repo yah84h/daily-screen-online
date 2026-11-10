@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Website: start development (F5)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Tests: debug current unit test",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "runtimeArgs": ["--test"],
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    }
+  ]
+}

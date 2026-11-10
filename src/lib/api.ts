@@ -1,6 +1,16 @@
-import {mediaSlideshowOf} from './slideshow';
+import { mediaSlideshowOf } from './slideshow';
 import { supabase } from './supabase';
-import { riyadhToday, type Content, type Device, type Post, type Preset, type School, type Screen, type Template, type TvState } from './types';
+import {
+  riyadhToday,
+  type Content,
+  type Device,
+  type Post,
+  type Preset,
+  type School,
+  type Screen,
+  type Template,
+  type TvState,
+} from './types';
 
 const fail = (e: { message: string } | null, fallback = 'تعذّر الحفظ. حاول مرة أخرى.') => {
   if (e) throw Error(e.message || fallback);
@@ -20,13 +30,22 @@ export async function notifyScreen(screenId: string) {
   const ch = screenChannel(screenId);
   // The saved database state is authoritative. Polling still works if Broadcast is unavailable.
   try {
-    if (ch.state !== 'joined') await new Promise<void>((resolve) => {
-      const timer = setTimeout(resolve, 1500);
-      if (ch.state === 'joining') return;
-      ch.subscribe((status) => { if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {clearTimeout(timer); resolve();} });
-    });
-    if (ch.state === 'joined') await ch.send({ type: 'broadcast', event: 'update', payload: { at: Date.now() } });
-  } catch { /* The TV will pick up the saved update on its next poll. */ }
+    if (ch.state !== 'joined')
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 1500);
+        if (ch.state === 'joining') return;
+        ch.subscribe((status) => {
+          if (status === 'SUBSCRIBED' || status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+      });
+    if (ch.state === 'joined')
+      await ch.send({ type: 'broadcast', event: 'update', payload: { at: Date.now() } });
+  } catch {
+    /* The TV will pick up the saved update on its next poll. */
+  }
 }
 
 // ---------- قراءة لوحة الإدارة ----------
@@ -56,8 +75,20 @@ export async function loadAdmin(screenId?: string | null): Promise<AdminData> {
   if (!screen) throw Error('لا توجد شاشة. شغّل ملف البذور 0002_seed.sql.');
 
   const [history, schedule, devices] = await Promise.all([
-    supabase.from('posts').select('*').eq('screen_id', screen.id).lte('publish_at', today).order('publish_at', { ascending: false }).order('created_at', { ascending: false }).limit(30),
-    supabase.from('posts').select('*').eq('screen_id', screen.id).gt('publish_at', today).order('publish_at'),
+    supabase
+      .from('posts')
+      .select('*')
+      .eq('screen_id', screen.id)
+      .lte('publish_at', today)
+      .order('publish_at', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(30),
+    supabase
+      .from('posts')
+      .select('*')
+      .eq('screen_id', screen.id)
+      .gt('publish_at', today)
+      .order('publish_at'),
     supabase.from('screen_devices').select('*').eq('screen_id', screen.id).order('paired_at'),
   ]);
   fail(history.error);
@@ -110,7 +141,8 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
     if (typeof v === 'string') {
       const m = v.match(/\/storage\/v1\/object\/public\/media\/(.+)$/);
       if (m) used.add(decodeURIComponent(m[1]));
-    } else if (v && typeof v === 'object') Object.values(v as Record<string, unknown>).forEach(collect);
+    } else if (v && typeof v === 'object')
+      Object.values(v as Record<string, unknown>).forEach(collect);
   };
   [posts.data, presets.data, screens.data, school.data].forEach(collect);
 
@@ -130,14 +162,45 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 }
 
 // ---------- الإجراءات ----------
+/** Runtime controls belong to the screen, not to an editable/scheduled copy of a post. */
+function withoutPlaybackState(content: Content): Content {
+  const clean = { ...content } as Content & { mediaPlayback?: unknown };
+  delete clean.mediaPlayback;
+  return clean;
+}
 export async function publish(screenId: string, content: Content, template?: Partial<Template>) {
-  if (template?.displayMode==='presentation'&&!content.presentation?.slides.length)throw Error('ارفع ملف PowerPoint أولًا.');
-  if (template?.displayMode==='slideshow' && !mediaSlideshowOf(template).images.length) throw Error('أضف صورًا لعرض الشرائح أولًا.');
-  if (template?.displayMode!=='slideshow' && !content.title?.trim() && !content.fullMedia && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
+  if (template?.displayMode === 'presentation' && !content.presentation?.slides.length)
+    throw Error('ارفع ملف PowerPoint أولًا.');
+  if (template?.displayMode === 'slideshow' && !mediaSlideshowOf(template).images.length)
+    throw Error('أضف صورًا لعرض الشرائح أولًا.');
+  if (
+    template?.displayMode !== 'slideshow' &&
+    !content.title?.trim() &&
+    !content.fullMedia &&
+    !(content.videoPlaylist?.enabled && content.videoPlaylist.items.length) &&
+    !content.presentation?.slides.length
+  )
+    throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
-  const post = await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id }).select().single();
+  const post = await supabase
+    .from('posts')
+    .insert({
+      screen_id: screenId,
+      content: withoutPlaybackState(content),
+      publish_at: riyadhToday(),
+      created_by: user.user?.id,
+    })
+    .select()
+    .single();
   fail(post.error);
-  fail((await supabase.from('screens').update({ draft: null, ...(template?{template}:{}) }).eq('id', screenId)).error);
+  fail(
+    (
+      await supabase
+        .from('screens')
+        .update({ draft: null, ...(template ? { template } : {}) })
+        .eq('id', screenId)
+    ).error,
+  );
   await notifyScreen(screenId);
   return post.data as Post;
 }
@@ -152,10 +215,26 @@ export async function saveTemplate(screenId: string, template: Partial<Template>
 }
 
 export async function schedulePost(screenId: string, content: Content, date: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < riyadhToday()) throw Error('اختر اليوم أو تاريخًا قادمًا.');
-  if (!content.title?.trim() && !content.fullMedia && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < riyadhToday())
+    throw Error('اختر اليوم أو تاريخًا قادمًا.');
+  if (
+    !content.title?.trim() &&
+    !content.fullMedia &&
+    !(content.videoPlaylist?.enabled && content.videoPlaylist.items.length) &&
+    !content.presentation?.slides.length
+  )
+    throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
-  fail((await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: date, created_by: user.user?.id })).error);
+  fail(
+    (
+      await supabase.from('posts').insert({
+        screen_id: screenId,
+        content: withoutPlaybackState(content),
+        publish_at: date,
+        created_by: user.user?.id,
+      })
+    ).error,
+  );
   if (date === riyadhToday()) await notifyScreen(screenId);
 }
 
@@ -167,7 +246,8 @@ export async function deletePost(id: string, screenId: string) {
 export async function savePreset(name: string, content: Content, id?: string | null) {
   const clean = name.trim().slice(0, 100);
   if (!clean) throw Error('أدخل اسم الموضوع.');
-  if (id) fail((await supabase.from('presets').update({ name: clean, content }).eq('id', id)).error);
+  if (id)
+    fail((await supabase.from('presets').update({ name: clean, content }).eq('id', id)).error);
   else fail((await supabase.from('presets').insert({ name: clean, content })).error);
 }
 
@@ -180,7 +260,11 @@ export async function saveSchool(patch: Partial<School>) {
 }
 
 export async function pairDevice(code: string, screenId: string, label?: string) {
-  const { error } = await supabase.rpc('pair_screen', { p_code: code, p_screen_id: screenId, p_label: label ?? null });
+  const { error } = await supabase.rpc('pair_screen', {
+    p_code: code,
+    p_screen_id: screenId,
+    p_label: label ?? null,
+  });
   fail(error);
   await notifyScreen(screenId);
 }
@@ -204,10 +288,19 @@ export async function fetchTv(token: string): Promise<TvState> {
 
 /** Reuse a paired, revocable display-only token. Existing Supabase policies apply. */
 export async function displayLink(screenId: string, index: number): Promise<string> {
-  const label='رابط عرض مباشر';
-  const existing=await supabase.from('screen_devices').select('*').eq('screen_id',screenId).eq('label',label).limit(1);
+  const label = 'رابط عرض مباشر';
+  const existing = await supabase
+    .from('screen_devices')
+    .select('*')
+    .eq('screen_id', screenId)
+    .eq('label', label)
+    .limit(1);
   fail(existing.error);
-  let token=(existing.data?.[0] as Device|undefined)?.token;
-  if(!token){const pairing=await requestPairing();await pairDevice(pairing.code,screenId,label);token=pairing.token;}
-  return `${location.origin}/display${index===0?'':index+1}?token=${encodeURIComponent(token)}`;
+  let token = (existing.data?.[0] as Device | undefined)?.token;
+  if (!token) {
+    const pairing = await requestPairing();
+    await pairDevice(pairing.code, screenId, label);
+    token = pairing.token;
+  }
+  return `${location.origin}/display${index === 0 ? '' : index + 1}?token=${encodeURIComponent(token)}`;
 }

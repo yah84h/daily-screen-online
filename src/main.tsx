@@ -10,13 +10,17 @@ import './loop-variants.css';
 
 const Admin = lazy(() => import('@/pages/admin/Admin'));
 const Login = lazy(() => import('@/pages/Login'));
-const Password=lazy(()=>import('@/pages/Password'));
-const Users=lazy(()=>import('@/pages/Users'));
-const News = lazy(()=>import('@/pages/News'));
+const Password = lazy(() => import('@/pages/Password'));
+const Users = lazy(() => import('@/pages/Users'));
+const News = lazy(() => import('@/pages/News'));
 const Tv = lazy(() => import('@/pages/Tv'));
 
 // Service Worker لصفحة التلفزيون فقط (إعادة تحميل دون اتصال)
-if ('serviceWorker' in navigator && (location.pathname.startsWith('/tv') || /^\/(?:display|tv)\d*$/.test(location.pathname))) {
+if (
+  import.meta.env.PROD &&
+  'serviceWorker' in navigator &&
+  (location.pathname.startsWith('/tv') || /^\/(?:display|tv)\d*$/.test(location.pathname))
+) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 
@@ -28,13 +32,22 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<Navigate to="/admin" replace />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/password" element={<Password/>}/>
-            <Route path="/users" element={<Users/>}/>
-            <Route path="/news" element={<News/>}/>
+            <Route path="/password" element={<Password />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/news" element={<News />} />
             <Route path="/login" element={<Login />} />
             <Route path="/tv" element={<Tv />} />
             <Route path="/display" element={<Tv />} />
-            <Route path="*" element={/^\/(?:display|tv)\d+$/.test(location.pathname)?<Tv/>:<Navigate to="/admin" replace />} />
+            <Route
+              path="*"
+              element={
+                /^\/(?:display|tv)\d+$/.test(location.pathname) ? (
+                  <Tv />
+                ) : (
+                  <Navigate to="/admin" replace />
+                )
+              }
+            />
           </Routes>
         </Suspense>
       </BrowserRouter>
