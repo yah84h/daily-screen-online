@@ -1,6 +1,117 @@
-import {useState,type FormEvent} from 'react';import {Navigate} from 'react-router-dom';import {Monitor,Loader2,Eye,EyeOff} from 'lucide-react';import {supabase,supabaseConfigured} from '@/lib/supabase';import {useAuth} from '@/lib/auth';import {signInUsername} from '@/lib/staff';
-export default function Login(){const{session,loading,permissions,error:authError,refresh}=useAuth(),[username,setUsername]=useState(''),[password,setPassword]=useState(''),[show,setShow]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
- if(!loading&&session&&!authError&&(permissions.admin||permissions.daily||permissions.news))return <Navigate to={permissions.admin||permissions.daily?(new URLSearchParams(location.search).get('next')==='/news'&&permissions.news?'/news':'/admin'):'/news'} replace/>;
- const submit=async(e:FormEvent)=>{e.preventDefault();setBusy(true);setError('');try{const r=await signInUsername(username,password);if(r.error)throw Error(r.error.message);await refresh();}catch(e){setError((e as Error).message);}finally{setBusy(false);}};
- return <div className="login-page"><form className="login-card" onSubmit={submit}><div className="login-logo"><Monitor size={30}/></div><span className="login-school">الموهوبين التقنية الثانوية بجدة - بنين</span><h1>أهلًا بعودتك.</h1><p>دخول موحّد للإدارة والأخبار. الحساب الأول جاهز دون رمز تفعيل.</p>{!supabaseConfigured&&<p className="login-error">أكمل إعداد Supabase لتسجيل الدخول.</p>}<label>اسم المستخدم<input aria-label="اسم المستخدم" type="text" dir="ltr" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="example@company.com" required disabled={busy} value={username} onChange={e=>setUsername(e.target.value)}/></label><label>كلمة المرور<div className="password-field"><input type={show?'text':'password'} aria-label="كلمة المرور" dir="ltr" autoComplete="current-password" required disabled={busy} value={password} onChange={e=>setPassword(e.target.value)}/><button type="button" aria-label="إظهار أو إخفاء كلمة المرور" onClick={()=>setShow(v=>!v)}>{show?<EyeOff size={19}/>:<Eye size={19}/>}</button></div></label><button className="button primary" type="submit" disabled={busy||!supabaseConfigured}>{busy&&<Loader2 className="spin" size={18}/>} تسجيل الدخول</button>{(error||authError)&&<p className="login-error" role="alert">{error||authError}</p>}{session&&!permissions.admin&&!permissions.daily&&!permissions.news&&<p className="login-error">الحساب لا يملك صلاحيات. تواصل مع المسؤول أو <button type="button" onClick={()=>supabase.auth.signOut()}>سجّل الخروج</button>.</p>}<div className="login-foot">لا تسجيل ذاتي. المسؤول الكامل ينشئ الحسابات ويحدد الصلاحيات.</div></form></div>;
+import { useState, type FormEvent } from 'react';
+import { Navigate } from 'react-router-dom';
+import { Monitor, Loader2, Eye, EyeOff } from 'lucide-react';
+import { supabase, supabaseConfigured } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth';
+import { signInUsername } from '@/lib/staff';
+export default function Login() {
+  const { session, loading, permissions, error: authError, refresh } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  if (
+    !loading &&
+    session &&
+    !authError &&
+    (permissions.admin || permissions.daily || permissions.news)
+  )
+    return (
+      <Navigate
+        to={
+          permissions.admin || permissions.daily
+            ? new URLSearchParams(location.search).get('next') === '/news' && permissions.news
+              ? '/news'
+              : '/admin'
+            : '/news'
+        }
+        replace
+      />
+    );
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const r = await signInUsername(username, password);
+      if (r.error) throw Error(r.error.message);
+      await refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="login-page">
+      <form className="login-card" onSubmit={submit}>
+        <div className="login-logo">
+          <Monitor size={30} />
+        </div>
+        <span className="login-school">الموهوبين التقنية الثانوية بجدة - بنين</span>
+        <h1>أهلًا بعودتك.</h1>
+        <p>دخول موحّد للإدارة والأخبار. الحساب الأول جاهز دون رمز تفعيل.</p>
+        {!supabaseConfigured && <p className="login-error">أكمل إعداد Supabase لتسجيل الدخول.</p>}
+        <label>
+          اسم المستخدم
+          <input
+            aria-label="اسم المستخدم"
+            type="text"
+            dir="ltr"
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="example@company.com"
+            required
+            disabled={busy}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+        <label>
+          كلمة المرور
+          <div className="password-field">
+            <input
+              type={show ? 'text' : 'password'}
+              aria-label="كلمة المرور"
+              dir="ltr"
+              autoComplete="current-password"
+              required
+              disabled={busy}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              aria-label="إظهار أو إخفاء كلمة المرور"
+              onClick={() => setShow((v) => !v)}
+            >
+              {show ? <EyeOff size={19} /> : <Eye size={19} />}
+            </button>
+          </div>
+        </label>
+        <button className="button primary" type="submit" disabled={busy || !supabaseConfigured}>
+          {busy && <Loader2 className="spin" size={18} />} تسجيل الدخول
+        </button>
+        {(error || authError) && (
+          <p className="login-error" role="alert">
+            {error || authError}
+          </p>
+        )}
+        {session && !permissions.admin && !permissions.daily && !permissions.news && (
+          <p className="login-error">
+            الحساب لا يملك صلاحيات. تواصل مع المسؤول أو{' '}
+            <button type="button" onClick={() => supabase.auth.signOut()}>
+              سجّل الخروج
+            </button>
+            .
+          </p>
+        )}
+        <div className="login-foot">
+          لا تسجيل ذاتي. المسؤول الكامل ينشئ الحسابات ويحدد الصلاحيات.
+        </div>
+      </form>
+    </div>
+  );
 }

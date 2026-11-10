@@ -1,7 +1,86 @@
-import type {Template} from '@/lib/types';
-import {loopLayouts} from '@/lib/loopLayouts';
-import {loopAppearance} from '@/lib/loopAppearance';
-export function LoopLayoutPicker({template,onChange}:{template:Template;onChange:(id:string)=>void}){
- const palette=loopAppearance(template.loopAppearance);
- return <section className="loop-layout-picker"><h2>توزيع عناصر خلفية الحصص</h2><p className="field-hint">اختر مكان الساعة ولوحة التميز والصور. تتغير المعاينة مباشرة، وتبقى ألوانك ومحتواك كما هي. فعّل صور الوسط ولوحة التميز لإظهارهما.</p><div className="loop-layout-grid">{loopLayouts.map(layout=><button type="button" className={'loop-layout-option'+((template.loopLayout||'classic')===layout.id?' selected':'')} key={layout.id} aria-pressed={(template.loopLayout||'classic')===layout.id} aria-label={'توزيع '+layout.name} onClick={()=>onChange(layout.id)}><div className="loop-layout-thumbnail" style={{background:palette.background,color:palette.text}} dir="rtl"><span className="loop-layout-school">اسم المدرسة</span>{(['clock','photo','board'] as const).filter(key=>key==='clock'?layout.showClock!==false:key==='board'?layout.showBoard!==false:layout.showPhoto!==false&&!layout.id.startsWith('no-photo')).map(key=>{const r=layout[key];return <span key={key} className={'loop-layout-block block-'+key} style={{left:r.x+'%',top:r.y+'%',width:r.w+'%',height:r.h+'%',background:key==='photo'?palette.accent:palette.widget,borderColor:palette.border,color:key==='photo'?palette.background:palette.text}}>{key==='clock'?<><b>09:15</b><small>الحصة الأولى</small></>:key==='board'?<><b>نجوم الأسبوع</b><small>١ · ٢ · ٣</small></>:<b>الصورة</b>}</span>;})}</div><b>{layout.name}</b><small>{layout.description}</small></button>)}</div></section>;
+import type { Template } from '@/lib/types';
+import { loopLayouts } from '@/lib/loopLayouts';
+import { loopAppearance } from '@/lib/loopAppearance';
+export function LoopLayoutPicker({
+  template,
+  onChange,
+}: {
+  template: Template;
+  onChange: (id: string) => void;
+}) {
+  const palette = loopAppearance(template.loopAppearance);
+  return (
+    <section className="loop-layout-picker">
+      <h2>توزيع عناصر خلفية الحصص</h2>
+      <p className="field-hint">
+        اختر مكان الساعة ولوحة التميز والصور. تتغير المعاينة مباشرة، وتبقى ألوانك ومحتواك كما هي.
+        فعّل صور الوسط ولوحة التميز لإظهارهما.
+      </p>
+      <div className="loop-layout-grid">
+        {loopLayouts.map((layout) => (
+          <button
+            type="button"
+            className={
+              'loop-layout-option' +
+              ((template.loopLayout || 'classic') === layout.id ? ' selected' : '')
+            }
+            key={layout.id}
+            aria-pressed={(template.loopLayout || 'classic') === layout.id}
+            aria-label={'توزيع ' + layout.name}
+            onClick={() => onChange(layout.id)}
+          >
+            <div
+              className="loop-layout-thumbnail"
+              style={{ background: palette.background, color: palette.text }}
+              dir="rtl"
+            >
+              <span className="loop-layout-school">اسم المدرسة</span>
+              {(['clock', 'photo', 'board'] as const)
+                .filter((key) =>
+                  key === 'clock'
+                    ? layout.showClock !== false
+                    : key === 'board'
+                      ? layout.showBoard !== false
+                      : layout.showPhoto !== false && !layout.id.startsWith('no-photo'),
+                )
+                .map((key) => {
+                  const r = layout[key];
+                  return (
+                    <span
+                      key={key}
+                      className={'loop-layout-block block-' + key}
+                      style={{
+                        left: r.x + '%',
+                        top: r.y + '%',
+                        width: r.w + '%',
+                        height: r.h + '%',
+                        background: key === 'photo' ? palette.accent : palette.widget,
+                        borderColor: palette.border,
+                        color: key === 'photo' ? palette.background : palette.text,
+                      }}
+                    >
+                      {key === 'clock' ? (
+                        <>
+                          <b>09:15</b>
+                          <small>الحصة الأولى</small>
+                        </>
+                      ) : key === 'board' ? (
+                        <>
+                          <b>نجوم الأسبوع</b>
+                          <small>١ · ٢ · ٣</small>
+                        </>
+                      ) : (
+                        <b>الصورة</b>
+                      )}
+                    </span>
+                  );
+                })}
+            </div>
+            <b>{layout.name}</b>
+            <small>{layout.description}</small>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }

@@ -1,5 +1,20 @@
 import { Navigate } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, CalendarDays, CheckCircle2, Clock, History, LayoutDashboard, Layers, LogOut, Monitor, Settings, Smartphone, Loader2, Quote } from 'lucide-react';
+import {
+  ArrowUpRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  History,
+  LayoutDashboard,
+  Layers,
+  LogOut,
+  Monitor,
+  Settings,
+  Smartphone,
+  Loader2,
+  Quote,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { AdminProvider, fmtTime, useAdmin, type Tab } from './store';
 import { HomeTab } from './HomeTab';
@@ -35,11 +50,17 @@ const subtitles: Record<Tab, string> = {
 
 export default function Admin() {
   const { session, loading, permissions, error } = useAuth();
-  if (loading) return <div className="loading-page"><Loader2 className="spin" size={28} /></div>;
-  
+  if (loading)
+    return (
+      <div className="loading-page">
+        <Loader2 className="spin" size={28} />
+      </div>
+    );
+
   if (!session) return <Navigate to="/login" replace />;
-  if(!permissions.admin&&!permissions.daily)return <Navigate to={permissions.news?'/news':'/login'} replace/>;
-  if(error)return <p role="alert">{error}</p>;
+  if (!permissions.admin && !permissions.daily)
+    return <Navigate to={permissions.news ? '/news' : '/login'} replace />;
+  if (error) return <p role="alert">{error}</p>;
   return (
     <AdminProvider>
       <Layout />
@@ -49,9 +70,12 @@ export default function Admin() {
 
 function Layout() {
   const { data, loadError, tab, setTab, setModal, toast, fileInput, selectScreen } = useAdmin();
-  const { signOut,permissions } = useAuth();
+  const { signOut, permissions } = useAuth();
   const school = data?.school;
-  const tvOnline = data?.devices.some((d) => d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 90_000) ?? false;
+  const tvOnline =
+    data?.devices.some(
+      (d) => d.last_seen_at && Date.now() - new Date(d.last_seen_at).getTime() < 90_000,
+    ) ?? false;
   const pairedCount = data?.devices.length ?? 0;
 
   return (
@@ -77,7 +101,11 @@ function Layout() {
         {data && data.screens.length > 1 && (
           <div className="screen-switch">
             <div className="nav-label">الشاشة الحالية</div>
-            <select value={data.screen.id} onChange={(e) => selectScreen(e.target.value)} aria-label="اختيار الشاشة">
+            <select
+              value={data.screen.id}
+              onChange={(e) => selectScreen(e.target.value)}
+              aria-label="اختيار الشاشة"
+            >
               {data.screens.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -87,14 +115,39 @@ function Layout() {
           </div>
         )}
         <div className="nav-label">مساحة العمل</div>
-        {permissions.news&&<a className="button white" href="/news">إدارة الأخبار</a>}{permissions.admin&&<a className="button white" href="/users">الحسابات والصلاحيات</a>}<a className="text-button" href="/password">تغيير كلمة المرور</a><nav>
-          {nav.filter(([name])=>permissions.admin||['الرئيسية','المواضيع المحفوظة','الجدولة','السجل','ومضات تقنية'].includes(name)).map(([label, Icon]) => (
-            <button key={label} className={tab === label ? 'active' : ''} onClick={() => setTab(label)}>
-              <Icon size={19} />
-              {label}
-              {label === 'الجدولة' && (data?.schedule.length ?? 0) > 0 && <span className="nav-count">{data!.schedule.length}</span>}
-            </button>
-          ))}
+        {permissions.news && (
+          <a className="button white" href="/news">
+            إدارة الأخبار
+          </a>
+        )}
+        {permissions.admin && (
+          <a className="button white" href="/users">
+            الحسابات والصلاحيات
+          </a>
+        )}
+        <a className="text-button" href="/password">
+          تغيير كلمة المرور
+        </a>
+        <nav>
+          {nav
+            .filter(
+              ([name]) =>
+                permissions.admin ||
+                ['الرئيسية', 'المواضيع المحفوظة', 'الجدولة', 'السجل', 'ومضات تقنية'].includes(name),
+            )
+            .map(([label, Icon]) => (
+              <button
+                key={label}
+                className={tab === label ? 'active' : ''}
+                onClick={() => setTab(label)}
+              >
+                <Icon size={19} />
+                {label}
+                {label === 'الجدولة' && (data?.schedule.length ?? 0) > 0 && (
+                  <span className="nav-count">{data!.schedule.length}</span>
+                )}
+              </button>
+            ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="help-card">
@@ -112,7 +165,11 @@ function Layout() {
               إعداد الشاشة <ArrowUpRight size={15} />
             </button>
           </div>
-          <button className="settings-nav" disabled={!permissions.admin} onClick={() => setModal('settings')}>
+          <button
+            className="settings-nav"
+            disabled={!permissions.admin}
+            onClick={() => setModal('settings')}
+          >
             <Settings size={19} />
             الإعدادات
           </button>
@@ -126,7 +183,18 @@ function Layout() {
       <div className="main">
         <header>
           <div className="breadcrumb">
-            <Monitor size={18}/><select aria-label="الشاشة المحددة" value={data?.screen.id||''} onChange={e=>selectScreen(e.target.value)}>{data?.screens.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select>
+            <Monitor size={18} />
+            <select
+              aria-label="الشاشة المحددة"
+              value={data?.screen.id || ''}
+              onChange={(e) => selectScreen(e.target.value)}
+            >
+              {data?.screens.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="header-right">
             <span className="timezone">
@@ -143,7 +211,9 @@ function Layout() {
           )}
           <div className="page-heading">
             <div>
-              <div className="eyebrow">مساحة المدرسة / {data?.screen.name||'الشاشة الرئيسية'}</div>
+              <div className="eyebrow">
+                مساحة المدرسة / {data?.screen.name || 'الشاشة الرئيسية'}
+              </div>
               <h1>{tab === 'الرئيسية' ? 'يوم جديد، ورسالة جديدة.' : tab}</h1>
               <p>{subtitles[tab]}</p>
             </div>
@@ -164,11 +234,16 @@ function Layout() {
                 </span>
               </b>
               <p>
-                {pairedCount ? `${pairedCount} جهاز مربوط` : 'لم يُربط تلفزيون بعد'} <span>·</span> 4K UHD <span>·</span> 3840 × 2160
+                {pairedCount ? `${pairedCount} جهاز مربوط` : 'لم يُربط تلفزيون بعد'} <span>·</span>{' '}
+                4K UHD <span>·</span> 3840 × 2160
               </p>
             </div>
             <div className="status-right">
-              <span>{data?.current ? 'آخر نشر: ' + fmtTime(data.current.created_at) : 'جاهزة لأول تحديث'}</span>
+              <span>
+                {data?.current
+                  ? 'آخر نشر: ' + fmtTime(data.current.created_at)
+                  : 'جاهزة لأول تحديث'}
+              </span>
               <a className="icon-button" href="/tv" target="_blank" title="فتح صفحة التلفزيون">
                 <ArrowUpRight size={19} />
               </a>
@@ -181,8 +256,12 @@ function Layout() {
           {permissions.admin && tab === 'القوالب' && <TemplateTab />}
           {tab === 'السجل' && <HistoryTab />}
           {permissions.admin && tab === 'خلفية الحصص' && <LoopTab />}
-          {permissions.admin && tab === 'الشاشات' && <section className="editor-card screens-page"><SettingsModal/></section>}
-          {tab === 'ومضات تقنية' && <TechLibraryTab/>}
+          {permissions.admin && tab === 'الشاشات' && (
+            <section className="editor-card screens-page">
+              <SettingsModal />
+            </section>
+          )}
+          {tab === 'ومضات تقنية' && <TechLibraryTab />}
         </main>
         <footer className="app-footer">
           <span>الشاشة اليومية</span>

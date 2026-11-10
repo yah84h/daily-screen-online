@@ -5,8 +5,12 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 export const supabaseConfigured = Boolean(url && key);
 
-export const supabase = createClient(url || 'https://placeholder.supabase.co', key || 'placeholder', {
-  auth: { persistSession: true, autoRefreshToken: true },
-});
+export const supabase = createClient(
+  url || 'https://placeholder.supabase.co',
+  key || 'placeholder',
+  {
+    auth: { persistSession: true, autoRefreshToken: true },
+  },
+);
 
-export const isLocalBackend=false;
+export const isLocalBackend = false;

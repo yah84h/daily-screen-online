@@ -5,10 +5,7 @@
       "label": "Website: start fast development",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "dev:local"
-      ],
+      "args": ["run", "dev:local"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "daily-screen",
@@ -33,10 +30,7 @@
       "label": "Website: type check",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "typecheck"
-      ],
+      "args": ["run", "typecheck"],
       "problemMatcher": "$tsc",
       "group": {
         "kind": "build",
@@ -47,29 +41,21 @@
       "label": "Website: production build",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "build"
-      ],
+      "args": ["run", "build"],
       "problemMatcher": "$tsc"
     },
     {
       "label": "Website: local release build",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "build:local"
-      ],
+      "args": ["run", "build:local"],
       "problemMatcher": []
     },
     {
       "label": "Website: unit tests",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "test"
-      ],
+      "args": ["test"],
       "problemMatcher": [],
       "group": {
         "kind": "test",
@@ -80,10 +66,14 @@
       "label": "Website: lint",
       "type": "shell",
       "command": "npm",
-      "args": [
-        "run",
-        "lint"
-      ],
+      "args": ["run", "lint"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Website: format code",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "format"],
       "problemMatcher": []
     }
   ]

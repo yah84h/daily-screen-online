@@ -1,15 +1,194 @@
-import {uploadBrowserPresentation} from '@/lib/browserPresentation';
-import {useRef,useState} from 'react';import {isLocalBackend} from '@/lib/supabase';import {usePresentation,type Presentation} from '@/lib/presentation';import {useAdmin} from './store';
-function Remote({deck,screenId}:{deck:Presentation;screenId:string}){
- const state=usePresentation(deck,{screenId});return <section className="presentation-remote"><h3>التحكم بالعرض من الجوال</h3><p role="status">{state.error||`الشريحة ${state.slide+1} من ${deck.slides.length}`}</p><div className="presentation-remote-buttons"><button className="button primary" disabled={!state.ready} onClick={()=>void state.command('previous')}>الشريحة السابقة</button><button className="button primary" disabled={!state.ready} onClick={()=>void state.command('next')}>الشريحة التالية</button></div><div className="button-row"><button className="button white" disabled={!state.ready} onClick={()=>void state.command('first')}>الأولى</button><button className="button white" disabled={!state.ready} onClick={()=>void state.command('last')}>الأخيرة</button><button className="button white" disabled={!state.ready} onClick={()=>void state.command('black')}>{state.black?'إظهار العرض':'شاشة سوداء'}</button></div><div className="presentation-thumbnails">{deck.slides.map((url,i)=><button key={url} aria-label={'انتقل إلى الشريحة '+(i+1)} aria-pressed={state.slide===i} disabled={!state.ready} onClick={()=>void state.command('goto',i)}><img src={url} alt="" loading="lazy"/><span>{i+1}</span></button>)}</div></section>;
+import { uploadBrowserPresentation } from '@/lib/browserPresentation';
+import { useRef, useState } from 'react';
+import { isLocalBackend } from '@/lib/supabase';
+import { usePresentation, type Presentation } from '@/lib/presentation';
+import { useAdmin } from './store';
+function Remote({ deck, screenId }: { deck: Presentation; screenId: string }) {
+  const state = usePresentation(deck, { screenId });
+  return (
+    <section className="presentation-remote">
+      <h3>التحكم بالعرض من الجوال</h3>
+      <p role="status">{state.error || `الشريحة ${state.slide + 1} من ${deck.slides.length}`}</p>
+      <div className="presentation-remote-buttons">
+        <button
+          className="button primary"
+          disabled={!state.ready}
+          onClick={() => void state.command('previous')}
+        >
+          الشريحة السابقة
+        </button>
+        <button
+          className="button primary"
+          disabled={!state.ready}
+          onClick={() => void state.command('next')}
+        >
+          الشريحة التالية
+        </button>
+      </div>
+      <div className="button-row">
+        <button
+          className="button white"
+          disabled={!state.ready}
+          onClick={() => void state.command('first')}
+        >
+          الأولى
+        </button>
+        <button
+          className="button white"
+          disabled={!state.ready}
+          onClick={() => void state.command('last')}
+        >
+          الأخيرة
+        </button>
+        <button
+          className="button white"
+          disabled={!state.ready}
+          onClick={() => void state.command('black')}
+        >
+          {state.black ? 'إظهار العرض' : 'شاشة سوداء'}
+        </button>
+      </div>
+      <div className="presentation-thumbnails">
+        {deck.slides.map((url, i) => (
+          <button
+            key={url}
+            aria-label={'انتقل إلى الشريحة ' + (i + 1)}
+            aria-pressed={state.slide === i}
+            disabled={!state.ready}
+            onClick={() => void state.command('goto', i)}
+          >
+            <img src={url} alt="" loading="lazy" />
+            <span>{i + 1}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }
-export function PresentationEditor(){
- const {content,edit,data}=useAdmin(),file=useRef<HTMLInputElement>(null),request=useRef<XMLHttpRequest|null>(null),[busy,setBusy]=useState(false),[progress,setProgress]=useState(0),[stage,setStage]=useState(''),[error,setError]=useState('');
- async function upload(input:File){if(!/\.pptx$/i.test(input.name)||input.size>100*1024*1024){setError('اختر ملف PPTX حتى ١٠٠ ميجابايت.');return;}setBusy(true);setError('');setProgress(0);setStage('رفع الملف…');
- try{if(!isLocalBackend){const deck=await uploadBrowserPresentation(input,(percent,text)=>{setProgress(percent);setStage(text);});edit('presentation',deck);setStage('العرض جاهز. انشره على الشاشة، ثم استخدم أزرار التحكم.');return;}const job=await new Promise<{id:string}>((resolve,reject)=>{const xhr=new XMLHttpRequest();request.current=xhr;xhr.open('POST','/local/presentations?name='+encodeURIComponent(input.name));xhr.upload.onprogress=e=>{if(e.lengthComputable)setProgress(Math.round(e.loaded/e.total*100));};xhr.upload.onload=()=>setStage('تجهيز ملف العرض…');xhr.onload=()=>{let body;try{body=JSON.parse(xhr.responseText);}catch{reject(Error('تعذر رفع الملف'));return;}if(xhr.status>=200&&xhr.status<300)resolve(body);else reject(Error(body.error?.message||'تعذر رفع الملف'));};xhr.onerror=()=>reject(Error('انقطع الاتصال أثناء الرفع'));xhr.onabort=()=>reject(Error('أُلغي الرفع'));xhr.send(input);});setStage('تحويل شرائح PowerPoint على الخادم…');
- for(let i=0;i<300;i++){const response=await fetch('/local/presentations/'+job.id,{signal:AbortSignal.timeout(5000)}),state=await response.json();if(!response.ok)throw Error(state.error?.message||'تعذر التحقق من التحويل');if(state.status==='error')throw Error(state.error);if(state.status==='ready'){edit('presentation',{id:state.id,name:state.name,slides:state.slides});setStage('العرض جاهز. انشره على الشاشة، ثم استخدم أزرار التحكم.');return;}await new Promise(r=>setTimeout(r,1000));}throw Error('استغرق التحويل وقتًا طويلًا. أعد المحاولة.');
- }catch(e){setError((e as Error).message);}finally{setBusy(false);request.current=null;}}
- return <section className="presentation-editor"><h2>ملف PowerPoint</h2><p className="field-hint">ارفع ملف PPTX مباشرة؛ يُجهّز في المتصفح على الموقع الإلكتروني دون خادم محلي. حتى ٢٠٠ شريحة و١٠٠ ميجابايت. تُعرض الشرائح بصور ثابتة؛ راجع الخطوط والتنسيق في المعاينة قبل النشر.</p>{<><input ref={file} hidden type="file" accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation" onChange={e=>{const input=e.target.files?.[0];if(input)void upload(input);e.target.value='';}}/><button className="button primary" disabled={busy} onClick={()=>file.current?.click()}>{busy?'جارٍ تجهيز العرض…':'رفع ملف PowerPoint'}</button>{busy&&<div role="status"><p>{stage}</p><progress value={progress} max={100}/><span>{progress}٪ من التجهيز والرفع</span></div>}{!busy&&stage&&<p role="status">{stage}</p>}{error&&<p role="alert">{error}</p>}
- {content.presentation&&data&&<><p><b>{content.presentation.name}</b> · {content.presentation.slides.length} شريحة</p><Remote key={content.presentation.id+data.screen.id} deck={content.presentation} screenId={data.screen.id}/></>}
- <p className="field-hint">على الشاشة الكبيرة: → أو Page Down أو المسافة للتالي، ← أو Page Up للسابق، Home / End للأولى والأخيرة، B للشاشة السوداء، و F5 لملء الشاشة. يعمل مؤشر العروض الذي يرسل مفاتيح Page Up / Page Down.</p></>}</section>;
+export function PresentationEditor() {
+  const { content, edit, data } = useAdmin();
+  const file = useRef<HTMLInputElement>(null);
+  const request = useRef<XMLHttpRequest | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [stage, setStage] = useState('');
+  const [error, setError] = useState('');
+  async function upload(input: File) {
+    if (!/\.pptx$/i.test(input.name) || input.size > 100 * 1024 * 1024) {
+      setError('اختر ملف PPTX حتى ١٠٠ ميجابايت.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setProgress(0);
+    setStage('رفع الملف…');
+    try {
+      if (!isLocalBackend) {
+        const deck = await uploadBrowserPresentation(input, (percent, text) => {
+          setProgress(percent);
+          setStage(text);
+        });
+        edit('presentation', deck);
+        setStage('العرض جاهز. انشره على الشاشة، ثم استخدم أزرار التحكم.');
+        return;
+      }
+      const job = await new Promise<{ id: string }>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        request.current = xhr;
+        xhr.open('POST', '/local/presentations?name=' + encodeURIComponent(input.name));
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.upload.onload = () => setStage('تجهيز ملف العرض…');
+        xhr.onload = () => {
+          let body;
+          try {
+            body = JSON.parse(xhr.responseText);
+          } catch {
+            reject(Error('تعذر رفع الملف'));
+            return;
+          }
+          if (xhr.status >= 200 && xhr.status < 300) resolve(body);
+          else reject(Error(body.error?.message || 'تعذر رفع الملف'));
+        };
+        xhr.onerror = () => reject(Error('انقطع الاتصال أثناء الرفع'));
+        xhr.onabort = () => reject(Error('أُلغي الرفع'));
+        xhr.send(input);
+      });
+      setStage('تحويل شرائح PowerPoint على الخادم…');
+      for (let i = 0; i < 300; i++) {
+        const response = await fetch('/local/presentations/' + job.id, {
+          signal: AbortSignal.timeout(5000),
+        });
+        const state = await response.json();
+        if (!response.ok) throw Error(state.error?.message || 'تعذر التحقق من التحويل');
+        if (state.status === 'error') throw Error(state.error);
+        if (state.status === 'ready') {
+          edit('presentation', { id: state.id, name: state.name, slides: state.slides });
+          setStage('العرض جاهز. انشره على الشاشة، ثم استخدم أزرار التحكم.');
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      throw Error('استغرق التحويل وقتًا طويلًا. أعد المحاولة.');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+      request.current = null;
+    }
+  }
+  return (
+    <section className="presentation-editor">
+      <h2>ملف PowerPoint</h2>
+      <p className="field-hint">
+        ارفع ملف PPTX مباشرة؛ يُجهّز في المتصفح على الموقع الإلكتروني دون خادم محلي. حتى ٢٠٠ شريحة
+        و١٠٠ ميجابايت. تُعرض الشرائح بصور ثابتة؛ راجع الخطوط والتنسيق في المعاينة قبل النشر.
+      </p>
+      {
+        <>
+          <input
+            ref={file}
+            hidden
+            type="file"
+            accept=".pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            onChange={(e) => {
+              const input = e.target.files?.[0];
+              if (input) void upload(input);
+              e.target.value = '';
+            }}
+          />
+          <button className="button primary" disabled={busy} onClick={() => file.current?.click()}>
+            {busy ? 'جارٍ تجهيز العرض…' : 'رفع ملف PowerPoint'}
+          </button>
+          {busy && (
+            <div role="status">
+              <p>{stage}</p>
+              <progress value={progress} max={100} />
+              <span>{progress}٪ من التجهيز والرفع</span>
+            </div>
+          )}
+          {!busy && stage && <p role="status">{stage}</p>}
+          {error && <p role="alert">{error}</p>}
+          {content.presentation && data && (
+            <>
+              <p>
+                <b>{content.presentation.name}</b> · {content.presentation.slides.length} شريحة
+              </p>
+              <Remote
+                key={content.presentation.id + data.screen.id}
+                deck={content.presentation}
+                screenId={data.screen.id}
+              />
+            </>
+          )}
+          <p className="field-hint">
+            على الشاشة الكبيرة: → أو Page Down أو المسافة للتالي، ← أو Page Up للسابق، Home / End
+            للأولى والأخيرة، B للشاشة السوداء، و F5 لملء الشاشة. يعمل مؤشر العروض الذي يرسل مفاتيح
+            Page Up / Page Down.
+          </p>
+        </>
+      }
+    </section>
+  );
 }

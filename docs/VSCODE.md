@@ -11,3 +11,7 @@ Open `Daily-Screen.code-workspace`. Use this Git checkout as the main editable s
 Requires Node 22 or 24 and `npm ci` after a fresh checkout or dependency changes. VS Code uses the project's installed TypeScript. No editor extension is required. Local test content is in ignored `local-test/data/`; environment values stay in ignored `.env.local`. Never commit either. The initial Mac setup copied existing test data into this checkout without changing the older testing copy; the copies are independent thereafter.
 
 Normal editing does not need ZIP creation, dependency reinstall, or full builds. Production deployment still requires a verified build. Editor choice itself does not determine AI token usage.
+
+## Readable code formatting
+
+Prettier formats TypeScript, React JSX, CSS, and JavaScript consistently. The recommended VS Code Prettier extension formats on save; use Shift+Option+F on Mac to format manually. Run `npm run format` to format project code or `npm run format:check` to check without changing files. Formatter settings are in `.prettierrc.json`. Generated builds, local data, environment files, fixtures, and native iOS files are excluded.

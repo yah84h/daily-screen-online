@@ -1,2 +1,76 @@
-import {useAdmin} from './store';import {rotationOptions} from '../../../local-test/rotation.mjs';
-export function RotationEditor(){const{template,setTemplate,data,busy}=useAdmin(),r=rotationOptions(template.rotation);const change=(patch:Partial<typeof r>)=>setTemplate(t=>({...t,rotation:{...rotationOptions(t.rotation),...patch}}));return <section className="rotation-editor"><h3>التناوب بين الصور ولوحة التميز</h3><label><input type="checkbox" aria-label="تفعيل التناوب" checked={r.enabled} disabled={!data||busy||template.displayMode==='presentation'} onChange={e=>change({enabled:e.target.checked})}/>تبديل العرض العادي ولوحة المتصدرين تلقائيًا</label>{template.displayMode==='presentation'&&<p className="field-hint">يتوقف التناوب أثناء عرض PowerPoint حتى تبقى الشرائح تحت تحكمك.</p>}{r.enabled&&<><label>العرض العادي<select aria-label="العرض العادي للتناوب" value={r.normal} onChange={e=>change({normal:e.target.value as typeof r.normal})}><option value="daily">الشاشة اليومية بالصورة والنص</option><option value="photos">الصور بملء الشاشة</option><option value="loop">خلفية الحصص دون المتصدرين</option><option value="media">الصورة أو الفيديو المنشور</option></select></label><label>مدة العرض العادي · ثوانٍ<input aria-label="مدة العرض العادي" type="number" min="5" max="600" value={r.normalSeconds} onChange={e=>change({normalSeconds:+e.target.value})}/></label><label>مدة لوحة المتصدرين · ثوانٍ<input aria-label="مدة لوحة المتصدرين" type="number" min="5" max="600" value={r.leaderboardSeconds} onChange={e=>change({leaderboardSeconds:+e.target.value})}/></label>{template.recognition?.source!=='qudrat-pro'&&!template.recognition?.students?.some(student=>student.name.trim())&&<p role="alert">أضف أسماء الطلاب أو اختر مصدر قدرات برو من خلفية الحصص لتظهر لوحة المتصدرين.</p>}<p className="field-hint">يعود للعرض العادي بعد لوحة المتصدرين ويكرر الدورة. يستخدم أسماء الطلاب أو مصدر قدرات برو من «خلفية الحصص». عرض الصور يستخدم قائمة صور ملء الشاشة، أو الصورة الرئيسية إن كانت القائمة فارغة. احفظ الإعدادات لتطبيق التناوب.</p></>}</section>;}
+import { useAdmin } from './store';
+import { rotationOptions } from '../../../local-test/rotation.mjs';
+export function RotationEditor() {
+  const { template, setTemplate, data, busy } = useAdmin();
+  const r = rotationOptions(template.rotation);
+  const change = (patch: Partial<typeof r>) =>
+    setTemplate((t) => ({ ...t, rotation: { ...rotationOptions(t.rotation), ...patch } }));
+  return (
+    <section className="rotation-editor">
+      <h3>التناوب بين الصور ولوحة التميز</h3>
+      <label>
+        <input
+          type="checkbox"
+          aria-label="تفعيل التناوب"
+          checked={r.enabled}
+          disabled={!data || busy || template.displayMode === 'presentation'}
+          onChange={(e) => change({ enabled: e.target.checked })}
+        />
+        تبديل العرض العادي ولوحة المتصدرين تلقائيًا
+      </label>
+      {template.displayMode === 'presentation' && (
+        <p className="field-hint">يتوقف التناوب أثناء عرض PowerPoint حتى تبقى الشرائح تحت تحكمك.</p>
+      )}
+      {r.enabled && (
+        <>
+          <label>
+            العرض العادي
+            <select
+              aria-label="العرض العادي للتناوب"
+              value={r.normal}
+              onChange={(e) => change({ normal: e.target.value as typeof r.normal })}
+            >
+              <option value="daily">الشاشة اليومية بالصورة والنص</option>
+              <option value="photos">الصور بملء الشاشة</option>
+              <option value="loop">خلفية الحصص دون المتصدرين</option>
+              <option value="media">الصورة أو الفيديو المنشور</option>
+            </select>
+          </label>
+          <label>
+            مدة العرض العادي · ثوانٍ
+            <input
+              aria-label="مدة العرض العادي"
+              type="number"
+              min="5"
+              max="600"
+              value={r.normalSeconds}
+              onChange={(e) => change({ normalSeconds: +e.target.value })}
+            />
+          </label>
+          <label>
+            مدة لوحة المتصدرين · ثوانٍ
+            <input
+              aria-label="مدة لوحة المتصدرين"
+              type="number"
+              min="5"
+              max="600"
+              value={r.leaderboardSeconds}
+              onChange={(e) => change({ leaderboardSeconds: +e.target.value })}
+            />
+          </label>
+          {template.recognition?.source !== 'qudrat-pro' &&
+            !template.recognition?.students?.some((student) => student.name.trim()) && (
+              <p role="alert">
+                أضف أسماء الطلاب أو اختر مصدر قدرات برو من خلفية الحصص لتظهر لوحة المتصدرين.
+              </p>
+            )}
+          <p className="field-hint">
+            يعود للعرض العادي بعد لوحة المتصدرين ويكرر الدورة. يستخدم أسماء الطلاب أو مصدر قدرات برو
+            من «خلفية الحصص». عرض الصور يستخدم قائمة صور ملء الشاشة، أو الصورة الرئيسية إن كانت
+            القائمة فارغة. احفظ الإعدادات لتطبيق التناوب.
+          </p>
+        </>
+      )}
+    </section>
+  );
+}

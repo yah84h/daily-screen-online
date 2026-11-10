@@ -1,4 +1,4 @@
-import {syncedTheme} from '@/lib/loopAppearance';
+import { syncedTheme } from '@/lib/loopAppearance';
 import {
   createContext,
   useCallback,
@@ -7,44 +7,32 @@ import {
   useRef,
   useState,
   type ReactNode,
-} from "react";
-import * as api from "@/lib/api";
-import { uploadImage, uploadMedia } from "@/lib/media";
-import { recognitionOf } from "@/lib/loop";
-import {
-  defaultTemplate,
-  initialContent,
-  type Content,
-  type Template,
-} from "@/lib/types";
+} from 'react';
+import * as api from '@/lib/api';
+import { uploadImage, uploadMedia } from '@/lib/media';
+import { recognitionOf } from '@/lib/loop';
+import { defaultTemplate, initialContent, type Content, type Template } from '@/lib/types';
 
 export type Tab =
-  | "الشاشات"
-  | "ومضات تقنية"
-  | "الرئيسية"
-  | "المواضيع المحفوظة"
-  | "الجدولة"
-  | "القوالب"
-  | "السجل"
-  | "خلفية الحصص";
+  | 'الشاشات'
+  | 'ومضات تقنية'
+  | 'الرئيسية'
+  | 'المواضيع المحفوظة'
+  | 'الجدولة'
+  | 'القوالب'
+  | 'السجل'
+  | 'خلفية الحصص';
 export type Modal =
-  | ""
-  | "preview"
-  | "pair"
-  | "schedule"
-  | "preset"
-  | "optional"
-  | "settings"
-  | "setup";
+  '' | 'preview' | 'pair' | 'schedule' | 'preset' | 'optional' | 'settings' | 'setup';
 export type UploadTarget =
-  | "image"
-  | "secondary"
-  | "qr"
-  | "logo"
-  | "fullMedia"
-  | "schoolLogoTemplate"
-  | "backgroundImage"
-  | "schoolLogo"
+  | 'image'
+  | 'secondary'
+  | 'qr'
+  | 'logo'
+  | 'fullMedia'
+  | 'schoolLogoTemplate'
+  | 'backgroundImage'
+  | 'schoolLogo'
   | `studentPhoto:${string}`;
 
 type Store = {
@@ -81,32 +69,32 @@ const Ctx = createContext<Store | null>(null);
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<api.AdminData | null>(null);
-  const [loadError, setLoadError] = useState("");
-  const [tab, setTab] = useState<Tab>("الرئيسية");
-  const [modal, setModal] = useState<Modal>("");
+  const [loadError, setLoadError] = useState('');
+  const [tab, setTab] = useState<Tab>('الرئيسية');
+  const [modal, setModal] = useState<Modal>('');
   const [content, setContentState] = useState<Content>(initialContent);
   const [template, setTemplateState] = useState<Template>(defaultTemplate);
   const [templateDirty, setTemplateDirty] = useState(false);
   const templateDirtyRef = useRef(false);
   const templateRevision = useRef(0);
   const contentRevision = useRef(0);
-  const setTemplate: Store["setTemplate"] = (value) => {
-    setTemplateState(prev=>syncedTheme(typeof value==='function'?value(prev):value));
+  const setTemplate: Store['setTemplate'] = (value) => {
+    setTemplateState((prev) => syncedTheme(typeof value === 'function' ? value(prev) : value));
     templateRevision.current++;
     templateDirtyRef.current = true;
     setTemplateDirty(true);
   };
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const target = useRef<UploadTarget>("image");
+  const target = useRef<UploadTarget>('image');
   const loadedFor = useRef<string | null>(null);
-  const screenId = useRef<string | null>(localStorage.getItem("admin-screen"));
+  const screenId = useRef<string | null>(localStorage.getItem('admin-screen'));
 
   const notify = useCallback((m: string) => {
     setToast(m);
-    setTimeout(() => setToast(""), 4000);
+    setTimeout(() => setToast(''), 4000);
   }, []);
 
   const reload = useCallback(async () => {
@@ -115,11 +103,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const d = await api.loadAdmin(requested);
       if (requested !== screenId.current) return;
       setData(d);
-      setLoadError("");
+      setLoadError('');
       if (loadedFor.current !== d.screen.id) {
         loadedFor.current = d.screen.id;
         screenId.current = d.screen.id;
-        localStorage.setItem("admin-screen", d.screen.id);
+        localStorage.setItem('admin-screen', d.screen.id);
         setTemplateState(syncedTheme({ ...defaultTemplate, ...d.screen.template }));
         templateDirtyRef.current = false;
         setTemplateDirty(false);
@@ -144,32 +132,30 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const selectScreen = (id: string) => {
     if (busy) {
-      notify("انتظر اكتمال الحفظ أو رفع الصورة.");
+      notify('انتظر اكتمال الحفظ أو رفع الصورة.');
       return;
     }
     if (
       (dirty || templateDirty) &&
-      !confirm(
-        "لديك تعديلات غير محفوظة. الانتقال إلى شاشة أخرى سيتجاهلها. متابعة؟",
-      )
+      !confirm('لديك تعديلات غير محفوظة. الانتقال إلى شاشة أخرى سيتجاهلها. متابعة؟')
     )
       return;
     screenId.current = id;
     reload();
   };
 
-  const edit: Store["edit"] = (key, value) => {
+  const edit: Store['edit'] = (key, value) => {
     contentRevision.current++;
     setContentState((c) => ({ ...c, [key]: value }));
     setDirty(true);
   };
-  const setContent: Store["setContent"] = (c, d = true) => {
+  const setContent: Store['setContent'] = (c, d = true) => {
     contentRevision.current++;
     setContentState(c);
     setDirty(d);
   };
 
-  const run: Store["run"] = async (fn, success) => {
+  const run: Store['run'] = async (fn, success) => {
     setBusy(true);
     try {
       const r = await fn();
@@ -177,7 +163,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       await reload();
       return r;
     } catch (e) {
-      notify((e as Error).message || "حدث خطأ.");
+      notify((e as Error).message || 'حدث خطأ.');
       return undefined;
     } finally {
       setBusy(false);
@@ -185,13 +171,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const publishScreen = async () => {
-    if(!data || busy) return;
-    const designRevision=templateRevision.current, textRevision=contentRevision.current;
-    await run(async()=>{
-      await api.publish(data.screen.id,content,template);
-      if(designRevision===templateRevision.current){templateDirtyRef.current=false;setTemplateDirty(false);}
-      if(textRevision===contentRevision.current)setDirty(false);
-    },'تم نشر المحتوى ووضع العرض والإعدادات على الشاشة.');
+    if (!data || busy) return;
+    const designRevision = templateRevision.current;
+    const textRevision = contentRevision.current;
+    await run(async () => {
+      await api.publish(data.screen.id, content, template);
+      if (designRevision === templateRevision.current) {
+        templateDirtyRef.current = false;
+        setTemplateDirty(false);
+      }
+      if (textRevision === contentRevision.current) setDirty(false);
+    }, 'تم نشر المحتوى ووضع العرض والإعدادات على الشاشة.');
   };
   const saveDesign = async () => {
     if (!data) return false;
@@ -203,14 +193,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         setTemplateDirty(false);
       }
       return true;
-    }, "تم حفظ القالب وإعدادات الخلفية.");
+    }, 'تم حفظ القالب وإعدادات الخلفية.');
     return result === true;
   };
 
   const chooseImage = (t: UploadTarget) => {
     if (busy) return;
     target.current = t;
-    if(fileRef.current) fileRef.current.accept=t==='fullMedia'?'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,.mp4,.webm,.gif':'image/*,.jpg,.jpeg,.png,.webp';
+    if (fileRef.current)
+      fileRef.current.accept =
+        t === 'fullMedia'
+          ? 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,.mp4,.webm,.gif'
+          : 'image/*,.jpg,.jpeg,.png,.webp';
     fileRef.current?.click();
   };
 
@@ -219,25 +213,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     setBusy(true);
     try {
       const t = target.current;
-      const url = await (t==='fullMedia'?uploadMedia:uploadImage)(
+      const url = await (t === 'fullMedia' ? uploadMedia : uploadImage)(
         file,
-        t === "backgroundImage"
-          ? "backgrounds"
-          : t === "schoolLogo" || t === "logo"
-            ? "logos"
-            : "content",
+        t === 'backgroundImage'
+          ? 'backgrounds'
+          : t === 'schoolLogo' || t === 'logo'
+            ? 'logos'
+            : 'content',
       );
-      if (t === "fullMedia") {
-        const video=/^video\//.test(file.type)||/\.(mp4|webm)$/i.test(file.name);
-        setContentState(c=>({...c,fullMedia:url,fullType:video?'video':'image'})); setDirty(true);
-      } else if (t === "schoolLogoTemplate") setTemplate(tp=>({...tp,schoolLogo:url}));
-      else if (t === "backgroundImage")
-        setTemplate((tp) => ({ ...tp, backgroundImage: url }));
-      else if (t === "schoolLogo") {
+      if (t === 'fullMedia') {
+        const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
+        setContentState((c) => ({ ...c, fullMedia: url, fullType: video ? 'video' : 'image' }));
+        setDirty(true);
+      } else if (t === 'schoolLogoTemplate') setTemplate((tp) => ({ ...tp, schoolLogo: url }));
+      else if (t === 'backgroundImage') setTemplate((tp) => ({ ...tp, backgroundImage: url }));
+      else if (t === 'schoolLogo') {
         await api.saveSchool({ logo_url: url });
         await reload();
-      } else if (t.startsWith("studentPhoto:")) {
-        const id = t.slice("studentPhoto:".length);
+      } else if (t.startsWith('studentPhoto:')) {
+        const id = t.slice('studentPhoto:'.length);
         setTemplate((tp) => ({
           ...tp,
           recognition: {
@@ -249,16 +243,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }));
       } else edit(t as keyof Content, url);
       notify(
-        t.startsWith("studentPhoto:")
-          ? "صورة الطالب جاهزة. احفظ إعدادات الخلفية لتطبيقها."
-          : t === "schoolLogo"
-            ? "تم حفظ الشعار."
-            : "الصورة جاهزة. اضغط «نشر على الشاشة» لعرضها على التلفزيون.",
+        t.startsWith('studentPhoto:')
+          ? 'صورة الطالب جاهزة. احفظ إعدادات الخلفية لتطبيقها.'
+          : t === 'schoolLogo'
+            ? 'تم حفظ الشعار.'
+            : 'الصورة جاهزة. اضغط «نشر على الشاشة» لعرضها على التلفزيون.',
       );
     } catch (e) {
-      notify((e as Error).message || "تعذّر الرفع.");
+      notify((e as Error).message || 'تعذّر الرفع.');
     } finally {
-      if (fileRef.current) fileRef.current.value = "";
+      if (fileRef.current) fileRef.current.value = '';
       setBusy(false);
     }
   };
@@ -273,12 +267,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     />
   );
 
-  const [presetName, setPresetName] = useState("");
+  const [presetName, setPresetName] = useState('');
   const [editingPreset, setEditingPreset] = useState<string | null>(null);
   const openPresetEditor = (id: string | null, name: string) => {
     setEditingPreset(id);
     setPresetName(name);
-    setModal("preset");
+    setModal('preset');
   };
 
   return (
@@ -320,25 +314,25 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
 export function useAdmin() {
   const s = useContext(Ctx);
-  if (!s) throw Error("useAdmin outside provider");
+  if (!s) throw Error('useAdmin outside provider');
   return s;
 }
 
 export const fmtTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("ar-SA-u-ca-gregory", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Riyadh",
+  new Date(iso).toLocaleTimeString('ar-SA-u-ca-gregory', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Riyadh',
   });
 export const fmtDateTime = (iso: string) =>
-  new Date(iso).toLocaleString("ar-SA-u-ca-gregory", {
-    timeZone: "Asia/Riyadh",
+  new Date(iso).toLocaleString('ar-SA-u-ca-gregory', {
+    timeZone: 'Asia/Riyadh',
   });
 export const fmtDate = (ymd: string) =>
-  new Date(ymd + "T00:00:00+03:00").toLocaleDateString("ar-SA-u-ca-gregory", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Asia/Riyadh",
+  new Date(ymd + 'T00:00:00+03:00').toLocaleDateString('ar-SA-u-ca-gregory', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Asia/Riyadh',
   });

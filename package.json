@@ -30,7 +30,9 @@
     "test:cloud-presentation": "node --test tests/cloud-presentation.test.mjs",
     "test:cloud-presentation-browser": "node tests/cloud-presentation-browser.mjs",
     "typecheck": "tsc -b --force --pretty",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"local-test/*.{ts,mjs,mts}\" \"netlify/**/*.mjs\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.{ts,json,html}\" \".vscode/*.json\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"local-test/*.{ts,mjs,mts}\" \"netlify/**/*.mjs\" \"scripts/*.mjs\" \"tests/*.mjs\" \"*.{ts,json,html}\" \".vscode/*.json\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
@@ -48,6 +50,7 @@
     "@vitejs/plugin-react": "^4.3.0",
     "oxlint": "^0.16.0",
     "playwright": "^1.56.1",
+    "prettier": "3.9.10",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0"

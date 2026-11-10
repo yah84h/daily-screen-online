@@ -23,7 +23,11 @@ export function ScheduleTab() {
               <b>{s.content.title}</b>
               <small>{fmtDate(s.publish_at)} · منتصف الليل بتوقيت الرياض</small>
             </span>
-            <button className="icon-button" aria-label="حذف الموعد" onClick={() => run(() => api.deletePost(s.id, s.screen_id), 'تم حذف الموعد.')}>
+            <button
+              className="icon-button"
+              aria-label="حذف الموعد"
+              onClick={() => run(() => api.deletePost(s.id, s.screen_id), 'تم حذف الموعد.')}
+            >
               <Trash2 size={17} />
             </button>
           </div>

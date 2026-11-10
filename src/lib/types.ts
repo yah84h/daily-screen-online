@@ -1,8 +1,12 @@
 export type Content = {
-  videoPlaylist?: {enabled:boolean;loop:boolean;items:{id:string;url:string;name:string;type:"video"|"image";seconds?:number}[]};
-  backgroundAudio?: {url:string;name:string};
+  videoPlaylist?: {
+    enabled: boolean;
+    loop: boolean;
+    items: { id: string; url: string; name: string; type: 'video' | 'image'; seconds?: number }[];
+  };
+  backgroundAudio?: { url: string; name: string };
   presentation?: import('./presentation').Presentation;
-  videoPreparation?: 'stream'|'buffer'|'cache';
+  videoPreparation?: 'stream' | 'buffer' | 'cache';
   videoSound?: boolean;
   videoLoop?: boolean;
   videoControls?: boolean;
@@ -28,7 +32,19 @@ export type Content = {
 };
 
 export type RecognitionStudent = { id: string; name: string; achievement: string; photo?: string };
-export type RecognitionBoard = { source?: 'manual' | 'qudrat-pro'; qudratPro?: import('../../local-test/qudrat-data.mjs').QudratOptions; enabled: boolean; title: string; subtitle: string; pageSeconds: number; width?: number; height?: number; style?: 'classic' | 'solo' | 'group'; groupSize?: 2 | 3 | 4; students: RecognitionStudent[] };
+export type RecognitionBoard = {
+  source?: 'manual' | 'qudrat-pro';
+  qudratPro?: import('../../local-test/qudrat-data.mjs').QudratOptions;
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  pageSeconds: number;
+  width?: number;
+  height?: number;
+  style?: 'classic' | 'solo' | 'group';
+  groupSize?: 2 | 3 | 4;
+  students: RecognitionStudent[];
+};
 export type Timetable = { periods: [string, string][] };
 
 export type Template = {
@@ -37,15 +53,29 @@ export type Template = {
   schoolName?: string;
   schoolTagline?: string;
   schoolLogo?: string;
-  schoolX?: number; schoolY?: number; schoolW?: number; schoolScale?: number;
+  schoolX?: number;
+  schoolY?: number;
+  schoolW?: number;
+  schoolScale?: number;
   dismissalLabel?: string;
   dismissalDetail?: string;
   loopHidePhoto?: boolean;
-  loopPositions?: Partial<Record<import('./loopPositions').LoopElement,import('./loopPositions').LoopPosition>>;
+  loopPositions?: Partial<
+    Record<import('./loopPositions').LoopElement, import('./loopPositions').LoopPosition>
+  >;
   loopLayout?: string;
-  loopBackdrop?: 'waves'|'aurora'|'dots'|'grid'|'orbits'|'plain';
-  loopCardStyle?: 'soft'|'glass'|'outlined';
-  loopExtras?: {topic?:boolean;announcement?:boolean;announcementTitle?:string;announcementText?:string;qr?:boolean;qrLabel?:string;schedule?:boolean;hijri?:boolean};
+  loopBackdrop?: 'waves' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
+  loopCardStyle?: 'soft' | 'glass' | 'outlined';
+  loopExtras?: {
+    topic?: boolean;
+    announcement?: boolean;
+    announcementTitle?: string;
+    announcementText?: string;
+    qr?: boolean;
+    qrLabel?: string;
+    schedule?: boolean;
+    hijri?: boolean;
+  };
   loopScale?: number;
   clockScale?: number;
   boardScale?: number;
@@ -56,12 +86,12 @@ export type Template = {
   animateClock?: boolean;
   recognition?: RecognitionBoard;
   timetable?: Timetable;
-  timetableSeason?: 'summer'|'winter'|'custom';
+  timetableSeason?: 'summer' | 'winter' | 'custom';
   background: string;
   backgroundImage?: string;
   slideshow?: import('./slideshow').Slideshow;
   loopAppearance?: import('./loopAppearance').LoopAppearance;
-  centerPhoto?: {ratio?:string;shape?:string;width?:number};
+  centerPhoto?: { ratio?: string; shape?: string; width?: number };
   mediaSlideshow?: import('./slideshow').Slideshow;
   centerSlideshow?: import('./slideshow').Slideshow;
   color: string;
@@ -144,7 +174,10 @@ export const initialContent: Content = {
 };
 
 export const defaultTemplate: Template = {
-  schoolX: 55, schoolY: 6, schoolW: 39, schoolScale: 100,
+  schoolX: 55,
+  schoolY: 6,
+  schoolW: 39,
+  schoolScale: 100,
   background: '#f2f6ff',
   color: '#254d80',
   accent: '#4b91f7',
@@ -164,6 +197,11 @@ export const defaultTemplate: Template = {
   calendar: 'gregory',
 };
 
-export const defaultSchool: School = { name: 'الموهوبين التقنية الثانوية بجدة - بنين', tagline: 'علمٌ ينفع، وأثرٌ يبقى.', logo_url: null };
+export const defaultSchool: School = {
+  name: 'الموهوبين التقنية الثانوية بجدة - بنين',
+  tagline: 'علمٌ ينفع، وأثرٌ يبقى.',
+  logo_url: null,
+};
 
-export const riyadhToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
+export const riyadhToday = () =>
+  new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });

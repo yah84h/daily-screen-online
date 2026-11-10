@@ -1,5 +1,78 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {windowsPresentationCommand,runWindowsPresentation} from '../local-test/presentation-platform.mjs';import {execFile} from 'node:child_process';import {promisify} from 'node:util';import {mkdtemp,writeFile,rm,readFile} from 'node:fs/promises';import {join,resolve} from 'node:path';import {tmpdir} from 'node:os';
-test('Windows converter passes paths with spaces as literal arguments',()=>{const task=windowsPresentationCommand('Convert',"C:\\School files\\teacher's deck.pptx",'C:\\School files\\slides',{SystemRoot:'D:\\Windows'});assert.equal(task.command,'D:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe');assert.equal(task.args[task.args.indexOf('-InputPath')+1],"C:\\School files\\teacher's deck.pptx");assert.equal(task.args[task.args.indexOf('-OutputDirectory')+1],'C:\\School files\\slides');assert(task.args.includes('-NonInteractive'));assert(!task.args.includes('-Command'));});
-test('Windows execution has a timeout and preserves converter failures',async()=>{let called;await runWindowsPresentation('Validate','C:\\in.pptx',undefined,async(...args)=>{called=args;},{POWERSHELL_PATH:'custom-powershell.exe'});assert.equal(called[0],'custom-powershell.exe');assert.equal(called[2].timeout,15000);assert.equal(called[2].windowsHide,true);await assert.rejects(runWindowsPresentation('Convert','in','out',async()=>{throw Error('Office missing');}),/Office missing/);});
-test('native Windows validation accepts a real deck and rejects damaged input',{skip:process.platform!=='win32'},async()=>{const exec=promisify(execFile),temp=await mkdtemp(join(tmpdir(),'windows-pptx-'));try{await runWindowsPresentation('Validate',resolve('tests/fixtures/presentation-test.pptx'),undefined,exec);const invalid=join(temp,'not-a-deck.pptx');await writeFile(invalid,'invalid');await assert.rejects(runWindowsPresentation('Validate',invalid,undefined,exec));}finally{await rm(temp,{recursive:true,force:true});}});
-test('Windows entry points retain packaged startup and source-build support',async()=>{const batch=await readFile('local-test/Start-Windows.bat','utf8');assert(batch.includes('start-local.mjs'));assert(batch.includes('start-server.mjs --lan --open'));const ps=await readFile('local-test/PowerPoint-Windows.ps1','utf8');assert(ps.includes('$app.AutomationSecurity = 3'));assert(ps.includes('$app.Presentations.Count -eq 0'));assert(!ps.includes('Stop-Process'));});
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  windowsPresentationCommand,
+  runWindowsPresentation,
+} from '../local-test/presentation-platform.mjs';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, writeFile, rm, readFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+test('Windows converter passes paths with spaces as literal arguments', () => {
+  const task = windowsPresentationCommand(
+    'Convert',
+    "C:\\School files\\teacher's deck.pptx",
+    'C:\\School files\\slides',
+    { SystemRoot: 'D:\\Windows' },
+  );
+  assert.equal(task.command, 'D:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe');
+  assert.equal(
+    task.args[task.args.indexOf('-InputPath') + 1],
+    "C:\\School files\\teacher's deck.pptx",
+  );
+  assert.equal(task.args[task.args.indexOf('-OutputDirectory') + 1], 'C:\\School files\\slides');
+  assert(task.args.includes('-NonInteractive'));
+  assert(!task.args.includes('-Command'));
+});
+test('Windows execution has a timeout and preserves converter failures', async () => {
+  let called;
+  await runWindowsPresentation(
+    'Validate',
+    'C:\\in.pptx',
+    undefined,
+    async (...args) => {
+      called = args;
+    },
+    { POWERSHELL_PATH: 'custom-powershell.exe' },
+  );
+  assert.equal(called[0], 'custom-powershell.exe');
+  assert.equal(called[2].timeout, 15000);
+  assert.equal(called[2].windowsHide, true);
+  await assert.rejects(
+    runWindowsPresentation('Convert', 'in', 'out', async () => {
+      throw Error('Office missing');
+    }),
+    /Office missing/,
+  );
+});
+test(
+  'native Windows validation accepts a real deck and rejects damaged input',
+  { skip: process.platform !== 'win32' },
+  async () => {
+    const exec = promisify(execFile),
+      temp = await mkdtemp(join(tmpdir(), 'windows-pptx-'));
+    try {
+      await runWindowsPresentation(
+        'Validate',
+        resolve('tests/fixtures/presentation-test.pptx'),
+        undefined,
+        exec,
+      );
+      const invalid = join(temp, 'not-a-deck.pptx');
+      await writeFile(invalid, 'invalid');
+      await assert.rejects(runWindowsPresentation('Validate', invalid, undefined, exec));
+    } finally {
+      await rm(temp, { recursive: true, force: true });
+    }
+  },
+);
+test('Windows entry points retain packaged startup and source-build support', async () => {
+  const batch = await readFile('local-test/Start-Windows.bat', 'utf8');
+  assert(batch.includes('start-local.mjs'));
+  assert(batch.includes('start-server.mjs --lan --open'));
+  const ps = await readFile('local-test/PowerPoint-Windows.ps1', 'utf8');
+  assert(ps.includes('$app.AutomationSecurity = 3'));
+  assert(ps.includes('$app.Presentations.Count -eq 0'));
+  assert(!ps.includes('Stop-Process'));
+});

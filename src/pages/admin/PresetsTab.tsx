@@ -26,7 +26,11 @@ export function PresetsTab() {
         {presets.map((p) => (
           <div className="preset-card" key={p.id}>
             <div className="preset-cover">
-              <Screen content={{ ...initialContent, ...p.content }} template={{...template,displayMode:'daily'}} school={data?.school} />
+              <Screen
+                content={{ ...initialContent, ...p.content }}
+                template={{ ...template, displayMode: 'daily' }}
+                school={data?.school}
+              />
             </div>
             <div className="preset-body">
               <h3>{p.name}</h3>
@@ -43,10 +47,19 @@ export function PresetsTab() {
                 >
                   تعديل
                 </button>
-                <button onClick={() => run(() => api.savePreset(p.name + ' — نسخة', p.content), 'تم إنشاء نسخة.')}>
+                <button
+                  onClick={() =>
+                    run(() => api.savePreset(p.name + ' — نسخة', p.content), 'تم إنشاء نسخة.')
+                  }
+                >
                   <Copy size={14} /> إنشاء نسخة
                 </button>
-                <button aria-label="حذف الموضوع" onClick={() => confirm('حذف هذا الموضوع؟') && run(() => api.deletePreset(p.id), 'تم الحذف.')}>
+                <button
+                  aria-label="حذف الموضوع"
+                  onClick={() =>
+                    confirm('حذف هذا الموضوع؟') && run(() => api.deletePreset(p.id), 'تم الحذف.')
+                  }
+                >
                   <Trash2 size={15} />
                 </button>
               </div>
