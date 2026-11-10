@@ -133,7 +133,7 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 export async function publish(screenId: string, content: Content, template?: Partial<Template>) {
   if (template?.displayMode==='presentation'&&!content.presentation?.slides.length)throw Error('ارفع ملف PowerPoint أولًا.');
   if (template?.displayMode==='slideshow' && !mediaSlideshowOf(template).images.length) throw Error('أضف صورًا لعرض الشرائح أولًا.');
-  if (template?.displayMode!=='slideshow' && !content.title?.trim() && !content.fullMedia && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
+  if (template?.displayMode!=='slideshow' && !content.title?.trim() && !content.fullMedia && !(content.videoPlaylist?.enabled&&content.videoPlaylist.items.length) && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
   const post = await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id }).select().single();
   fail(post.error);
@@ -153,7 +153,7 @@ export async function saveTemplate(screenId: string, template: Partial<Template>
 
 export async function schedulePost(screenId: string, content: Content, date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < riyadhToday()) throw Error('اختر اليوم أو تاريخًا قادمًا.');
-  if (!content.title?.trim() && !content.fullMedia && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
+  if (!content.title?.trim() && !content.fullMedia && !(content.videoPlaylist?.enabled&&content.videoPlaylist.items.length) && !content.presentation?.slides.length) throw Error('أضف عنوانًا أو وسائط أولًا.');
   const { data: user } = await supabase.auth.getUser();
   fail((await supabase.from('posts').insert({ screen_id: screenId, content, publish_at: date, created_by: user.user?.id })).error);
   if (date === riyadhToday()) await notifyScreen(screenId);

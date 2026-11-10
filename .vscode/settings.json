@@ -1,0 +1,22 @@
+{
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "files.exclude": {
+    "**/*.tsbuildinfo": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "dist": true,
+    "dist-local": true,
+    "local-test/data": true,
+    "work": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/dist-local/**": true,
+    "**/local-test/data/**": true,
+    "**/work/**": true
+  },
+  "debug.javascript.autoAttachFilter": "smart"
+}

@@ -1,8 +1,10 @@
+import {clearShowCache} from '@/lib/assetCache';
 import {BackgroundAudio} from '@/components/BackgroundAudio';
 import DisplayControls from "@/components/DisplayControls";
 import { useEffect, useRef, useState } from "react";
 import { Monitor } from "lucide-react";
-import { Screen } from "@/components/Screen";
+import {PreparedDisplay} from "@/components/PreparedDisplay";
+import {CacheStatusLine} from "@/components/CacheStatusLine";
 import { fetchTv, requestPairing, screenChannel } from "@/lib/api";
 import { cacheTvState, readTvCache } from "@/lib/offline";
 import { initialContent, type TvState } from "@/lib/types";
@@ -123,7 +125,7 @@ export default function Tv() {
   return (
     <div className="tv" onDoubleClick={() => setSettings((v) => !v)}>
       {paired ? (
-        <Screen
+        <PreparedDisplay key={paired.screen.id}
           content={paired.post?.content || initialContent}
           template={paired.screen.template}
           school={paired.school}
@@ -152,12 +154,14 @@ export default function Tv() {
         </div>
       )}
       <BackgroundAudio source={paired?.post?.content.backgroundAudio} controls={settings}/>
+      <CacheStatusLine/>
       <DisplayControls />
       {settings && (
         <div className="tv-settings">
           <b>{online ? "متصلة" : "غير متصلة · تُعرض آخر شاشة محفوظة"}</b>
           {paired && <span>{paired.screen.name}</span>}
           <button onClick={() => location.reload()}>إعادة تحميل الشاشة</button>
+          <button onClick={()=>{void clearShowCache().then(()=>location.reload()).catch(()=>alert("تعذر مسح ذاكرة الوسائط."));}}>مسح ذاكرة قوائم الوسائط على هذا الجهاز</button>
           <button
             onClick={() =>
               document.fullscreenElement

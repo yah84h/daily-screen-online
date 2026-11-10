@@ -9,6 +9,11 @@ export async function clearDriveVideoCache(){const db=await database();try{await
 export function driveError(code:string){return ({INVALID_DRIVE_LINK:'رابط Google Drive غير صالح.',DRIVE_NOT_PUBLIC:'تعذر قراءة الفيديو. اجعل المشاركة «أي شخص لديه الرابط» واسمح بالتنزيل، واستخدم MP4 أو WEBM.',DRIVE_QUOTA:'وصل الملف إلى حد التنزيل في Google Drive. حاول لاحقًا.',DRIVE_RANGE_UNAVAILABLE:'لم يسمح Drive بتشغيل هذا الملف على أجزاء. جرّب ملف MP4 آخر مع السماح بالتنزيل.',OFFLINE_ONLY:'الخادم في وضع دون اتصال؛ يحتاج فيديو Drive إلى الإنترنت أول مرة.'} as Record<string,string>)[code]||'تعذر تحميل فيديو Drive. تحقق من الاتصال وصلاحيات الملف ثم أعد المحاولة.';}
 export async function cacheDriveVideo(url:string,signal:AbortSignal,onProgress:(loaded:number,total:number)=>void):Promise<{blob:Blob;persistent:boolean;cached:boolean}>{
  try{const blob=await stored(url);signal.throwIfAborted();if(blob){onProgress(blob.size,blob.size);return{blob,persistent:true,cached:true};}}catch{signal.throwIfAborted();}
+ const blob=await downloadDriveMedia(url,signal,onProgress);
+ let persistent=false;try{await remember(url,blob);persistent=true;}catch{/* Prepared media can still play when storage is full. */}signal.throwIfAborted();return{blob,persistent,cached:false};
+}
+/** Fully download Drive's bounded range responses without replacing the saved video cache. */
+export async function downloadDriveMedia(url:string,signal:AbortSignal,onProgress:(loaded:number,total:number)=>void):Promise<Blob>{
  const chunks:BlobPart[]=[];let offset=0,total=0,type='video/mp4';
  do{
   signal.throwIfAborted();const response=await fetch(url,{signal,cache:'no-store',headers:{Range:`bytes=${offset}-${offset+DRIVE_CHUNK-1}`}});
@@ -20,5 +25,5 @@ export async function cacheDriveVideo(url:string,signal:AbortSignal,onProgress:(
   while(true){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>DRIVE_CHUNK||offset+length>total){await reader.cancel();throw Error('حجم الفيديو غير متوقع');}chunks.push(value);onProgress(offset+length,total);}
   if(length!==Number(range[2])-offset+1)throw Error('انقطع تنزيل الفيديو. أعد المحاولة.');offset+=length;
  }while(offset<total);
- const blob=new Blob(chunks,{type});signal.throwIfAborted();let persistent=false;try{await remember(url,blob);persistent=true;}catch{/* The prepared in-memory video can still play when storage is full. */}signal.throwIfAborted();return{blob,persistent,cached:false};
+ signal.throwIfAborted();return new Blob(chunks,{type});
 }

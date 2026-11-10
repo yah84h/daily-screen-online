@@ -1,0 +1,20 @@
+import {chromium} from 'playwright';import assert from 'node:assert/strict';import {mkdtemp,cp,rm,readFile,writeFile} from 'node:fs/promises';import {tmpdir} from 'node:os';import {join} from 'node:path';import {spawn} from 'node:child_process';
+const folder=await mkdtemp(join(tmpdir(),'deck-cache-')),port=32000+Math.floor(Math.random()*15000),base='http://127.0.0.1:'+port;
+await cp('dist-local',folder,{recursive:true});await rm(join(folder,'data'),{recursive:true,force:true});
+const seed=JSON.parse(await readFile(join(folder,'seed.json'),'utf8'));seed.screens[0].template={...seed.screens[0].template,displayMode:'presentation'};seed.posts[0].publish_at=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Riyadh'});seed.posts[0].content.presentation={id:'cache-test-deck',name:'Cache test',slides:[1,2,3].map(n=>base+'/deck/'+n+'.png')};seed.posts[0].content.backgroundAudio=undefined;await writeFile(join(folder,'seed.json'),JSON.stringify(seed));
+const server=spawn(process.execPath,[join(folder,'server.mjs'),'--localhost'],{env:{...process.env,PORT:String(port)},stdio:'ignore'});let browser;
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64');
+try{
+ for(let i=0;i<100;i++){try{if((await fetch(base+'/local/status')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+ browser=await chromium.launch({headless:true});const context=await browser.newContext({serviceWorkers:'block'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ let release;const gate=new Promise(resolve=>{release=resolve;});let downloads=0,failLast=true;
+ await context.route('**/deck/*.png',async route=>{downloads++;if(route.request().url().endsWith('/3.png')){await gate;if(failLast){await route.fulfill({status:503,body:'Unavailable'});return;}}await route.fulfill({contentType:'image/png',body:png});});
+ await page.goto(base+'/display');await page.locator('.presentation-preparation progress[value="2"]').waitFor();assert.equal(await page.locator('.presentation-player>img').count(),0,'No partial deck is displayed');release();
+ await page.getByRole('button',{name:'إعادة المحاولة',exact:true}).waitFor();failLast=false;await page.getByRole('button',{name:'إعادة المحاولة',exact:true}).click();
+ await page.locator('.presentation-player[data-prepared=true]>img').waitFor();assert(await page.locator('.presentation-player>img').evaluate(img=>img.src.startsWith('blob:')&&img.complete&&img.naturalWidth>0));
+ await page.keyboard.press('End');await page.waitForFunction(()=>document.querySelector('.presentation-player')?.getAttribute('data-slide')==='2');
+ await context.unroute('**/deck/*.png');let unexpected=0;await context.route('**/deck/*.png',route=>{unexpected++;return route.abort();});
+ await page.reload();await page.locator('.presentation-player[data-prepared=true]>img').waitFor();assert.equal(unexpected,0,'Saved deck loads with slide network requests blocked');await page.keyboard.press('Home');await page.waitForFunction(()=>document.querySelector('.presentation-player')?.getAttribute('data-slide')==='0');assert.deepEqual(errors,[]);
+ console.log('PASS whole-deck gate, slide progress, failed-download retry, local Blob slide navigation, and IndexedDB reload with all slide network requests blocked. Downloads:',downloads);
+ const noStorage=await browser.newContext({serviceWorkers:'block'});await noStorage.addInitScript(()=>{indexedDB.open=()=>{throw Error('Storage disabled');};});await noStorage.route('**/deck/*.png',route=>route.fulfill({contentType:'image/png',body:png}));const fallback=await noStorage.newPage();await fallback.goto(base+'/display');await fallback.locator('.presentation-player[data-prepared=true]>img').waitFor();await fallback.locator('.presentation-cache-note').waitFor();console.log('PASS session-only fallback when browser storage is unavailable.');await noStorage.close();
+}finally{await browser?.close();server.kill();await rm(folder,{recursive:true,force:true});}

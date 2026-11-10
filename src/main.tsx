@@ -16,7 +16,7 @@ const News = lazy(()=>import('@/pages/News'));
 const Tv = lazy(() => import('@/pages/Tv'));
 
 // Service Worker لصفحة التلفزيون فقط (إعادة تحميل دون اتصال)
-if ('serviceWorker' in navigator && (location.pathname.startsWith('/tv') || /^\/(?:display|tv)\d*$/.test(location.pathname))) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator && (location.pathname.startsWith('/tv') || /^\/(?:display|tv)\d*$/.test(location.pathname))) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
 

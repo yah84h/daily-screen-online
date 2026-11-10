@@ -148,7 +148,7 @@ export function HomeTab() {
             </button></>}
           </fieldset>
           <div className="publish-area">
-            <button className="button publish" disabled={busy || (template.displayMode==='presentation'?!content.presentation?.slides.length:template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!content.fullMedia:!content.title.trim()) || !data} onClick={publishScreen}>
+            <button className="button publish" disabled={busy || (template.displayMode==='presentation'?!content.presentation?.slides.length:template.displayMode==='slideshow'?!mediaSlideshowOf(template).images.length:template.displayMode==='media'?!(content.fullMedia||(content.videoPlaylist?.enabled&&content.videoPlaylist.items.length)):!content.title.trim()) || !data} onClick={publishScreen}>
               {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
               نشر على الشاشة
             </button>

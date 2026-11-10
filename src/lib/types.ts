@@ -1,4 +1,5 @@
 export type Content = {
+  videoPlaylist?: {enabled:boolean;loop:boolean;items:{id:string;url:string;name:string;type:"video"|"image";seconds?:number}[]};
   backgroundAudio?: {url:string;name:string};
   presentation?: import('./presentation').Presentation;
   videoPreparation?: 'stream'|'buffer'|'cache';
