@@ -1,3 +1,4 @@
+import { RemoteMediaReceiver } from '@/components/RemoteMediaReceiver';
 import { clearShowCache } from '@/lib/assetCache';
 import { BackgroundAudio } from '@/components/BackgroundAudio';
 import DisplayControls from '@/components/DisplayControls';
@@ -149,6 +150,13 @@ export default function Tv() {
         </div>
       )}
       <BackgroundAudio source={paired?.post?.content.backgroundAudio} controls={settings} />
+      {paired && (
+        <RemoteMediaReceiver
+          key={paired.screen.id}
+          screen={paired.screen.id}
+          token={urlToken || localStorage.getItem(TOKEN_KEY) || ''}
+        />
+      )}
       <CacheStatusLine />
       <DisplayControls />
       {settings && (

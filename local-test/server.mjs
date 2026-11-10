@@ -1,3 +1,4 @@
+import { mediaControlStep, playbackState } from './media-control-state.mjs';
 import { uploadPresentation, presentationJob, presentationStep } from './presentations.mjs';
 import { driveVideoResponse } from './drive-video.mjs';
 import { Readable } from 'node:stream';
@@ -186,6 +187,7 @@ function rpc({ name, args = {}, options = '' }, staff) {
     const token = randomUUID(),
       code = String(Math.floor(100000 + Math.random() * 900000));
     db.screen_devices.push({
+      id: randomUUID(),
       token,
       code,
       screen_id: settings.has('pair') ? null : screen.id,
@@ -364,6 +366,49 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname.startsWith('/local/presentations/')) {
       accounts.requireUser(req, 'daily');
       return reply(res, presentationJob(url.pathname.split('/').pop(), dataDir));
+    }
+    if (url.pathname === '/local/media-control') {
+      if (!['GET', 'POST'].includes(req.method))
+        throw Object.assign(Error('Method not allowed'), { status: 405 });
+      const input =
+        req.method === 'POST'
+          ? JSON.parse((await body(req)).toString() || '{}')
+          : Object.fromEntries(url.searchParams);
+      const screen = db.screens.find((screen) => screen.id === input.screen);
+      if (!screen) throw Object.assign(Error('الشاشة غير موجودة.'), { status: 404 });
+      const device = input.token
+        ? db.screen_devices.find(
+            (device) => device.token === input.token && device.screen_id === screen.id,
+          )
+        : null;
+      if (input.token && !device)
+        throw Object.assign(Error('رمز جهاز العرض غير صالح.'), { status: 403 });
+      if (!device) accounts.requireUser(req, 'daily');
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
+      const posts = db.posts
+        .filter((post) => post.screen_id === screen.id && post.publish_at <= today)
+        .sort(
+          (a, b) =>
+            b.publish_at.localeCompare(a.publish_at) || b.created_at.localeCompare(a.created_at),
+        );
+      const post = posts[0];
+      if (!post) throw Object.assign(Error('انشر محتوى على الشاشة أولًا.'), { status: 409 });
+      const previous =
+        post.content.mediaPlayback ||
+        posts.find((post) => post.content.mediaPlayback)?.content.mediaPlayback;
+      if (!device && input.action === 'state' && input.watch) input.action = 'watch';
+      if (input.action === 'state') return reply(res, playbackState(previous));
+      if (req.method !== 'POST') throw Object.assign(Error('Method not allowed'), { status: 405 });
+      const identity = device
+        ? {
+            id: device.id || createHash('sha256').update(device.token).digest('hex').slice(0, 16),
+            label: device.label,
+          }
+        : null;
+      const next = mediaControlStep(previous, input, identity);
+      post.content = { ...post.content, mediaPlayback: next };
+      save();
+      return reply(res, next);
     }
     if (url.pathname === '/local/presentation-control') {
       const input =

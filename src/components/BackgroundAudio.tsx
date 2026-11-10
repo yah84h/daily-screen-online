@@ -114,11 +114,11 @@ export function BackgroundAudio({
     const el = audio.current;
     if (!el || !preparedURL) return;
     setError('');
-    if (prefs.enabled && !device.paused)
+    if ((prefs.enabled || device.remoteActive) && !device.paused)
       el.play().catch(() => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'));
     else el.pause();
     return () => el.pause();
-  }, [preparedURL, prefs.enabled, device.paused]);
+  }, [preparedURL, prefs.enabled, device.paused, device.remoteActive]);
 
   if (!url) return controls ? <p>لا يوجد صوت خلفية منشور. أضفه من لوحة الإدارة.</p> : null;
   return (

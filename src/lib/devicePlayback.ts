@@ -1,5 +1,10 @@
 import { useSyncExternalStore } from 'react';
-type DevicePlayback = { paused: boolean; volume: number; downloadsPaused: boolean };
+type DevicePlayback = {
+  paused: boolean;
+  volume: number;
+  downloadsPaused: boolean;
+  remoteActive?: boolean;
+};
 const listeners = new Set<() => void>();
 let state: DevicePlayback = { paused: false, volume: 1, downloadsPaused: false };
 try {

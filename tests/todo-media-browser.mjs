@@ -74,11 +74,17 @@ try {
     await tv.locator('.screen-image .daily-media-content>div').evaluate((el) => el.style.transform),
     'scale(1.5)',
   );
-  await tv.mouse.move(100, 100);
-  await tv.getByLabel('التحكم بالوسائط والتنزيل', { exact: true }).click();
-  await tv.getByLabel('مستوى صوت جهاز العرض', { exact: true }).fill('0.4');
-  assert.equal(await tv.locator('.screen-image video').evaluate((video) => video.volume), 0.4);
-  await tv.getByLabel('إيقاف جميع الوسائط مؤقتًا', { exact: true }).click();
+  const admin = await context.newPage();
+  await admin.goto(base + '/admin');
+  await admin.getByLabel('اسم المستخدم', { exact: true }).fill('Archo');
+  await admin.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
+  await admin.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
+  await admin.waitForURL('**/admin');
+  await admin.getByLabel('مستوى صوت الشاشة عن بعد', { exact: true }).fill('0.4');
+  await tv.waitForFunction(
+    () => Math.abs(document.querySelector('.screen-image video').volume - 0.4) < 0.001,
+  );
+  await admin.getByLabel('إيقاف الشاشة مؤقتًا عن بعد', { exact: true }).click();
   await tv.waitForFunction(() => document.querySelector('.screen-image video')?.paused);
   const pausedTime = await tv.locator('.screen-image video').evaluate((video) => video.currentTime);
   await tv.waitForTimeout(300);
@@ -86,16 +92,11 @@ try {
     await tv.locator('.screen-image video').evaluate((video) => video.currentTime),
     pausedTime,
   );
-  await tv.getByLabel('متابعة جميع الوسائط', { exact: true }).click();
+  await admin.getByLabel('تشغيل الشاشة عن بعد', { exact: true }).click();
   await tv.waitForFunction(() => !document.querySelector('.screen-image video')?.paused);
   await tv.screenshot({ path: 'work/todo-controls.png' });
-  await tv.getByLabel('إيقاف التنزيلات مؤقتًا', { exact: true }).click();
-  const admin = await context.newPage();
-  await admin.goto(base + '/admin');
-  await admin.getByLabel('اسم المستخدم', { exact: true }).fill('Archo');
-  await admin.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
-  await admin.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
-  await admin.waitForURL('**/admin');
+  await admin.getByLabel('إيقاف تنزيلات الشاشة مؤقتًا', { exact: true }).click();
+
   await admin
     .getByLabel('رابط وسائط الشاشة اليومية', { exact: true })
     .fill('https://fixture.invalid/next.webm');
@@ -110,7 +111,7 @@ try {
     1,
     'Previous daily video remains visible during download pause',
   );
-  await tv.getByLabel('متابعة التنزيلات', { exact: true }).click();
+  await admin.getByLabel('متابعة تنزيلات الشاشة', { exact: true }).click();
   await tv.locator('.cache-status-line').waitFor({ state: 'hidden' });
   await tv.waitForFunction(
     () =>

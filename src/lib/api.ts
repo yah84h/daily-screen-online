@@ -162,6 +162,12 @@ export async function cleanupMedia(): Promise<{ deleted: number; kept: number }>
 }
 
 // ---------- الإجراءات ----------
+/** Runtime controls belong to the screen, not to an editable/scheduled copy of a post. */
+function withoutPlaybackState(content: Content): Content {
+  const clean = { ...content } as Content & { mediaPlayback?: unknown };
+  delete clean.mediaPlayback;
+  return clean;
+}
 export async function publish(screenId: string, content: Content, template?: Partial<Template>) {
   if (template?.displayMode === 'presentation' && !content.presentation?.slides.length)
     throw Error('ارفع ملف PowerPoint أولًا.');
@@ -178,7 +184,12 @@ export async function publish(screenId: string, content: Content, template?: Par
   const { data: user } = await supabase.auth.getUser();
   const post = await supabase
     .from('posts')
-    .insert({ screen_id: screenId, content, publish_at: riyadhToday(), created_by: user.user?.id })
+    .insert({
+      screen_id: screenId,
+      content: withoutPlaybackState(content),
+      publish_at: riyadhToday(),
+      created_by: user.user?.id,
+    })
     .select()
     .single();
   fail(post.error);
@@ -216,9 +227,12 @@ export async function schedulePost(screenId: string, content: Content, date: str
   const { data: user } = await supabase.auth.getUser();
   fail(
     (
-      await supabase
-        .from('posts')
-        .insert({ screen_id: screenId, content, publish_at: date, created_by: user.user?.id })
+      await supabase.from('posts').insert({
+        screen_id: screenId,
+        content: withoutPlaybackState(content),
+        publish_at: date,
+        created_by: user.user?.id,
+      })
     ).error,
   );
   if (date === riyadhToday()) await notifyScreen(screenId);

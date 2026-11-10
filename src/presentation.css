@@ -637,3 +637,108 @@ html[data-pointer-ui='true'] .playback-toolbar,
 .playlist-card .crop-editor input[type='range'] {
   width: 100%;
 }
+
+.remote-media-panel {
+  background: linear-gradient(130deg, #fff, #f1f6ff);
+  border: 1px solid #d9e5f5;
+  border-radius: 18px;
+  padding: 22px;
+  margin: 18px 0;
+  box-shadow: 0 5px 20px #18355e06;
+}
+.remote-media-panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.remote-media-panel h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.remote-media-panel header p {
+  font-size: 12px;
+  color: #617c9c;
+  margin: 6px 0;
+}
+.remote-online,
+.remote-offline {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.remote-online {
+  background: #def5e9;
+  color: #267358;
+}
+.remote-offline {
+  background: #edf0f5;
+  color: #6a7b91;
+}
+.remote-playback-buttons,
+.remote-seek {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+.remote-media-panel > label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 14px 0;
+}
+.remote-media-panel input[type='range'] {
+  width: 100%;
+}
+.remote-seek button {
+  border: 1px solid #d8e5f3;
+  background: white;
+  border-radius: 9px;
+  padding: 10px;
+  color: #375e8c;
+}
+.remote-device-reports {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.remote-device-reports article {
+  border: 1px solid #dce6f4;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.remote-device-reports small {
+  color: #64809e;
+}
+.remote-device-reports article > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+}
+.remote-device-reports progress {
+  width: 100%;
+}
+@media (max-width: 600px) {
+  .remote-media-panel {
+    padding: 15px;
+  }
+  .remote-media-panel header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .remote-playback-buttons button {
+    flex: 1;
+    font-size: 12px;
+  }
+  .remote-seek select {
+    width: 100%;
+  }
+}

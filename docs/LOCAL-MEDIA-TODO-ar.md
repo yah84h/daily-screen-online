@@ -14,3 +14,7 @@
 الكاش خاص بالجهاز والمتصفح والموقع، وليس على الهاتف الذي ينشر المحتوى. يستعمل مخزن الوسائط حدود القائمة السابقة (٥١٢ ميجابايت للملف، ٢ جيجابايت للمخزن)، ويخضع لمساحة المتصفح. التخزين لا يضمن أن التطبيق كله يعمل بلا إنترنت.
 
 للتجربة المحلية: `npm run dev:local` ثم افتح `/admin` و`/display` على المنفذ 5173. اختبارات التحسينات في `tests/todo-media-browser.mjs`، مع اختبارات القوائم وPowerPoint والصوت الموجودة مسبقًا. استخدمت الاختبارات ملفات محلية وخوادم مؤقتة؛ لم تُغيّر بيانات المدرسة.
+
+## Remote controls in admin
+
+Select a screen in admin and use the new remote media panel for play/pause, volume, seeking, playlist next/previous, and download pause/resume. The display is a player with read-only preparation progress. Admin shows live per-device position and preparation feedback. Phone previews and other screens are unaffected. Playback settings survive new publications. Existing Supabase function environment variables are reused; no migration is required.

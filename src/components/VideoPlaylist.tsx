@@ -26,6 +26,17 @@ export function VideoPlaylist({
     const timer = setTimeout(next, Math.max(3, item.seconds || 10) * 1000);
     return () => clearTimeout(timer);
   }, [item?.id, item?.url, index, large, loop, items.length, device.paused]);
+  useEffect(() => {
+    if (!large) return;
+    const handle = (event: Event) => {
+      const action = (event as CustomEvent).detail;
+      if (action === 'next') next();
+      if (action === 'previous')
+        setIndex((index) => (index > 0 ? index - 1 : loop ? items.length - 1 : 0));
+    };
+    window.addEventListener('daily-screen-playlist-command', handle);
+    return () => window.removeEventListener('daily-screen-playlist-command', handle);
+  }, [large, items.length, loop]);
   if (!item) return null;
   return (
     <div className="video-playlist" data-playlist-index={index}>

@@ -1,3 +1,4 @@
+import { RemoteMediaPanel } from './RemoteMediaPanel';
 import { DailyMediaEditor } from './DailyMediaEditor';
 import { CropEditor } from './CropEditor';
 import { DailyMedia } from '@/components/DailyMedia';
@@ -59,6 +60,7 @@ export function HomeTab() {
   return (
     <>
       {permissions.admin && <DisplayModes />}
+      <RemoteMediaPanel />
       <div className="overview-grid">
         <section className="preview-section">
           <div className="section-heading">
