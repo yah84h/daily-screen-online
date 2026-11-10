@@ -19,7 +19,7 @@ export function createPresentationHandler(getClients){return async event=>{
    const raw=post.content.presentationPlayback,revision=Number.isSafeInteger(raw?.revision)?raw.revision:0;
    const current=raw?.deck===deck.id?{slide:Math.max(0,Math.min(deck.slides.length-1,Number(raw.slide)||0)),black:raw.black===true}:{slide:0,black:false};
    if(input.action==='state')return json(200,{...current,deck:deck.id,count:deck.slides.length,revision});
-   const next={...presentationStep(current,input.action,deck.slides.length,input.index),deck:deck.id,revision:revision+1};
+   const next={...presentationStep(current,input.action,deck.slides.length,input.index,input.black),deck:deck.id,revision:revision+1};
    let update=admin.from('posts').update({content:{...post.content,presentationPlayback:next}}).eq('id',post.id);
    update=raw?.revision==null?update.is('content->presentationPlayback->>revision',null):update.eq('content->presentationPlayback->>revision',String(raw.revision));
    const saved=await update.select('id');if(saved.error)throw fail('تعذر حفظ موضع العرض',502);if(saved.data?.length)return json(200,{slide:next.slide,black:next.black,deck:deck.id,count:deck.slides.length,revision:next.revision});

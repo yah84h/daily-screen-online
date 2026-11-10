@@ -1,3 +1,5 @@
+import {MediaAudio} from './MediaAudio';
+import {rotationOptions,rotationPhase} from '../../local-test/rotation.mjs';
 import {PresentationPlayer} from './PresentationPlayer';
 import type {PresentationContext} from '@/lib/presentation';
 import {parseDriveLink} from '@/lib/driveVideo';
@@ -8,26 +10,34 @@ import { mediaSlideshowOf } from '@/lib/slideshow';
 import { BackgroundSlideshow } from './BackgroundSlideshow';
 import { MediaVideo } from './MediaVideo';
 import { LoopScreen } from './loop/LoopScreen';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GraduationCap } from 'lucide-react';
 import { defaultSchool, defaultTemplate, type Content, type School, type Template } from '@/lib/types';
 
-type Props = { content: Content; template?: Partial<Template>; school?: School; large?: boolean; presentationContext?:PresentationContext };
+type Props = { content: Content; template?: Partial<Template>; school?: School; large?: boolean; presentationContext?:PresentationContext; slideshowStartIndex?:number };
 
 /** العرض المشترك بين المعاينة والقالب والتلفزيون — لا تكرره في مكان آخر. */
-export function Screen({ content: c, template, school = defaultSchool, large = false,presentationContext }: Props) {
+export function Screen({ content: c, template, school = defaultSchool, large = false,presentationContext,slideshowStartIndex=0 }: Props) {
   const t: Template = syncedTheme({ ...defaultTemplate, ...template });
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const i = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(i);
   }, []);
+  const rotation=rotationOptions(t.rotation),started=useRef(Date.now());
+  useEffect(()=>{started.current=Date.now();},[rotation.enabled,rotation.normal,rotation.normalSeconds,rotation.leaderboardSeconds]);
+  if(rotation.enabled&&t.displayMode!=='presentation'){
+   const elapsed=Math.max(0,(now.getTime()-started.current)/1000),phase=rotationPhase(elapsed,rotation),cycle=rotation.normalSeconds+rotation.leaderboardSeconds,photoSeconds=Math.floor(elapsed/cycle)*rotation.normalSeconds+Math.min(elapsed%cycle,rotation.normalSeconds),playlist=mediaSlideshowOf(t),photoIndex=playlist.loop?Math.floor(photoSeconds/playlist.seconds)%Math.max(1,playlist.images.length):Math.min(Math.floor(photoSeconds/playlist.seconds),Math.max(0,playlist.images.length-1)),next={...t,rotation:undefined};let content=c;
+   if(phase==='leaderboard'){next.displayMode='loop';next.loopLayout='board-only';next.loopPositions=undefined;next.loopExtras=undefined;next.recognition={title:'نجوم الأسبوع',subtitle:'',pageSeconds:10,students:[],...t.recognition,enabled:true};}
+   else{next.displayMode=rotation.normal==='photos'?(mediaSlideshowOf(t).images.length?'slideshow':'media'):rotation.normal;if(rotation.normal==='photos'&&!mediaSlideshowOf(t).images.length)content={...c,fullMedia:c.fullType==='image'&&c.fullMedia?c.fullMedia:c.image,fullType:'image'};if(rotation.normal==='loop')next.recognition={title:'',subtitle:'',pageSeconds:10,students:[],...t.recognition,enabled:false};}
+   return <div className="screen-rotation" data-phase={phase}><Screen key={phase} content={content} template={next} school={school} large={large} presentationContext={presentationContext} slideshowStartIndex={rotation.normal==='photos'?photoIndex:0}/></div>;
+  }
   if(t.displayMode==='presentation')return <div className="screen screen-presentation">{c.presentation?.slides.length?<PresentationPlayer key={c.presentation.id} deck={c.presentation} context={presentationContext} large={large}/>:<div className="media-empty">ارفع ملف PowerPoint وانشره على الشاشة</div>}</div>;
-  if(t.displayMode==='slideshow') return <div className={'screen screen-slideshow '+(large?'large':'')} style={{background:t.background}}><BackgroundSlideshow template={{...t,slideshow:{...mediaSlideshowOf(t),enabled:true}}}/>{!mediaSlideshowOf(t).images.length&&<div className="media-empty">أضف صورًا لعرض الشرائح</div>}</div>;
+  if(t.displayMode==='slideshow') return <div className={'screen screen-slideshow '+(large?'large':'')} style={{background:t.background}}><BackgroundSlideshow startIndex={slideshowStartIndex} template={{...t,slideshow:{...mediaSlideshowOf(t),enabled:true}}}/>{!mediaSlideshowOf(t).images.length&&<div className="media-empty">أضف صورًا لعرض الشرائح</div>}</div>;
   if (t.displayMode === 'loop') return <LoopScreen content={c} now={now} template={t} school={school} logo={c.logo || t.schoolLogo || school.logo_url || undefined} large={large}/>;
   const d = c.autoDate || !c.date ? now : new Date(c.date + 'T12:00:00+03:00');
   const logo = c.logo || t.schoolLogo || school.logo_url;
-  if(t.displayMode==='media') return <div className={'screen screen-media '+(large?'large':'')} style={{background:t.background,'--media-fit':c.mediaFit||'cover'} as import('react').CSSProperties}>{c.fullMedia ? c.fullType==='video' ? parseDriveLink(c.fullMedia)?<DriveVideo key={c.fullMedia} link={c.fullMedia} preparation={c.videoPreparation} large={large} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false} controls={large&&!!c.videoControls}/>:<MediaVideo key={c.fullMedia} src={c.fullMedia} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false} controls={large&&!!c.videoControls}/> : <img src={c.fullMedia} alt="وسائط الشاشة" style={{objectFit:c.mediaFit||'cover'}}/> : <div className="media-empty">اختر صورة أو فيديو من لوحة التحكم</div>}</div>;
+  if(t.displayMode==='media') return <div className={'screen screen-media '+(large?'large':'')} style={{background:t.background,'--media-fit':c.mediaFit||'cover'} as import('react').CSSProperties}>{c.fullMedia ? c.fullType==='audio'?<MediaAudio src={c.fullMedia} large={large} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false}/>:c.fullType==='video' ? parseDriveLink(c.fullMedia)?<DriveVideo key={c.fullMedia} link={c.fullMedia} preparation={c.videoPreparation} large={large} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false} controls={large&&!!c.videoControls}/>:<MediaVideo key={c.fullMedia} src={c.fullMedia} sound={large&&c.videoSound!==false} loop={c.videoLoop!==false} controls={large&&!!c.videoControls}/> : <img src={c.fullMedia} alt="وسائط الشاشة" style={{objectFit:c.mediaFit||'cover'}}/> : <div className="media-empty">اختر صورة أو فيديو من لوحة التحكم</div>}</div>;
   return (
     <div
       className={'screen ' + (large ? 'large' : '')}

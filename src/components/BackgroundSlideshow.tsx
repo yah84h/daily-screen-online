@@ -1,14 +1,14 @@
 import {useEffect,useState,useRef} from 'react';
 import {slideshowOf,type BackgroundSlide} from '@/lib/slideshow';
 import type {Template} from '@/lib/types';
-export function BackgroundSlideshow({template}:{template:Partial<Template>}){
+export function BackgroundSlideshow({template,startIndex=0}:{template:Partial<Template>;startIndex?:number}){
  const visibleRef=useRef<BackgroundSlide|null>(null);
- const s=slideshowOf(template),[cursor,setCursor]=useState(0),[failed,setFailed]=useState<string[]>([]),[visible,setVisible]=useState<BackgroundSlide|null>(null),[previous,setPrevious]=useState<BackgroundSlide|null>(null);
+ const s=slideshowOf(template),[cursor,setCursor]=useState(startIndex),[failed,setFailed]=useState<string[]>([]),[visible,setVisible]=useState<BackgroundSlide|null>(null),[previous,setPrevious]=useState<BackgroundSlide|null>(null);
  const images=s.images.filter(i=>!failed.includes(i.url)),key=images.map(i=>i.id+':'+i.url).join('|'),target=images.length?images[cursor%images.length]:undefined;
  const shown=s.images.find(i=>i.id===visible?.id&&i.url===visible?.url)||null;
  const duration=Math.min(s.transitionMs,(shown?.seconds||s.seconds)*500);
  useEffect(()=>{const retry=()=>setFailed([]);window.addEventListener('online',retry);return()=>window.removeEventListener('online',retry);},[]);
- useEffect(()=>{setCursor(0);setFailed([]);},[s.images.map(i=>i.id+':'+i.url).join('|')]);
+ useEffect(()=>{setCursor(startIndex);setFailed([]);},[s.images.map(i=>i.id+':'+i.url).join('|')]);
  useEffect(()=>{
   if(!s.enabled||!target)return;let alive=true;const img=new Image();
   img.onload=()=>{if(!alive)return;const old=visibleRef.current;if(old&&old.id!==target.id)setPrevious(old);visibleRef.current=target;setVisible(target);};
