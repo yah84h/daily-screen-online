@@ -1,311 +1,206 @@
-import { RemoteMediaPanel } from './RemoteMediaPanel';
-import { DailyMediaEditor } from './DailyMediaEditor';
-import { CropEditor } from './CropEditor';
-import { DailyMedia } from '@/components/DailyMedia';
-import { BackgroundAudioEditor } from './BackgroundAudioEditor';
-import { PresentationEditor } from './PresentationEditor';
-import { useAuth } from '@/lib/auth';
-import { mediaSlideshowOf } from '@/lib/slideshow';
+import { useState } from 'react';
 import {
-  ArrowUpRight,
-  BookOpen,
-  CalendarDays,
-  CheckCircle2,
-  Loader2,
+  Check,
+  FileText,
+  Image,
   Maximize2,
   Monitor,
+  Music2,
   Palette,
-  Plus,
-  Settings,
-  ShieldCheck,
-  Sun,
-  GraduationCap,
-  Upload,
-  X,
+  Save,
+  Send,
 } from 'lucide-react';
 import { Screen } from '@/components/Screen';
+import { useAuth } from '@/lib/auth';
+import { mediaSlideshowOf } from '@/lib/slideshow';
 import * as api from '@/lib/api';
-import { WORKSPACE_PHOTO, initialContent, type Preset } from '@/lib/types';
-import { DisplayModes, MediaOnlyEditor } from './DisplayModes';
 import { useAdmin } from './store';
+import { DailyContentFields } from './studio/DailyContentFields';
+import { DailyMediaFields } from './studio/DailyMediaFields';
+import { BackgroundAudioEditor } from './BackgroundAudioEditor';
+import { PresentationEditor } from './PresentationEditor';
+import { MediaOnlyEditor } from './DisplayModes';
 
-const topicIcons = [ShieldCheck, BookOpen, GraduationCap, Sun];
-const topicColors = ['mint', 'blue', 'peach', 'yellow'];
+const modeNames = {
+  daily: 'الشاشة اليومية',
+  loop: 'الخلفية والساعة',
+  media: 'صورة أو فيديو',
+  slideshow: 'شرائح الصور',
+  presentation: 'PowerPoint',
+};
 
 export function HomeTab() {
   const { permissions } = useAuth();
   const {
     data,
     content,
-    edit,
-    setContent,
     template,
     dirty,
+    templateDirty,
     busy,
-    run,
     setModal,
     setTab,
-    chooseImage,
-    notify,
     publishScreen,
+    run,
   } = useAdmin();
-  const presets = data?.presets ?? [];
-
-  const usePreset = (p: Preset) => {
-    setContent({ ...initialContent, ...p.content });
-    setTab('الرئيسية');
-    notify('تم تحميل الموضوع. راجعه ثم انشره عندما يكون جاهزًا.');
-  };
-
+  const [tool, setTool] = useState('text');
+  const mode = template.displayMode || 'daily';
+  const daily = mode === 'daily' || mode === 'loop';
+  const tools = [
+    { id: 'text', label: daily ? 'النص' : 'المحتوى', icon: FileText },
+    ...(daily ? [{ id: 'media', label: 'الصور والفيديو', icon: Image }] : []),
+    { id: 'audio', label: 'صوت الخلفية', icon: Music2 },
+  ];
+  const selected = tools.some((item) => item.id === tool) ? tool : 'text';
+  const ready =
+    mode === 'presentation'
+      ? !!content.presentation?.slides.length
+      : mode === 'slideshow'
+        ? !!mediaSlideshowOf(template).images.length
+        : mode === 'media'
+          ? !!(
+              content.fullMedia ||
+              (content.videoPlaylist?.enabled && content.videoPlaylist.items.length)
+            )
+          : !!content.title.trim();
   return (
-    <>
-      {permissions.admin && <DisplayModes />}
-      <RemoteMediaPanel />
-      <div className="overview-grid">
-        <section className="preview-section">
-          <div className="section-heading">
-            <h2>المعروض على شاشتك</h2>
-            <button className="text-button" onClick={() => setModal('preview')}>
-              <Maximize2 size={15} /> معاينة
-            </button>
-          </div>
-          <div className="preview-card">
-            <div className="preview-toolbar">
-              <span>
-                <i /> {dirty ? 'معاينة المسودة' : 'الشاشة الحالية'}
-              </span>
-              <span>
-                16:9 <span className="divider">|</span> جاهزة لدقة 4K
-              </span>
-            </div>
-            <Screen
-              content={content}
-              template={template}
-              school={data?.school}
-              presentationContext={
-                template.displayMode === 'presentation' && data
-                  ? { screenId: data.screen.id }
-                  : undefined
-              }
-            />
-            <div className="preview-bottom">
-              <span>
-                <Monitor size={15} /> {data?.screen.name}
-              </span>
-              <button
-                className="text-button"
-                disabled={!permissions.admin}
-                onClick={() => setTab('القوالب')}
-              >
-                <Palette size={14} /> تعديل القالب
-              </button>
-            </div>
-          </div>
-          <button
-            disabled={!permissions.admin}
-            className="button white loop-shortcut"
-            onClick={() => setTab('خلفية الحصص')}
-          >
-            خلفية الحصص ولوحة التميز
-          </button>
-          <div className="design-note">
+    <div className="studio-composer">
+      <div className="studio-mode-strip">
+        <span>
+          <Monitor size={18} />
+          <b>{modeNames[mode]}</b>
+          <small>نوع العرض الحالي</small>
+        </span>
+        {permissions.admin && (
+          <button onClick={() => setTab('طريقة العرض')}>تغيير نوع العرض</button>
+        )}
+      </div>
+      <div className="studio-compose-grid">
+        <section className="studio-editor" aria-label="تحرير محتوى الشاشة">
+          <div className="studio-panel-heading">
             <div>
-              <CheckCircle2 size={18} />
+              <h2>جهّز محتواك</h2>
+              <p>التغييرات تظهر في المعاينة مباشرة.</p>
             </div>
-            <span>
-              <b>تصميم واحد، ومحتوى يتجدد.</b>
-              <p>القالب ثابت. حدّث محتوى اليوم فقط.</p>
+            <span className={'studio-draft-tag' + (dirty || templateDirty ? ' changed' : '')}>
+              {dirty || templateDirty ? 'تعديلات غير منشورة' : 'جاهز للتعديل'}
             </span>
           </div>
-          <div className="section-heading topics-heading">
-            <h2>ابدأ بموضوع محفوظ</h2>
-            <button className="text-button" onClick={() => setTab('المواضيع المحفوظة')}>
-              عرض الكل <ArrowUpRight size={15} />
-            </button>
-          </div>
-          <div className="quick-topics">
-            {presets.slice(0, 3).map((p, i) => {
-              const Icon = topicIcons[i] || BookOpen;
-              return (
-                <button key={p.id} onClick={() => usePreset(p)}>
-                  <div className={'topic-icon ' + (topicColors[i] || 'mint')}>
-                    <Icon size={21} />
-                  </div>
-                  <b>{p.name}</b>
-                  <span>
-                    استخدام الموضوع <Plus size={13} />
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="editor-card">
-          <div className="editor-title">
-            <div>
-              <h2>محتوى اليوم</h2>
-              <p>تعديلات بسيطة ليوم جديد.</p>
-            </div>
-            <span className="edit-tag">{dirty ? 'غير محفوظ' : 'تحديث يومي'}</span>
-          </div>
-          <fieldset className="editor-fields" disabled={!data || busy}>
-            <BackgroundAudioEditor />
-            {template.displayMode === 'presentation' && <PresentationEditor />}
-            {(template.displayMode === 'media' || template.displayMode === 'slideshow') && (
+          <nav className="studio-editor-nav" aria-label="تحرير المحتوى">
+            {tools.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                aria-current={selected === id ? 'page' : undefined}
+                onClick={() => setTool(id)}
+              >
+                <Icon size={17} />
+                {label}
+              </button>
+            ))}
+          </nav>
+          <fieldset disabled={!data || busy} className="studio-editor-body" key={selected}>
+            {selected === 'text' && daily && <DailyContentFields />}
+            {selected === 'text' && mode === 'presentation' && <PresentationEditor />}
+            {selected === 'text' && (mode === 'media' || mode === 'slideshow') && (
               <MediaOnlyEditor />
             )}
-            {template.displayMode !== 'slideshow' && template.displayMode !== 'presentation' && (
-              <>
-                <label>
-                  عنوان اليوم
-                  <input
-                    maxLength={100}
-                    value={content.title}
-                    onChange={(e) => edit('title', e.target.value)}
-                    placeholder="ما موضوع اليوم؟"
-                  />
-                </label>
-                <label>
-                  <span>
-                    العنوان الفرعي <small>اختياري</small>
-                  </span>
-                  <input
-                    maxLength={160}
-                    value={content.subtitle}
-                    onChange={(e) => edit('subtitle', e.target.value)}
-                  />
-                </label>
-                <label>
-                  الرسالة الرئيسية
-                  <textarea
-                    maxLength={700}
-                    rows={3}
-                    value={content.body}
-                    onChange={(e) => edit('body', e.target.value)}
-                  />
-                  <span className="field-hint">اجعلها مختصرة وسهلة القراءة من مسافة بعيدة.</span>
-                </label>
-                <div className="date-control">
-                  <div>
-                    <CalendarDays size={19} />
-                    <span>
-                      استخدام تاريخ اليوم تلقائيًا<small>اليوم والتاريخ · توقيت جدة</small>
-                    </span>
-                  </div>
-                  <button
-                    role="switch"
-                    aria-checked={content.autoDate}
-                    className={'toggle ' + (content.autoDate ? 'on' : '')}
-                    onClick={() => edit('autoDate', !content.autoDate)}
-                    aria-label="استخدام تاريخ اليوم تلقائيًا"
-                  >
-                    <i />
-                  </button>
-                </div>
-                {!content.autoDate && (
-                  <label>
-                    التاريخ
-                    <input
-                      type="date"
-                      value={content.date}
-                      onChange={(e) => edit('date', e.target.value)}
-                    />
-                  </label>
-                )}
-                <DailyMediaEditor />
-                {content.image && (
-                  <CropEditor
-                    value={content.imageCrop}
-                    onChange={(value) => edit('imageCrop', value)}
-                    label="قص وسائط الشاشة اليومية"
-                  />
-                )}
-                <div className="image-label">
-                  وسائط الشاشة اليومية <span>صورة / GIF / MP4 / WEBM</span>
-                </div>
-                <div className="image-control">
-                  {content.image ? (
-                    <div className="daily-media-preview">
-                      <DailyMedia
-                        src={content.image}
-                        type={content.imageType}
-                        large={false}
-                        crop={content.imageCrop}
-                      />
-                    </div>
-                  ) : (
-                    <div className="image-empty" />
-                  )}
-                  <div>
-                    <b>
-                      {content.image === WORKSPACE_PHOTO
-                        ? 'مساحة رقمية'
-                        : content.image
-                          ? 'صورة الشاشة'
-                          : 'بدون صورة'}
-                    </b>
-                    <span>مهيّأة لشاشتك</span>
-                    <button className="text-button" onClick={() => chooseImage('image')}>
-                      <Upload size={13} /> تغيير الصورة أو الفيديو
-                    </button>
-                  </div>
-                  <button
-                    className="icon-button"
-                    aria-label="إزالة الصورة"
-                    onClick={() => edit('image', '')}
-                  >
-                    <X size={15} />
-                  </button>
-                </div>
-                <button className="optional-button" onClick={() => setModal('optional')}>
-                  <Settings size={15} /> الشارة والتذييل والعناصر الاختيارية <Plus size={15} />
-                </button>
-              </>
+            {selected === 'media' && <DailyMediaFields />}
+            {selected === 'audio' && (
+              <section aria-label="صوت الخلفية">
+                <BackgroundAudioEditor />
+              </section>
             )}
           </fieldset>
-          <div className="publish-area">
-            <button
-              className="button publish"
-              disabled={
-                busy ||
-                (template.displayMode === 'presentation'
-                  ? !content.presentation?.slides.length
-                  : template.displayMode === 'slideshow'
-                    ? !mediaSlideshowOf(template).images.length
-                    : template.displayMode === 'media'
-                      ? !(
-                          content.fullMedia ||
-                          (content.videoPlaylist?.enabled && content.videoPlaylist.items.length)
-                        )
-                      : !content.title.trim()) ||
-                !data
-              }
-              onClick={publishScreen}
-            >
-              {busy ? <Loader2 className="spin" size={18} /> : <Monitor size={18} />}
-              نشر على الشاشة
-            </button>
+        </section>
+        <section className="studio-preview" aria-label="معاينة المحتوى">
+          <div className="studio-panel-heading">
             <div>
-              <button
-                disabled={busy || !data}
-                onClick={() =>
-                  run(() => api.saveDraft(data!.screen.id, content), 'تم حفظ المسودة.')
-                }
-              >
-                حفظ المسودة
-              </button>
-              <span>
-                تحديث التلفزيون خلال ثوانٍ <Monitor size={12} />
-              </span>
+              <h2>هكذا ستظهر شاشتك</h2>
+              <p>{data?.screen.name}</p>
             </div>
+            <button
+              className="icon-button"
+              aria-label="تكبير المعاينة"
+              onClick={() => setModal('preview')}
+            >
+              <Maximize2 size={18} />
+            </button>
+          </div>
+          <div className="studio-display-frame">
+            <div className="studio-display-caption">
+              <span>
+                <i />
+                معاينة المحتوى
+              </span>
+              <span>16:9 · 4K</span>
+            </div>
+            <div className="preview-card">
+              <Screen
+                content={content}
+                template={template}
+                school={data?.school}
+                presentationContext={
+                  mode === 'presentation' && data ? { screenId: data.screen.id } : undefined
+                }
+              />
+            </div>
+            <div className="studio-display-base">
+              <span>
+                <Monitor size={15} />
+                {modeNames[mode]}
+              </span>
+              <span>معاينة صامتة</span>
+            </div>
+          </div>
+          <div className="studio-preview-actions">
+            {permissions.admin && (
+              <button
+                className="button white"
+                onClick={() => setTab(mode === 'loop' ? 'خلفية الحصص' : 'القوالب')}
+              >
+                <Palette size={17} />
+                تعديل التصميم
+              </button>
+            )}
+          </div>
+          <div className="studio-preview-note">
+            <Check size={17} />
+            <p>راجع المعاينة ثم انشر. لن تتغير شاشة العرض أثناء تعديلك للمسودة.</p>
           </div>
         </section>
       </div>
-      <div className="bottom-note">
-        <ShieldCheck size={14} /> تحتفظ الشاشة بآخر محتوى حتى عند انقطاع الاتصال.
-        <span>لتحديث يومي بسيط.</span>
+      <div className="studio-publish-bar">
+        <div className="studio-publish-status">
+          <span className="studio-publish-icon">
+            <Monitor size={20} />
+          </span>
+          <div>
+            <b>{data?.screen.name || 'شاشتك'}</b>
+            <small>
+              {dirty || templateDirty ? 'التعديلات جاهزة للإرسال' : 'المحتوى الحالي في المعاينة'}
+            </small>
+          </div>
+        </div>
+        <div className="studio-publish-actions">
+          <button
+            className="button white"
+            disabled={!data || busy}
+            onClick={() => run(() => api.saveDraft(data!.screen.id, content), 'تم حفظ المسودة.')}
+          >
+            <Save size={17} />
+            حفظ المسودة
+          </button>
+          <button
+            className="button primary"
+            disabled={!data || busy || !ready}
+            onClick={publishScreen}
+          >
+            <Send size={18} />
+            {busy ? 'جارٍ الحفظ…' : 'نشر على الشاشة'}
+          </button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

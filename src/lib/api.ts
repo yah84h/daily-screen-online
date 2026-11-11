@@ -209,6 +209,20 @@ export async function saveDraft(screenId: string, content: Content) {
   fail((await supabase.from('screens').update({ draft: content }).eq('id', screenId)).error);
 }
 
+/** Read the exact scheduled day; changing a printed date alone does not select its post. */
+export async function contentForDate(screenId: string, date: string): Promise<Post | null> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw Error('اختر تاريخًا صحيحًا.');
+  const result = await supabase
+    .from('posts')
+    .select('*')
+    .eq('screen_id', screenId)
+    .eq('publish_at', date)
+    .order('created_at', { ascending: false })
+    .limit(1);
+  fail(result.error);
+  return (result.data?.[0] as Post) || null;
+}
+
 export async function saveTemplate(screenId: string, template: Partial<Template>) {
   fail((await supabase.from('screens').update({ template }).eq('id', screenId)).error);
   await notifyScreen(screenId);

@@ -74,6 +74,7 @@ test('English-only three-person board, all-exam rotation, list layout and empty 
 });
 test('untrusted settings and malformed scores/names are normalized without invented ranks', () => {
   assert.deepEqual(leaderboardOptions({ pageSize: 100, exam: 'bad', layout: 'bad' }), {
+    refreshSeconds: 30,
     pageSize: 3,
     exam: 'weekly',
     layout: 'podium',
@@ -123,7 +124,7 @@ test('only the configured Supabase leaderboard endpoint is fetched, with redirec
   assert.equal(result.stale, false);
   assert(!JSON.stringify(result).includes('private-unit-key'));
 });
-test('five-minute cache, persisted fallback and stale marking retain last valid results', async () => {
+test('25-second cache, persisted fallback and stale marking retain last valid results', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'qudrat-cache-')),
     cacheFile = path.join(dir, 'cache.json'),
     url = endpoint('cache-test');
@@ -136,6 +137,8 @@ test('five-minute cache, persisted fallback and stale marking retain last valid 
     await fetchQudratLeaderboard({ url, cacheFile, fetcher, now: 1000 });
     await fetchQudratLeaderboard({ url, cacheFile, fetcher, now: 2000 });
     assert.equal(calls, 1);
+    await fetchQudratLeaderboard({ url, cacheFile, fetcher, now: 27000 });
+    assert.equal(calls, 2);
     const stale = await fetchQudratLeaderboard({
       url,
       cacheFile,
@@ -146,7 +149,7 @@ test('five-minute cache, persisted fallback and stale marking retain last valid 
     });
     assert.equal(stale.stale, true);
     assert.equal(stale.exams[0].leaders.length, 10);
-    assert.equal(stale.fetchedAt, 1000);
+    assert.equal(stale.fetchedAt, 27000);
     assert(!fs.readFileSync(cacheFile, 'utf8').includes('cache-test'));
     await fetchQudratLeaderboard({ url: endpoint('other'), fetcher, now: 1000 });
     const restored = await fetchQudratLeaderboard({

@@ -79,7 +79,7 @@
   text-align: right;
 }
 .screen-loop .loop-clock-panel > p {
-  font-size: 0.86cqw;
+  font-size: calc(0.86cqw * var(--clock-text-scale, 1));
   color: #8299ba;
   margin: 0;
 }
@@ -87,7 +87,7 @@
   display: flex;
   justify-content: center;
   font-family: Arial, sans-serif;
-  font-size: 6cqw;
+  font-size: calc(6cqw * var(--clock-text-scale, 1));
   font-weight: 400;
   line-height: 1.5;
   color: #3e7fe0;
@@ -104,24 +104,24 @@
 }
 .screen-loop .loop-date {
   margin: 0.4cqw 0 1.7cqw !important;
-  font-size: 1cqw !important;
+  font-size: calc(1cqw * var(--clock-text-scale, 1)) !important;
 }
 .screen-loop .loop-period {
   border-top: 1px solid #e3edff;
   padding-top: 1.25cqw;
 }
 .screen-loop .loop-period small {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--clock-text-scale, 1));
   color: #8299ba;
 }
 .screen-loop .loop-period h2 {
-  font-size: 2cqw;
+  font-size: calc(2cqw * var(--clock-text-scale, 1));
   margin: 0.65cqw 0;
   font-weight: 600;
   line-height: 1.6;
 }
 .screen-loop .loop-period p {
-  font-size: 1.05cqw;
+  font-size: calc(1.05cqw * var(--clock-text-scale, 1));
   margin: 0;
   color: #8299ba;
   font-variant-numeric: tabular-nums;
@@ -187,13 +187,13 @@
   flex-shrink: 0;
 }
 .screen-loop .recognition-heading h2 {
-  font-size: 1.25cqw;
+  font-size: calc(1.25cqw * var(--board-text-scale, 1));
   line-height: 1.5;
   margin: 0;
   overflow-wrap: anywhere;
 }
 .screen-loop .recognition-heading p {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--board-text-scale, 1));
   margin: 0.2cqw 0 0;
   color: #8299ba;
   overflow: hidden;
@@ -228,11 +228,11 @@
 .screen-loop .recognition-avatar {
   display: grid;
   place-items: center;
-  font-size: 1.3cqw;
+  font-size: calc(1.3cqw * var(--board-text-scale, 1));
   color: #4b91f7;
 }
 .screen-loop .recognition-student h3 {
-  font-size: 1.05cqw;
+  font-size: calc(1.05cqw * var(--board-text-scale, 1));
   line-height: 1.5;
   color: #2b5389;
   margin: 0;
@@ -241,7 +241,7 @@
   white-space: nowrap;
 }
 .screen-loop .recognition-student p {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--board-text-scale, 1));
   line-height: 1.5;
   color: #8299ba;
   margin: 0.1cqw 0 0;
@@ -253,7 +253,7 @@
   display: block;
   text-align: left;
   font-family: Arial, sans-serif;
-  font-size: 0.65cqw;
+  font-size: calc(0.65cqw * var(--board-text-scale, 1));
   color: #8299ba;
   margin-top: 0.5cqw;
 }
@@ -462,7 +462,7 @@
   gap: 12px;
 }
 .loop-period-row > b {
-  font-size: 13px;
+  font-size: calc(13px * var(--clock-text-scale, 1));
 }
 .loop-period-row > div {
   display: grid;

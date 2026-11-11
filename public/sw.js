@@ -1,5 +1,5 @@
 // يعمل لصفحة التلفزيون فقط: يحتفظ بآخر نسخة من الصفحة والخطوط لإعادة التحميل دون اتصال.
-const CACHE = 'daily-screen-online-v40';
+const CACHE = 'daily-screen-online-v41';
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/index.html', '/fonts.css', '/workspace.jpg', '/school_font.ttf', '/branding/ministry-of-education.svg', '/branding/tuwaiq-academy.svg', '/branding/qudrat-pro.png'])));
   self.skipWaiting();
@@ -31,7 +31,7 @@ self.addEventListener('fetch', (e) => {
   if (u.origin !== location.origin) return; // Supabase لا يُخزَّن هنا؛ الصور تُخزَّن في IndexedDB
   if (u.pathname.startsWith('/admin') || u.pathname.startsWith('/login')) return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request.mode === 'navigate' ? new Request(e.request, { cache: 'no-cache' }) : e.request)
       .then((r) => {
         if (r.ok) {
           const copy = r.clone();

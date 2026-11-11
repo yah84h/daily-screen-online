@@ -596,7 +596,7 @@ body {
   min-height: 0;
 }
 .screen-loop .recognition-heading h2 {
-  font-size: 1.15cqw;
+  font-size: calc(1.15cqw * var(--board-text-scale, 1));
 }
 @media (max-width: 1150px) {
   .overview-grid,
@@ -933,7 +933,7 @@ body {
   background: white;
 }
 .screen-loop .recognition-solo .recognition-student h3 {
-  font-size: 1.2cqw;
+  font-size: calc(1.2cqw * var(--board-text-scale, 1));
 }
 .screen-loop .recognition-solo .recognition-page {
   gap: 0;
@@ -963,19 +963,19 @@ body {
   border-radius: 0.6cqw;
 }
 .screen-loop .recognition-group .recognition-student h3 {
-  font-size: 0.82cqw;
+  font-size: calc(0.82cqw * var(--board-text-scale, 1));
 }
 .screen-loop .recognition-group .recognition-student p {
-  font-size: 0.62cqw;
+  font-size: calc(0.62cqw * var(--board-text-scale, 1));
 }
 .screen-loop .recognition-group .recognition-heading {
   margin-bottom: 0.55cqw;
 }
 .screen-loop .recognition-group .recognition-heading h2 {
-  font-size: 1cqw;
+  font-size: calc(1cqw * var(--board-text-scale, 1));
 }
 .screen-loop .recognition-group .recognition-heading p {
-  font-size: 0.65cqw;
+  font-size: calc(0.65cqw * var(--board-text-scale, 1));
 }
 .screen-loop .recognition-count-3 .recognition-student:last-child {
   grid-column: 1/-1;
@@ -1428,7 +1428,7 @@ select,
 }
 .screen-loop .animated-clock {
   font-family: Cairo, sans-serif;
-  font-size: 4.1cqw;
+  font-size: calc(4.1cqw * var(--clock-text-scale, 1));
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
@@ -1620,10 +1620,10 @@ h3,
   justify-content: space-between;
   align-items: center;
   gap: 0.5cqw;
-  font-size: 0.85cqw;
+  font-size: calc(0.85cqw * var(--clock-text-scale, 1));
 }
 .lesson-countdown small {
-  font-size: 0.7cqw;
+  font-size: calc(0.7cqw * var(--clock-text-scale, 1));
 }
 .lesson-countdown span {
   font-variant-numeric: tabular-nums;
@@ -1659,7 +1659,7 @@ h3,
   margin: 1cqw 0 0;
 }
 .loop-period .lesson-countdown small {
-  font-size: 0.7cqw;
+  font-size: calc(0.7cqw * var(--clock-text-scale, 1));
 }
 
 .lesson-countdown progress {

@@ -1,3 +1,4 @@
+import { SavedLayouts } from '@/pages/admin/SavedLayouts';
 import { loopPalettePresets } from '@/lib/loopAppearance';
 import { SlideshowEditor } from '@/pages/admin/SlideshowEditor';
 import React, { useRef, useState } from 'react';
@@ -200,6 +201,7 @@ export default function TemplateEditor({
         </div>
         {panel === 'ready' ? (
           <>
+            <SavedLayouts mode="daily" />
             <h3>أين تحب أن تكون الصورة والكلمات؟</h3>
             <p className="hint">
               ٨ توزيعات جاهزة. نغيّر المواقع والأحجام فقط ونحافظ على ألوانك وصورك وهوية المدرسة.

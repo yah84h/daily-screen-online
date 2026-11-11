@@ -169,7 +169,7 @@
   color: var(--loop-muted);
 }
 .screen-loop .loop-clock-panel > p.loop-hijri {
-  font-size: 0.65cqw;
+  font-size: calc(0.65cqw * var(--clock-text-scale, 1));
   color: var(--loop-muted);
   margin: 0;
 }
@@ -206,24 +206,24 @@
   overflow: hidden;
 }
 .screen-loop[data-extras='true'] .animated-clock {
-  font-size: 4.8cqw;
+  font-size: calc(4.8cqw * var(--clock-text-scale, 1));
   line-height: 1.15;
   margin: 0.25cqw 0;
 }
 .screen-loop[data-extras='true'] .loop-date {
   margin: 0.2cqw 0 !important;
-  font-size: 0.8cqw !important;
+  font-size: calc(0.8cqw * var(--clock-text-scale, 1)) !important;
 }
 .screen-loop[data-extras='true'] .loop-period {
   padding-top: 0.4cqw;
 }
 .screen-loop[data-extras='true'] .loop-period h2 {
-  font-size: 1.6cqw;
+  font-size: calc(1.6cqw * var(--clock-text-scale, 1));
   margin: 0.25cqw 0;
   line-height: 1.4;
 }
 .screen-loop[data-extras='true'] .loop-period p {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--clock-text-scale, 1));
 }
 .screen-loop[data-extras='true'] .loop-period .lesson-countdown {
   margin: 0.3cqw 0 0;
@@ -339,24 +339,24 @@
   width: min(var(--layout-photo-w), 24cqw);
 }
 .screen-loop:not([data-layout='classic']) .animated-clock {
-  font-size: 4.3cqw;
+  font-size: calc(4.3cqw * var(--clock-text-scale, 1));
   line-height: 1.2;
   margin: 0.3cqw 0;
 }
 .screen-loop:not([data-layout='classic']) .loop-date {
-  font-size: 0.8cqw !important;
+  font-size: calc(0.8cqw * var(--clock-text-scale, 1)) !important;
   margin: 0.2cqw 0 !important;
 }
 .screen-loop:not([data-layout='classic']) .loop-period {
   padding-top: 0.5cqw;
 }
 .screen-loop:not([data-layout='classic']) .loop-period h2 {
-  font-size: 1.6cqw;
+  font-size: calc(1.6cqw * var(--clock-text-scale, 1));
   line-height: 1.4;
   margin: 0.3cqw 0;
 }
 .screen-loop:not([data-layout='classic']) .loop-period p {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--clock-text-scale, 1));
 }
 .screen-loop:not([data-layout='classic']) .loop-period .lesson-countdown {
   margin: 0.4cqw 0 0;
@@ -570,7 +570,7 @@
   gap: 0.2cqw;
 }
 .screen-loop[data-custom='true'] .animated-clock {
-  font-size: var(--position-clock-font, 4.3cqw);
+  font-size: calc(var(--position-clock-font, 4.3cqw) * var(--clock-text-scale, 1));
 }
 /* Keep the resize target outside small logos so a touch on the logo moves it. */
 .loop-edit-box > .loop-resize-handle {
@@ -632,7 +632,7 @@
   text-align: center;
 }
 .screen-loop[data-clock-face='true'] .animated-clock {
-  font-size: 8cqw;
+  font-size: calc(8cqw * var(--clock-text-scale, 1));
   line-height: 1.2;
 }
 .screen-loop[data-custom='true'][data-positions~='news'] .news-ribbon {

@@ -36,7 +36,7 @@ export function ScheduleTab() {
         <div className="empty">
           <CalendarDays size={36} />
           <h3>خطط لمحتوى الأيام القادمة.</h3>
-          <p>جدول مسودة اليوم أو موضوعًا محفوظًا لتاريخ قادم.</p>
+          <p>جدول مسودة اليوم لتاريخ قادم.</p>
           <button className="button white" onClick={() => setModal('schedule')}>
             إنشاء أول موعد
           </button>

@@ -1,3 +1,4 @@
+import { reloadDisplay } from '@/lib/reloadDisplay';
 import { RemoteMediaReceiver } from '@/components/RemoteMediaReceiver';
 import { clearShowCache } from '@/lib/assetCache';
 import { BackgroundAudio } from '@/components/BackgroundAudio';
@@ -163,7 +164,7 @@ export default function Tv() {
         <div className="tv-settings">
           <b>{online ? 'متصلة' : 'غير متصلة · تُعرض آخر شاشة محفوظة'}</b>
           {paired && <span>{paired.screen.name}</span>}
-          <button onClick={() => location.reload()}>إعادة تحميل الشاشة</button>
+          <button onClick={() => void reloadDisplay()}>تحديث الموقع وإعادة تحميل الشاشة</button>
           <button
             onClick={() => {
               void clearShowCache()

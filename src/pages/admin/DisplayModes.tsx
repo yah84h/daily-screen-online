@@ -4,7 +4,7 @@ import { RotationEditor } from './RotationEditor';
 import { DriveVideoEditor } from './DriveVideoEditor';
 import { useAuth } from '@/lib/auth';
 import { withDisplayMode } from '@/lib/slideshow';
-import { Clock, Images, Image as ImageIcon, PanelsTopLeft, Upload, X } from 'lucide-react';
+import { Clock, Images, Image as ImageIcon, PanelsTopLeft, Monitor, Upload, X } from 'lucide-react';
 import { SlideshowEditor } from './SlideshowEditor';
 import { useAdmin } from './store';
 const modes = [
@@ -17,38 +17,73 @@ const modes = [
 export function DisplayModes() {
   const { template, setTemplate, saveDesign, busy, data } = useAdmin();
   return (
-    <>
-      <div className="mode-cards">
-        {modes.map(([id, name, description, Icon]) => (
-          <button
-            key={id}
-            disabled={busy || !data}
-            className={'mode-card ' + ((template.displayMode || 'daily') === id ? 'selected' : '')}
-            onClick={() => setTemplate((t) => withDisplayMode(t, id))}
-          >
-            <span className="mode-icon">
-              <Icon size={23} />
-            </span>
-            <span>
-              <b>{name}</b>
-              <small>{description}</small>
-            </span>
-            <i />
-          </button>
-        ))}
+    <section className="display-control-room" aria-label="طريقة العرض">
+      <div className="display-mode-main">
+        <div className="display-mode-intro">
+          <span className="display-step">01 / طريقة العرض</span>
+          <h2>ماذا تريد أن تعرض؟</h2>
+          <p>اختر نوع المحتوى. يبقى اختيارك في المعاينة حتى تطبّقه.</p>
+        </div>
+        <div className="mode-cards" role="radiogroup" aria-label="نوع العرض">
+          {modes.map(([id, name, description, Icon]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={(template.displayMode || 'daily') === id}
+              disabled={busy || !data}
+              className={
+                'mode-card ' + ((template.displayMode || 'daily') === id ? 'selected' : '')
+              }
+              onClick={() => setTemplate((t) => withDisplayMode(t, id))}
+              onKeyDown={(event) => {
+                if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key))
+                  return;
+                event.preventDefault();
+                const next =
+                  (modes.findIndex(([key]) => key === id) +
+                    (['ArrowLeft', 'ArrowDown'].includes(event.key) ? 1 : -1) +
+                    modes.length) %
+                  modes.length;
+                setTemplate((t) => withDisplayMode(t, modes[next][0]));
+                event.currentTarget
+                  .parentElement!.querySelectorAll<HTMLButtonElement>('[role="radio"]')
+                  [next].focus();
+              }}
+            >
+              <span className="mode-icon">
+                <Icon size={25} />
+              </span>
+              <span>
+                <b>{name}</b>
+                <small>{description}</small>
+              </span>
+              <i aria-hidden="true" />
+            </button>
+          ))}
+        </div>
       </div>
-      <RotationEditor />
+      <div className="display-mode-side">
+        <span className="display-step">02 / أثناء التشغيل</span>
+        <RotationEditor />
+        <div className="display-mode-note">
+          <Monitor size={20} />
+          <p>لكل شاشة وضعها وإعداداتها. لا يتغير محتوى الشاشات الأخرى.</p>
+        </div>
+      </div>
       <div className="mode-save">
-        <span>
-          اختَر الوضع ثم انشر من زر «نشر على الشاشة». زر التطبيق يغيّر الوضع والإعدادات فقط.
-        </span>
+        <div>
+          <b>{modes.find(([id]) => id === (template.displayMode || 'daily'))?.[1]}</b>
+          <span>تطبيق الوضع يغيّر طريقة العرض. انشر المحتوى من صفحة الشاشة.</span>
+        </div>
         <button className="button primary" disabled={busy || !data} onClick={saveDesign}>
-          تطبيق وضع العرض
+          تطبيق على الشاشة
         </button>
       </div>
-    </>
+    </section>
   );
 }
+
 export function FullMediaEditor() {
   const { content, edit, chooseImage, busy } = useAdmin();
   return (

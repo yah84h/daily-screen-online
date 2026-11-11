@@ -60,6 +60,7 @@ export function normalizeLeaderboard(input) {
 }
 export function leaderboardOptions(value = {}) {
   return {
+    refreshSeconds: [30, 60, 120, 300].includes(value?.refreshSeconds) ? value.refreshSeconds : 30,
     layout: value?.layout === 'list' ? 'list' : 'podium',
     exam: ['weekly', 'gat', 'all'].includes(value?.exam) ? value.exam : 'weekly',
     pageSize: [2, 3, 4].includes(value?.pageSize) ? value.pageSize : 3,

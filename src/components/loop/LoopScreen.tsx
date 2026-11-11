@@ -94,6 +94,8 @@ export function LoopScreen({
           '--center-ratio': ratio,
           '--center-width': sizing.width + 'cqw',
           '--center-x': sizing.x + '%',
+          '--clock-text-scale': Math.max(60, Math.min(180, template.clockTextScale || 100)) / 100,
+          '--board-text-scale': Math.max(60, Math.min(180, template.boardTextScale || 100)) / 100,
           '--clock-scale': sizing.clockScale,
           '--board-scale': sizing.boardScale,
           '--brand-filter':

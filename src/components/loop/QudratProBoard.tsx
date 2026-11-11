@@ -23,8 +23,8 @@ function PodiumStudent({ leader, place }: { leader: QudratLeader; place: number 
 }
 export function QudratProBoard({ board }: { board: RecognitionBoard }) {
   const titleId = useId();
-  const state = useLeaderboard();
   const options = leaderboardOptions(board.qudratPro);
+  const state = useLeaderboard(true, options.refreshSeconds);
   const [cursor, setCursor] = useState(0);
   const views = state.data ? leaderboardPages(state.data, options) : [];
   const current = views.length ? views[cursor % views.length] : null;
