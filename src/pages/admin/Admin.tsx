@@ -254,12 +254,14 @@ function Studio() {
             {data?.current ? 'آخر نشر ' + fmtTime(data.current.created_at) : 'لم يُنشر محتوى بعد'}
           </span>
           <div className="studio-screen-actions">
-            {!data?.devices.length && (
-              <button className="button white" onClick={() => setModal('setup')}>
-                <Plus size={16} />
-                ربط جهاز
-              </button>
-            )}
+            <button
+              className="button white"
+              disabled={!data || busy}
+              onClick={() => setModal('pair')}
+            >
+              <Plus size={16} />
+              ربط جهاز بالكود
+            </button>
             <a
               className="icon-button"
               href="/tv"
