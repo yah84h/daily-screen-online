@@ -102,7 +102,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       const requested = screenId.current;
       const d = await api.loadAdmin(requested);
       if (requested !== screenId.current) return;
-      setData(d);
+      setData((previous) => (JSON.stringify(previous) === JSON.stringify(d) ? previous : d));
       setLoadError('');
       if (loadedFor.current !== d.screen.id) {
         loadedFor.current = d.screen.id;
@@ -117,7 +117,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         });
         setDirty(!!d.screen.draft);
       } else if (!templateDirtyRef.current) {
-        setTemplateState(syncedTheme({ ...defaultTemplate, ...d.screen.template }));
+        const next = syncedTheme({ ...defaultTemplate, ...d.screen.template });
+        setTemplateState((previous) =>
+          JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+        );
       }
     } catch (e) {
       setLoadError((e as Error).message);

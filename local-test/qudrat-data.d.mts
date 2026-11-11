@@ -7,6 +7,7 @@ export type QudratExam = {
 };
 export type QudratData = { week: number | null; updated_at: string | null; exams: QudratExam[] };
 export type QudratOptions = {
+  refreshSeconds?: 30 | 60 | 120 | 300;
   layout: 'podium' | 'list';
   exam: 'weekly' | 'gat' | 'all';
   pageSize: 2 | 3 | 4;

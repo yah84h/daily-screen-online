@@ -4,7 +4,7 @@ import { normalizeLeaderboard, type QudratData } from '../../local-test/qudrat-d
 export { leaderboardOptions, leaderboardPages } from '../../local-test/qudrat-data.mjs';
 export type { QudratData, QudratLeader, QudratOptions } from '../../local-test/qudrat-data.mjs';
 const KEY = 'daily-screen-qudrat-pro-v1';
-const TTL = 300000;
+const TTL = 30000;
 type Saved = { data: QudratData; fetchedAt: number; at: number; stale: boolean };
 export type LeaderboardState = {
   data: QudratData | null;
@@ -61,7 +61,7 @@ async function load(force = false): Promise<Saved> {
 export function refreshLeaderboard() {
   window.dispatchEvent(new Event('qudrat-pro-refresh'));
 }
-export function useLeaderboard(enabled = true) {
+export function useLeaderboard(enabled = true, refreshSeconds = 30) {
   const [state, setState] = useState<LeaderboardState>(() => {
     const saved = cached();
     return {
@@ -101,14 +101,21 @@ export function useLeaderboard(enabled = true) {
     const force = () => void update(true);
     const offline = () => setState((old) => ({ ...old, stale: !!old.data }));
     void update(true);
+    const timer = window.setInterval(
+      force,
+      Math.max(30, Math.min(300, refreshSeconds || 30)) * 1000,
+    );
+    window.addEventListener('online', force);
     window.addEventListener('offline', offline);
     window.addEventListener('qudrat-pro-refresh', force);
     return () => {
       active = false;
+      window.clearInterval(timer);
+      window.removeEventListener('online', force);
       window.removeEventListener('offline', offline);
       window.removeEventListener('qudrat-pro-refresh', force);
     };
-  }, [enabled]);
+  }, [enabled, refreshSeconds]);
   return { ...state, refresh };
 }
 export type QudratSource = {

@@ -42,20 +42,20 @@
 }
 .qudrat-eyebrow {
   display: block;
-  font-size: 0.43cqw;
+  font-size: calc(0.43cqw * var(--board-text-scale, 1));
   color: var(--loop-muted);
   line-height: 1.5;
   letter-spacing: 0.03em;
 }
 .screen-loop .qudrat-brand h2 {
-  font-size: 1.15cqw;
+  font-size: calc(1.15cqw * var(--board-text-scale, 1));
   line-height: 1.65;
   color: var(--loop-text);
   margin: 0;
   font-weight: 800;
 }
 .screen-loop .qudrat-brand p {
-  font-size: 0.53cqw;
+  font-size: calc(0.53cqw * var(--board-text-scale, 1));
   line-height: 1.7;
   color: var(--loop-muted);
   margin: 0;
@@ -120,7 +120,7 @@
   width: 1.1cqw;
 }
 .qudrat-medal b {
-  font-size: 0.9cqw;
+  font-size: calc(0.9cqw * var(--board-text-scale, 1));
   line-height: 1;
 }
 .podium-place-1 .qudrat-medal {
@@ -130,7 +130,7 @@
   color: #bb8259;
 }
 .screen-loop .qudrat-podium-student h3 {
-  font-size: 0.64cqw;
+  font-size: calc(0.64cqw * var(--board-text-scale, 1));
   line-height: 1.55;
   font-weight: 750;
   color: var(--loop-text);
@@ -147,13 +147,13 @@
   display: flex;
   align-items: baseline;
   gap: 0.2cqw;
-  font-size: 0.86cqw;
+  font-size: calc(0.86cqw * var(--board-text-scale, 1));
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--loop-text);
 }
 .qudrat-podium-score small {
-  font-size: 0.41cqw;
+  font-size: calc(0.41cqw * var(--board-text-scale, 1));
   font-weight: 500;
   color: var(--loop-muted);
 }
@@ -169,7 +169,7 @@
   display: flex;
   justify-content: space-between;
   padding: 0 0.25cqw 0.2cqw;
-  font-size: 0.46cqw;
+  font-size: calc(0.46cqw * var(--board-text-scale, 1));
   color: var(--loop-muted);
 }
 .qudrat-ranking ol {
@@ -194,7 +194,7 @@
 .qudrat-rank {
   display: grid;
   place-items: center;
-  font-size: 0.67cqw;
+  font-size: calc(0.67cqw * var(--board-text-scale, 1));
   font-weight: 750;
   min-width: 1.15cqw;
   height: 1.15cqw;
@@ -204,7 +204,7 @@
   font-variant-numeric: tabular-nums;
 }
 .screen-loop .qudrat-ranking h3 {
-  font-size: 0.65cqw;
+  font-size: calc(0.65cqw * var(--board-text-scale, 1));
   line-height: 1.5;
   font-weight: 650;
   flex: 1;
@@ -218,7 +218,7 @@
   overflow-wrap: anywhere;
 }
 .qudrat-ranking li > b {
-  font-size: 0.73cqw;
+  font-size: calc(0.73cqw * var(--board-text-scale, 1));
   color: var(--loop-text);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
@@ -233,7 +233,7 @@
   gap: 0.4cqw;
   border-top: 1px solid var(--loop-border);
   padding-top: 0.3cqw;
-  font-size: 0.43cqw;
+  font-size: calc(0.43cqw * var(--board-text-scale, 1));
   color: var(--loop-muted);
   margin-top: auto;
   flex-shrink: 0;
@@ -247,7 +247,7 @@
 .qudrat-footer small {
   display: block;
   flex-basis: 100%;
-  font-size: 0.4cqw;
+  font-size: calc(0.4cqw * var(--board-text-scale, 1));
   line-height: 1.8;
 }
 .qudrat-footer > span > i {
@@ -303,22 +303,22 @@
   opacity: 0.6;
 }
 .screen-loop .qudrat-empty p {
-  font-size: 0.8cqw;
+  font-size: calc(0.8cqw * var(--board-text-scale, 1));
   margin: 0;
   line-height: 1.8;
 }
 .qudrat-empty small {
-  font-size: 0.55cqw;
+  font-size: calc(0.55cqw * var(--board-text-scale, 1));
   line-height: 1.8;
 }
 .qudrat-layout-list .qudrat-ranking li {
   padding: 0.45cqw;
 }
 .qudrat-layout-list .qudrat-ranking h3 {
-  font-size: 0.85cqw;
+  font-size: calc(0.85cqw * var(--board-text-scale, 1));
 }
 .qudrat-layout-list .qudrat-ranking li > b {
-  font-size: 1cqw;
+  font-size: calc(1cqw * var(--board-text-scale, 1));
 }
 .qudrat-settings {
   border: 1px solid var(--line, #e3eaf5);
@@ -386,7 +386,7 @@
   grid-template-rows: repeat(var(--qudrat-page-size, 3), minmax(0, 1fr));
 }
 .qudrat-ranking li {
-  font-size: min(2.8cqw, var(--qudrat-row-font, 8cqh));
+  font-size: calc(min(2.8cqw, var(--qudrat-row-font, 8cqh)) * var(--board-text-scale, 1));
   gap: 0.6em;
   padding: 0.25em 0.5em;
   border-radius: 0.6em;
@@ -408,7 +408,7 @@
   padding-inline: 0.15em;
 }
 .qudrat-layout-list .qudrat-ranking li {
-  font-size: min(4cqw, var(--qudrat-row-font, 8cqh));
+  font-size: calc(min(4cqw, var(--qudrat-row-font, 8cqh)) * var(--board-text-scale, 1));
 }
 
 /* Isolate the display header from the admin's global header styles. */

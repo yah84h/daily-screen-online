@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { normalizeLeaderboard } from './qudrat-data.mjs';
-const TTL = 5 * 60 * 1000;
+const TTL = 25 * 1000;
 let cached = null,
   inflight = null,
   inflightSource = null;

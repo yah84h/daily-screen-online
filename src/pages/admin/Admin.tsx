@@ -1,5 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
+import '@/admin-glass.css';
 import { Navigate } from 'react-router-dom';
 import {
+  Menu,
+  X,
   ArrowUpRight,
   BookOpen,
   CalendarDays,
@@ -40,7 +44,7 @@ const nav: [Tab, typeof LayoutDashboard][] = [
 const subtitles: Record<Tab, string> = {
   الشاشات: 'كل شاشاتك، في مكان واحد. لكل شاشة محتواها وقالبها.',
   'ومضات تقنية': 'أفكار عن المعرفة والتقنية، محفوظة وجاهزة بلا إنترنت.',
-  الرئيسية: 'يوم جديد ورسالة جديدة. حدّث محتوى اليوم.',
+  الرئيسية: 'جهّز محتواك، راجعه، وأرسله إلى الشاشة.',
   'المواضيع المحفوظة': 'رسائلك المتكررة، جاهزة للاستخدام من جديد.',
   الجدولة: 'خطط مسبقًا، وستعرض الشاشة المحتوى في موعده.',
   القوالب: 'اختر قالبًا جاهزًا أو أضف لمستك من الجوال.',
@@ -71,6 +75,47 @@ export default function Admin() {
 function Layout() {
   const { data, loadError, tab, setTab, setModal, toast, fileInput, selectScreen } = useAdmin();
   const { signOut, permissions } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    sidebar.current?.querySelector<HTMLButtonElement>('.mobile-menu-close')?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false);
+        menuButton.current?.focus();
+      }
+      if (event.key === 'Tab') {
+        const items = sidebar.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not(:disabled), select, summary',
+        );
+        if (!items?.length) return;
+        const first = items[0],
+          last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', keydown);
+    return () => {
+      document.body.style.overflow = previous;
+      window.removeEventListener('keydown', keydown);
+    };
+  }, [menuOpen]);
+  const navigate = (next: Tab) => {
+    setTab(next);
+    setMenuOpen(false);
+    if (menuOpen) menuButton.current?.focus();
+    window.scrollTo({ top: 0 });
+  };
   const school = data?.school;
   const tvOnline =
     data?.devices.some(
@@ -79,9 +124,32 @@ function Layout() {
   const pairedCount = data?.devices.length ?? 0;
 
   return (
-    <div className="app">
+    <div className="app admin-glass" data-menu-open={menuOpen}>
+      <a className="skip-link" href="#admin-main">
+        انتقل إلى المحتوى
+      </a>
       {fileInput}
-      <aside>
+      {menuOpen && (
+        <button
+          className="nav-scrim"
+          aria-label="إغلاق القائمة"
+          onClick={() => {
+            setMenuOpen(false);
+            menuButton.current?.focus();
+          }}
+        />
+      )}
+      <aside ref={sidebar} id="admin-navigation" aria-label="التنقل الرئيسي">
+        <button
+          className="icon-button mobile-menu-close"
+          aria-label="إغلاق التنقل"
+          onClick={() => {
+            setMenuOpen(false);
+            menuButton.current?.focus();
+          }}
+        >
+          <X size={20} />
+        </button>
         <a className="brand" href="/admin">
           <div>
             <Monitor size={23} />
@@ -98,36 +166,7 @@ function Layout() {
             <small>مساحة المدرسة</small>
           </span>
         </div>
-        {data && data.screens.length > 1 && (
-          <div className="screen-switch">
-            <div className="nav-label">الشاشة الحالية</div>
-            <select
-              value={data.screen.id}
-              onChange={(e) => selectScreen(e.target.value)}
-              aria-label="اختيار الشاشة"
-            >
-              {data.screens.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
         <div className="nav-label">مساحة العمل</div>
-        {permissions.news && (
-          <a className="button white" href="/news">
-            إدارة الأخبار
-          </a>
-        )}
-        {permissions.admin && (
-          <a className="button white" href="/users">
-            الحسابات والصلاحيات
-          </a>
-        )}
-        <a className="text-button" href="/password">
-          تغيير كلمة المرور
-        </a>
         <nav>
           {nav
             .filter(
@@ -139,7 +178,8 @@ function Layout() {
               <button
                 key={label}
                 className={tab === label ? 'active' : ''}
-                onClick={() => setTab(label)}
+                aria-current={tab === label ? 'page' : undefined}
+                onClick={() => navigate(label)}
               >
                 <Icon size={19} />
                 {label}
@@ -150,6 +190,22 @@ function Layout() {
             ))}
         </nav>
         <div className="sidebar-bottom">
+          <details className="account-links">
+            <summary>الحساب والإدارة</summary>{' '}
+            {permissions.news && (
+              <a className="button white" href="/news">
+                إدارة الأخبار
+              </a>
+            )}
+            {permissions.admin && (
+              <a className="button white" href="/users">
+                الحسابات والصلاحيات
+              </a>
+            )}
+            <a className="text-button" href="/password">
+              تغيير كلمة المرور
+            </a>
+          </details>
           <div className="help-card">
             <div className="help-icon">
               <Smartphone size={20} />
@@ -181,7 +237,17 @@ function Layout() {
       </aside>
 
       <div className="main">
-        <header>
+        <header className="admin-topbar">
+          <button
+            ref={menuButton}
+            className="icon-button mobile-menu-toggle"
+            aria-label="فتح التنقل"
+            aria-expanded={menuOpen}
+            aria-controls="admin-navigation"
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu size={22} />
+          </button>
           <div className="breadcrumb">
             <Monitor size={18} />
             <select
@@ -203,7 +269,7 @@ function Layout() {
             <div className="avatar small">م</div>
           </div>
         </header>
-        <main>
+        <main id="admin-main">
           {loadError && (
             <div className="error-banner" role="alert">
               {loadError}
@@ -214,7 +280,7 @@ function Layout() {
               <div className="eyebrow">
                 مساحة المدرسة / {data?.screen.name || 'الشاشة الرئيسية'}
               </div>
-              <h1>{tab === 'الرئيسية' ? 'يوم جديد، ورسالة جديدة.' : tab}</h1>
+              <h1>{tab === 'الرئيسية' ? 'مساحة شاشتك' : tab}</h1>
               <p>{subtitles[tab]}</p>
             </div>
             <button className="button white" onClick={() => setModal('setup')}>
@@ -235,7 +301,7 @@ function Layout() {
               </b>
               <p>
                 {pairedCount ? `${pairedCount} جهاز مربوط` : 'لم يُربط تلفزيون بعد'} <span>·</span>{' '}
-                4K UHD <span>·</span> 3840 × 2160
+                العرض المباشر
               </p>
             </div>
             <div className="status-right">

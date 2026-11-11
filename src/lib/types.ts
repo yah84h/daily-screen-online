@@ -57,7 +57,15 @@ export type RecognitionBoard = {
 };
 export type Timetable = { periods: [string, string][] };
 
+export type SavedLayout = {
+  id: string;
+  name: string;
+  mode: 'daily' | 'loop';
+  patch: Partial<Template>;
+};
+
 export type Template = {
+  savedLayouts?: SavedLayout[];
   rotation?: import('../../local-test/rotation.mjs').DisplayRotation;
   displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation';
   schoolName?: string;
@@ -87,6 +95,8 @@ export type Template = {
     hijri?: boolean;
   };
   loopScale?: number;
+  clockTextScale?: number;
+  boardTextScale?: number;
   clockScale?: number;
   boardScale?: number;
   loopBranding?: 'paired' | 'school';

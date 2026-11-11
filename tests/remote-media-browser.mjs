@@ -125,6 +125,7 @@ try {
   await phone.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await phone.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
   await phone.waitForURL('**/admin');
+  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
   const panel = phone.getByRole('region', { name: 'التحكم عن بعد بالشاشة' });
   await panel.getByText('الشاشة متصلة', { exact: true }).waitFor();
   await phone.getByLabel('إيقاف الشاشة مؤقتًا عن بعد', { exact: true }).click();
@@ -139,6 +140,7 @@ try {
     () => Math.abs(document.querySelector('.video-playlist video').volume - 0.23) < 0.001,
   );
   assert.equal(await other.locator('.video-playlist video').evaluate((video) => video.volume), 1);
+  await phone.getByRole('tab', { name: 'المحتوى' }).click();
   assert.equal(
     await phone
       .locator('.preview-card video')
@@ -147,6 +149,7 @@ try {
     1,
     'Phone preview is not being controlled',
   );
+  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
   await phone.getByLabel('الوسائط المراد التحكم بها', { exact: true }).selectOption('video');
   await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).fill('0.8');
   await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).dispatchEvent('pointerup');
@@ -187,6 +190,7 @@ try {
   await phone.getByLabel('تشغيل الشاشة عن بعد', { exact: true }).click();
   await tv.waitForFunction(() => !document.querySelector('.video-playlist video')?.paused);
   // A new publication keeps screen playback preferences without needing another control command.
+  await phone.getByRole('tab', { name: 'المحتوى' }).click();
   await phone.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
   await tv.waitForTimeout(3500);
   state = await phone.request.post(base + '/local/media-control', {
@@ -194,6 +198,7 @@ try {
   });
   assert.equal((await state.json()).volume, 0.23);
   assert.deepEqual(errors, []);
+  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
   await panel.screenshot({ path: 'work/remote-admin-panel.png' });
   console.log(
     'PASS separate admin/display contexts: screen-scoped pause, volume, timeline seek without replay, playlist next/previous, download pause/resume, telemetry, publication persistence, token scoping, and unaffected second screen/phone preview.',

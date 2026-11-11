@@ -105,7 +105,7 @@ export function QudratProSettings({
   onChange: (patch: Partial<RecognitionBoard>) => void;
 }) {
   const options = leaderboardOptions(board.qudratPro);
-  const state = useLeaderboard();
+  const state = useLeaderboard(true, options.refreshSeconds);
   const change = (patch: Partial<typeof options>) =>
     onChange({ qudratPro: { ...options, ...patch } });
   return (
@@ -118,6 +118,22 @@ export function QudratProSettings({
         </div>
       </div>
       <SourceEditor onSaved={state.refresh} />
+      <label>
+        تحديث النتائج تلقائيًا
+        <select
+          aria-label="فترة تحديث قدرات برو"
+          value={options.refreshSeconds}
+          onChange={(event) =>
+            change({ refreshSeconds: Number(event.target.value) as 30 | 60 | 120 | 300 })
+          }
+        >
+          {[30, 60, 120, 300].map((seconds) => (
+            <option key={seconds} value={seconds}>
+              {seconds} ثانية
+            </option>
+          ))}
+        </select>
+      </label>
       <label>
         الاختبار المعروض
         <select
@@ -165,8 +181,8 @@ export function QudratProSettings({
         </select>
       </label>
       <p className="field-hint">
-        يبقى الثلاثة الأوائل ظاهرين، وتتنقل بقية القائمة تلقائيًا. تُجلب النتائج عند إعادة تحميل
-        الصفحة، وتبقى آخر نتائج محفوظة عند انقطاع المصدر.
+        يبقى الثلاثة الأوائل ظاهرين، وتتنقل بقية القائمة تلقائيًا. تُحدّث النتائج تلقائيًا حسب
+        الفترة المحددة، وتبقى آخر نتائج محفوظة عند انقطاع المصدر.
       </p>
       <div className="qudrat-source-status" role="status">
         {state.loading
