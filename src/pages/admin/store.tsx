@@ -14,16 +14,16 @@ import { recognitionOf } from '@/lib/loop';
 import { defaultTemplate, initialContent, type Content, type Template } from '@/lib/types';
 
 export type Tab =
+  | 'المساعد'
   | 'الشاشات'
-  | 'ومضات تقنية'
   | 'الرئيسية'
-  | 'المواضيع المحفوظة'
+  | 'التحكم'
   | 'الجدولة'
+  | 'طريقة العرض'
   | 'القوالب'
   | 'السجل'
   | 'خلفية الحصص';
-export type Modal =
-  '' | 'preview' | 'pair' | 'schedule' | 'preset' | 'optional' | 'settings' | 'setup';
+export type Modal = '' | 'preview' | 'pair' | 'schedule' | 'optional' | 'settings' | 'setup';
 export type UploadTarget =
   | 'image'
   | 'secondary'
@@ -45,6 +45,9 @@ type Store = {
   modal: Modal;
   setModal: (m: Modal) => void;
   content: Content;
+  selectContentDate: (date: string, autoDate?: boolean) => Promise<void>;
+  dateLoading: boolean;
+  dateNotice: string;
   edit: (key: keyof Content, value: Content[keyof Content]) => void;
   setContent: (c: Content, dirty?: boolean) => void;
   template: Template;
@@ -59,10 +62,6 @@ type Store = {
   run: <T>(fn: () => Promise<T>, success?: string) => Promise<T | undefined>;
   chooseImage: (target: UploadTarget) => void;
   fileInput: ReactNode;
-  presetName: string;
-  setPresetName: (n: string) => void;
-  editingPreset: string | null;
-  openPresetEditor: (id: string | null, name: string) => void;
 };
 
 const Ctx = createContext<Store | null>(null);
@@ -84,7 +83,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     templateDirtyRef.current = true;
     setTemplateDirty(true);
   };
+  const [dateLoading, setDateLoading] = useState(false);
+  const [dateNotice, setDateNotice] = useState('');
   const [dirty, setDirty] = useState(false);
+  const contentDirtyRef = useRef(false);
+  const currentContent = useRef(content);
+  currentContent.current = content;
+  const seenPublished = useRef('');
+  useEffect(() => {
+    contentDirtyRef.current = dirty;
+  }, [dirty]);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -100,10 +108,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const reload = useCallback(async () => {
     try {
       const requested = screenId.current;
+      const requestedRevision = contentRevision.current;
       const d = await api.loadAdmin(requested);
       if (requested !== screenId.current) return;
       setData((previous) => (JSON.stringify(previous) === JSON.stringify(d) ? previous : d));
       setLoadError('');
+      const publishedKey = JSON.stringify([d.screen.id, d.current?.id, d.current?.content]);
+      const changedPublished = !!seenPublished.current && seenPublished.current !== publishedKey;
+      seenPublished.current = publishedKey;
       if (loadedFor.current !== d.screen.id) {
         loadedFor.current = d.screen.id;
         screenId.current = d.screen.id;
@@ -116,11 +128,26 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           ...(d.screen.draft || d.current?.content || {}),
         });
         setDirty(!!d.screen.draft);
-      } else if (!templateDirtyRef.current) {
-        const next = syncedTheme({ ...defaultTemplate, ...d.screen.template });
-        setTemplateState((previous) =>
-          JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
-        );
+        setDateNotice('');
+      } else {
+        // A new day's scheduled post must reach an untouched editor as well as
+        // the TV. Protect unsaved edits and manually selected date previews.
+        if (
+          changedPublished &&
+          !contentDirtyRef.current &&
+          requestedRevision === contentRevision.current &&
+          currentContent.current.autoDate &&
+          d.current
+        ) {
+          contentRevision.current++;
+          setContentState({ ...initialContent, ...d.current.content });
+        }
+        if (!templateDirtyRef.current) {
+          const next = syncedTheme({ ...defaultTemplate, ...d.screen.template });
+          setTemplateState((previous) =>
+            JSON.stringify(previous) === JSON.stringify(next) ? previous : next,
+          );
+        }
       }
     } catch (e) {
       setLoadError((e as Error).message);
@@ -150,12 +177,55 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const edit: Store['edit'] = (key, value) => {
     contentRevision.current++;
     setContentState((c) => ({ ...c, [key]: value }));
+    contentDirtyRef.current = true;
     setDirty(true);
   };
   const setContent: Store['setContent'] = (c, d = true) => {
     contentRevision.current++;
     setContentState(c);
+    contentDirtyRef.current = d;
     setDirty(d);
+  };
+
+  const selectContentDate: Store['selectContentDate'] = async (date, autoDate = false) => {
+    if (!data || busy || dateLoading || !date) return;
+    const selected = data.screen.id,
+      revision = contentRevision.current;
+    setDateLoading(true);
+    setDateNotice('');
+    try {
+      const post = await api.contentForDate(selected, date);
+      if (screenId.current !== selected) return;
+      if (contentRevision.current !== revision) {
+        setDateNotice(
+          'عدّلت المسودة أثناء تحميل اليوم؛ بقيت تعديلاتك كما هي. اختر التاريخ مجددًا لتحميل محتواه.',
+        );
+        return;
+      }
+      if (post) {
+        setContent({
+          ...initialContent,
+          ...post.content,
+          title: post.content.title ?? '',
+          subtitle: post.content.subtitle ?? '',
+          body: post.content.body ?? '',
+          badge: post.content.badge ?? '',
+          footer: post.content.footer ?? '',
+          date,
+          autoDate,
+        });
+        setDateNotice('تم تحميل محتوى ' + date + ' في المحرر والمعاينة. لم يُنشر شيء على الشاشة.');
+      } else {
+        setContent({ ...content, date, autoDate });
+        setDateNotice(
+          'لا يوجد محتوى محفوظ أو مجدول لهذا التاريخ. تغيّر التاريخ فقط وبقيت المسودة الحالية.',
+        );
+      }
+    } catch (error) {
+      setDateNotice((error as Error).message);
+    } finally {
+      setDateLoading(false);
+    }
   };
 
   const run: Store['run'] = async (fn, success) => {
@@ -227,10 +297,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (t === 'fullMedia') {
         const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
         setContentState((c) => ({ ...c, fullMedia: url, fullType: video ? 'video' : 'image' }));
+        contentDirtyRef.current = true;
         setDirty(true);
       } else if (t === 'image') {
         const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
         setContentState((c) => ({ ...c, image: url, imageType: video ? 'video' : 'image' }));
+        contentDirtyRef.current = true;
         setDirty(true);
       } else if (t === 'schoolLogoTemplate') setTemplate((tp) => ({ ...tp, schoolLogo: url }));
       else if (t === 'backgroundImage') setTemplate((tp) => ({ ...tp, backgroundImage: url }));
@@ -274,14 +346,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     />
   );
 
-  const [presetName, setPresetName] = useState('');
-  const [editingPreset, setEditingPreset] = useState<string | null>(null);
-  const openPresetEditor = (id: string | null, name: string) => {
-    setEditingPreset(id);
-    setPresetName(name);
-    setModal('preset');
-  };
-
   return (
     <Ctx.Provider
       value={{
@@ -294,6 +358,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         modal,
         setModal,
         content,
+        selectContentDate,
+        dateLoading,
+        dateNotice,
         edit,
         setContent,
         template,
@@ -308,10 +375,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         run,
         chooseImage,
         fileInput,
-        presetName,
-        setPresetName,
-        editingPreset,
-        openPresetEditor,
       }}
     >
       {children}

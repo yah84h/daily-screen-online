@@ -8,6 +8,8 @@ import { saveTemplatePatch } from './template-patch.mjs';
 import { publishFromIphone, scheduleFromIphone } from './native-publish.mjs';
 import { normalizeNews } from './news-security.mjs';
 import { createAccounts } from './accounts.mjs';
+import { applyAssistantSchedule } from './assistant-schedule.mjs';
+import { createAdminAssistant } from './admin-assistant.mjs';
 import { fetchHeadlines } from './headlines.mjs';
 import http from 'node:http';
 import { pipeline } from 'node:stream/promises';
@@ -46,6 +48,9 @@ const db = JSON.parse(
   fs.readFileSync(fs.existsSync(stateFile) ? stateFile : path.join(root, 'seed.json'), 'utf8'),
 );
 const accounts = createAccounts(dataDir);
+const assistant = createAdminAssistant(path.join(dataDir, 'chatgpt'), {
+  applySchedule: (input, user) => applyAssistantSchedule(db, input, user, save),
+});
 const oldSchoolNames = [
   'مدارس الموهوبين التقنيه بجدة',
   'مدارس الموهوبين التقنية بجدة',
@@ -83,12 +88,12 @@ function reply(res, data, status = 200) {
   });
   res.end(JSON.stringify(data));
 }
-async function body(req) {
+async function body(req, maxBytes = 1024 * 1024) {
   const chunks = [];
   let length = 0;
   for await (const chunk of req) {
     length += chunk.length;
-    if (length > 1024 * 1024) throw Error('بيانات الإعدادات كبيرة جدًا');
+    if (length > maxBytes) throw Error('بيانات الإعدادات كبيرة جدًا');
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
@@ -358,6 +363,17 @@ const server = http.createServer(async (req, res) => {
       new URL(req.headers.origin).host !== req.headers.host
     )
       throw Object.assign(Error('Origin rejected'), { status: 403 });
+    if (url.pathname === '/local/assistant' && req.method === 'POST') {
+      const user = accounts.requireUser(req, 'daily');
+      const input = JSON.parse((await body(req, 9 * 1024 * 1024)).toString());
+      const screen = db.screens.find((item) => item.id === input.screenId);
+      const host = new URL('http://' + req.headers.host).hostname;
+      const peer = req.socket.remoteAddress;
+      const localBrowser =
+        ['localhost', '127.0.0.1', '[::1]'].includes(host) &&
+        ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(peer);
+      return reply(res, await assistant(input, user, screen, localBrowser, db.posts));
+    }
     if (url.pathname === '/local/presentations' && req.method === 'POST') {
       accounts.requireUser(req, 'daily');
       const job = await uploadPresentation(req, url.searchParams.get('name'), dataDir, mediaDir);

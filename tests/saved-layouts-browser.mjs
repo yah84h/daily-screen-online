@@ -56,18 +56,24 @@ try {
   await page.getByLabel('اسم المستخدم', { exact: true }).fill('Archo');
   await page.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await page.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
-  await page.getByRole('button', { name: 'القوالب', exact: true }).click();
+  await page.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await page.getByRole('button', { name: 'تصميم اليومي', exact: true }).click();
   const saved = page.locator('.saved-layouts');
   await saved.getByLabel('اسم القالب الجديد').fill('Daily custom');
   await saved.getByRole('button', { name: 'حفظ كتوزيع جديد', exact: true }).click();
   await saved.getByText('تم حفظ القالب على هذه الشاشة.', { exact: true }).waitFor();
   await page.reload();
-  await page.getByRole('button', { name: 'القوالب', exact: true }).click();
+  await page.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await page.getByRole('button', { name: 'تصميم اليومي', exact: true }).click();
   await saved.getByText('Daily custom', { exact: true }).waitFor();
   await saved.getByRole('button', { name: 'تطبيق', exact: true }).click();
-  await page.getByRole('button', { name: 'خلفية الحصص', exact: true }).click();
-  await page.locator('summary').filter({ hasText: 'التوزيع والقوالب' }).click();
-  await page.locator('summary').filter({ hasText: 'حجم الكتابة' }).click();
+  await page.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await page.getByRole('button', { name: 'تصميم اليومي', exact: true }).click();
+  await page.getByRole('button', { name: 'الخلفية والساعة', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'أدوات الخلفية' })
+    .getByRole('button', { name: /حجم الكتابة/ })
+    .click();
   assert.equal(await saved.getByText('Daily custom', { exact: true }).count(), 0);
   const clock = page.locator('.loop-preview-panel .animated-clock');
   const heading = page.locator('.loop-preview-panel .qudrat-brand h2');
@@ -91,16 +97,29 @@ try {
         1.3,
     ) < 0.02,
   );
+  await page
+    .getByRole('navigation', { name: 'أدوات الخلفية' })
+    .getByRole('button', { name: /التوزيع والقوالب/ })
+    .click();
   await saved.getByLabel('اسم القالب الجديد').fill('Loop custom');
   await saved.getByRole('button', { name: 'حفظ كتوزيع جديد', exact: true }).click();
   await saved.getByText('تم حفظ القالب على هذه الشاشة.', { exact: true }).waitFor();
   await page.reload();
-  await page.getByRole('button', { name: 'خلفية الحصص', exact: true }).click();
-  await page.locator('summary').filter({ hasText: 'التوزيع والقوالب' }).click();
-  await page.locator('summary').filter({ hasText: 'حجم الكتابة' }).click();
-  await saved.getByText('Loop custom', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await page.getByRole('button', { name: 'تصميم اليومي', exact: true }).click();
+  await page.getByRole('button', { name: 'الخلفية والساعة', exact: true }).click();
+  await page
+    .getByRole('navigation', { name: 'أدوات الخلفية' })
+    .getByRole('button', { name: /حجم الكتابة/ })
+    .click();
+
   assert.equal(await page.getByLabel('حجم نص الساعة والحصة', { exact: true }).inputValue(), '150');
   assert.equal(await page.getByLabel('حجم نص لوحة التميز', { exact: true }).inputValue(), '130');
+  await page
+    .getByRole('navigation', { name: 'أدوات الخلفية' })
+    .getByRole('button', { name: /التوزيع والقوالب/ })
+    .click();
+  await saved.getByText('Loop custom', { exact: true }).waitFor();
   await saved.getByRole('button', { name: 'تطبيق', exact: true }).click();
   await saved.getByRole('button', { name: 'تحديث من التوزيع الحالي', exact: true }).click();
   await saved.getByText('تم حفظ القالب على هذه الشاشة.', { exact: true }).waitFor();

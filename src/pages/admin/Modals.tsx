@@ -1,5 +1,5 @@
 import { MonitorLink } from './MonitorLink';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Copy, Monitor, Plus, Trash2, Upload, X, Eraser, Check } from 'lucide-react';
 import { Screen } from '@/components/Screen';
 import * as api from '@/lib/api';
@@ -16,10 +16,57 @@ const optionalRows: [keyof Content, string][] = [
 
 export function Modals() {
   const { modal, setModal } = useAdmin();
+  const panel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!modal) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    panel.current?.querySelector<HTMLElement>('button')?.focus();
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setModal('');
+      }
+      if (event.key !== 'Tab') return;
+      const items = Array.from(
+        panel.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], summary',
+        ) || [],
+      ).filter((item) => item.getClientRects().length > 0);
+      const first = items[0],
+        last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener('keydown', keydown);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener('keydown', keydown);
+      previous?.focus({ preventScroll: true });
+    };
+  }, [modal, setModal]);
+  const titles = {
+    preview: 'معاينة الشاشة',
+    pair: 'ربط جهاز',
+    schedule: 'جدولة المحتوى',
+    optional: 'العناصر الإضافية',
+    settings: 'الإعدادات',
+    setup: 'إعداد الشاشة',
+  };
   if (!modal) return null;
   return (
     <div className="modal-backdrop" onClick={() => setModal('')}>
       <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-label={titles[modal]}
         className={'modal ' + (modal === 'preview' ? 'wide' : '')}
         onClick={(e) => e.stopPropagation()}
       >
@@ -29,7 +76,6 @@ export function Modals() {
         {modal === 'preview' && <Preview />}
         {modal === 'pair' && <Pair />}
         {modal === 'schedule' && <ScheduleModal />}
-        {modal === 'preset' && <PresetModal />}
         {modal === 'optional' && <Optional />}
         {modal === 'settings' && <SettingsModal />}
         {modal === 'setup' && <Setup />}
@@ -139,41 +185,6 @@ function ScheduleModal() {
         }
       >
         حفظ الموعد
-      </button>
-    </>
-  );
-}
-
-function PresetModal() {
-  const { content, edit, run, busy, presetName, setPresetName, editingPreset } = useAdmin();
-  return (
-    <>
-      <h2>{editingPreset ? 'تعديل الموضوع' : 'حفظ موضوع'}</h2>
-      <p>احفظ العنوان والنص والصورة لاستخدامها في يوم آخر.</p>
-      <label>
-        اسم الموضوع
-        <input value={presetName} onChange={(e) => setPresetName(e.target.value)} />
-      </label>
-      <label>
-        العنوان
-        <input value={content.title} onChange={(e) => edit('title', e.target.value)} />
-      </label>
-      <label>
-        العنوان الفرعي
-        <input value={content.subtitle} onChange={(e) => edit('subtitle', e.target.value)} />
-      </label>
-      <label>
-        الرسالة
-        <textarea rows={3} value={content.body} onChange={(e) => edit('body', e.target.value)} />
-      </label>
-      <button
-        className="button primary"
-        disabled={!presetName.trim() || busy}
-        onClick={() =>
-          run(() => api.savePreset(presetName, content, editingPreset), 'تم حفظ الموضوع.')
-        }
-      >
-        حفظ الموضوع
       </button>
     </>
   );

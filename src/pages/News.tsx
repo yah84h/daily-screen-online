@@ -1,3 +1,5 @@
+import { KnowledgeLibrary } from './news/KnowledgeLibrary';
+import '@/news-workspace.css';
 import { dailyTechQuestions } from '@/lib/techQuestions';
 import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
@@ -40,7 +42,7 @@ export default function News() {
   const [settings, setSettings] = useState<NewsSettings>(newsOf());
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  const [tab, setTab] = useState<'school' | 'feed'>('school');
+  const [tab, setTab] = useState<'school' | 'feed' | 'knowledge'>('school');
   const [feed, setFeed] = useState<TechNews[]>(cachedTechNews);
   const [feedError, setFeedError] = useState('');
   const [feedBusy, setFeedBusy] = useState(false);
@@ -84,7 +86,22 @@ export default function News() {
   if (loading) return <div className="loading-page">جارٍ التحميل…</div>;
   if (!session) return <Navigate to="/login?next=/news" replace />;
   if (!permissions.news)
-    return <Navigate to={permissions.daily || permissions.admin ? '/admin' : '/login'} replace />;
+    return permissions.admin || permissions.daily ? (
+      <main className="news-studio">
+        <header className="news-studio-header">
+          <div>
+            <h1>مكتب الأخبار والمعرفة</h1>
+            <p>الومضات والاقتباسات التقنية مع مصادرها.</p>
+          </div>
+          <Link className="button white" to="/admin">
+            لوحة الإدارة
+          </Link>
+        </header>
+        <KnowledgeLibrary />
+      </main>
+    ) : (
+      <Navigate to="/login" replace />
+    );
   const change = (p: Partial<NewsSettings>) => {
     setSettings((s) => ({ ...s, ...p }));
     setMessage('');
@@ -150,8 +167,8 @@ export default function News() {
       <header className="news-studio-header">
         <div>
           <span className="news-eyebrow">مساحة المدرسة</span>
-          <h1>مكتب الأخبار</h1>
-          <p>رسائل واضحة، وأخبار تقنية تستحق القراءة.</p>
+          <h1>مكتب الأخبار والمعرفة</h1>
+          <p>إعلانات المدرسة، الأخبار، والومضات التقنية في مساحة واحدة.</p>
         </div>
         <div className="button-row">
           {(permissions.admin || permissions.daily) && (
@@ -231,8 +248,33 @@ export default function News() {
             <button role="tab" aria-selected={tab === 'feed'} onClick={() => setTab('feed')}>
               الأخبار التقنية <small>{feed.length}</small>
             </button>
+            <button
+              role="tab"
+              aria-selected={tab === 'knowledge'}
+              onClick={() => setTab('knowledge')}
+            >
+              الومضات والاقتباسات
+            </button>
           </div>
-          {tab === 'school' ? (
+          {tab === 'knowledge' ? (
+            <KnowledgeLibrary
+              disabled={busy || !screenId || settings.items.length >= 30}
+              onUse={(text) => {
+                change({
+                  items: [
+                    ...settings.items,
+                    { id: crypto.randomUUID(), text: text.slice(0, 300), enabled: true },
+                  ],
+                });
+                setTab('school');
+                setMessage(
+                  text.length > 300
+                    ? 'أُضيف الإعلان كمسودة واختُصر إلى ٣٠٠ حرف. راجعه قبل النشر.'
+                    : 'أُضيف النص كإعلان غير منشور. راجعه ثم انشر الأخبار.',
+                );
+              }}
+            />
+          ) : tab === 'school' ? (
             <div className="news-announcements">
               {!settings.items.length && (
                 <div className="news-empty">

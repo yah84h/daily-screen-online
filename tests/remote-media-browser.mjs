@@ -34,6 +34,7 @@ seed.screens = [
     },
   },
 ];
+seed.screens.push({ ...seed.screens[1], id: 'single-screen', name: 'Single clip' });
 seed.posts = seed.screens.map((screen, i) => ({
   ...seed.posts[0],
   id: 'post-' + i,
@@ -55,9 +56,20 @@ seed.posts = seed.screens.map((screen, i) => ({
     },
   },
 }));
+seed.posts[2].content.videoPlaylist = undefined;
+seed.posts[2].content.fullMedia = 'https://fixture.invalid/single.webm';
+seed.posts[2].content.fullType = 'video';
+seed.posts[2].content.videoPreparation = 'cache';
+seed.posts[2].content.videoLoop = true;
 seed.screen_devices = [
   { id: 'first-tv', token: 'first-tv-token', screen_id: original.id, label: 'First TV' },
   { id: 'other-tv', token: 'other-tv-token', screen_id: 'other-screen', label: 'Other TV' },
+  {
+    id: 'single-tv',
+    token: 'single-tv-token',
+    screen_id: 'single-screen',
+    label: 'Single video TV',
+  },
 ];
 await writeFile(join(folder, 'seed.json'), JSON.stringify(seed));
 const server = spawn(process.execPath, [join(folder, 'server.mjs'), '--localhost'], {
@@ -125,7 +137,10 @@ try {
   await phone.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await phone.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
   await phone.waitForURL('**/admin');
-  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
+  await phone
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .click();
   const panel = phone.getByRole('region', { name: 'التحكم عن بعد بالشاشة' });
   await panel.getByText('الشاشة متصلة', { exact: true }).waitFor();
   await phone.getByLabel('إيقاف الشاشة مؤقتًا عن بعد', { exact: true }).click();
@@ -140,7 +155,10 @@ try {
     () => Math.abs(document.querySelector('.video-playlist video').volume - 0.23) < 0.001,
   );
   assert.equal(await other.locator('.video-playlist video').evaluate((video) => video.volume), 1);
-  await phone.getByRole('tab', { name: 'المحتوى' }).click();
+  await phone
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'المحتوى', exact: true })
+    .click();
   assert.equal(
     await phone
       .locator('.preview-card video')
@@ -149,7 +167,10 @@ try {
     1,
     'Phone preview is not being controlled',
   );
-  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
+  await phone
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .click();
   await phone.getByLabel('الوسائط المراد التحكم بها', { exact: true }).selectOption('video');
   await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).fill('0.8');
   await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).dispatchEvent('pointerup');
@@ -190,7 +211,10 @@ try {
   await phone.getByLabel('تشغيل الشاشة عن بعد', { exact: true }).click();
   await tv.waitForFunction(() => !document.querySelector('.video-playlist video')?.paused);
   // A new publication keeps screen playback preferences without needing another control command.
-  await phone.getByRole('tab', { name: 'المحتوى' }).click();
+  await phone
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'المحتوى', exact: true })
+    .click();
   await phone.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
   await tv.waitForTimeout(3500);
   state = await phone.request.post(base + '/local/media-control', {
@@ -198,8 +222,38 @@ try {
   });
   assert.equal((await state.json()).volume, 0.23);
   assert.deepEqual(errors, []);
-  await phone.getByRole('tab', { name: 'التحكم المباشر' }).click();
+  await phone
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .click();
   await panel.screenshot({ path: 'work/remote-admin-panel.png' });
+  const singleContext = await context();
+  const single = await singleContext.newPage();
+  await single.goto(base + '/display?token=single-tv-token');
+  await single.waitForFunction(() => document.querySelector('video')?.currentTime > 0);
+  await phone
+    .getByRole('combobox', { name: 'الشاشة المحددة', exact: true })
+    .selectOption('single-screen');
+  await panel.locator('header p').filter({ hasText: 'Single clip' }).waitFor();
+  await panel.getByText('الشاشة متصلة', { exact: true }).waitFor();
+  assert(
+    await panel.getByRole('button', { name: 'التالي في القائمة', exact: true }).isDisabled(),
+    'No playlist means no next button',
+  );
+  assert(await panel.getByRole('button', { name: 'السابق في القائمة', exact: true }).isDisabled());
+  await phone.getByLabel('إيقاف الشاشة مؤقتًا عن بعد', { exact: true }).click();
+  await single.waitForFunction(() => document.querySelector('video')?.paused);
+  await phone.getByLabel('الوسائط المراد التحكم بها', { exact: true }).selectOption('video');
+  await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).fill('0.5');
+  await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).dispatchEvent('pointerup');
+  await single.waitForFunction(
+    () => Math.abs(document.querySelector('video').currentTime - 0.5) < 0.05,
+  );
+  assert(
+    await panel.getByRole('button', { name: 'تقديم ١٠ ثوانٍ على الشاشة', exact: true }).isEnabled(),
+    'Seeking works for a single video outside a playlist',
+  );
+  assert.deepEqual(errors, []);
   console.log(
     'PASS separate admin/display contexts: screen-scoped pause, volume, timeline seek without replay, playlist next/previous, download pause/resume, telemetry, publication persistence, token scoping, and unaffected second screen/phone preview.',
   );

@@ -1,3 +1,14 @@
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  Download,
+  SlidersHorizontal,
+} from 'lucide-react';
+import { RemoteDeviceReports } from './studio/RemoteDeviceReports';
+import { PublishedScreenPreview } from './studio/PublishedScreenPreview';
 import { useEffect, useRef, useState } from 'react';
 import { useRemoteMedia } from '@/lib/remoteMedia';
 import { useAdmin } from './store';
@@ -60,150 +71,170 @@ function ScreenMediaPanel({
           {current ? 'الشاشة متصلة' : 'بانتظار جهاز العرض'}
         </span>
       </header>
-      <div className="remote-playback-buttons">
-        <button
-          className="button primary"
-          disabled={!state}
-          aria-label={state?.paused ? 'تشغيل الشاشة عن بعد' : 'إيقاف الشاشة مؤقتًا عن بعد'}
-          onClick={() => send({ action: 'set', patch: { paused: !state?.paused } })}
-        >
-          {state?.paused ? '▶ تشغيل / متابعة' : 'Ⅱ إيقاف مؤقت'}
-        </button>
-        <button
-          className="button white"
-          disabled={!state || !playlist}
-          onClick={() => send({ action: 'previous' })}
-        >
-          السابق في القائمة
-        </button>
-        <button className="button white" disabled={!state} onClick={() => send({ action: 'next' })}>
-          التالي في القائمة
-        </button>
-      </div>
-      <label>
-        صوت الشاشة · {Math.round(volume * 100)}٪
-        <input
-          aria-label="مستوى صوت الشاشة عن بعد"
-          type="range"
-          min="0"
-          max="1"
-          step=".01"
-          value={volume}
-          disabled={!state}
-          onChange={(event) => {
-            const value = +event.target.value;
-            editing.current = true;
-            setVolume(value);
-            if (debounce.current) clearTimeout(debounce.current);
-            debounce.current = setTimeout(() => {
-              void remote
-                .send({ action: 'set', patch: { volume: value } })
-                .catch(() => {})
-                .finally(() => {
-                  editing.current = false;
-                });
-            }, 200);
-          }}
-        />
-      </label>
-      <div className="remote-seek">
-        <select
-          aria-label="الوسائط المراد التحكم بها"
-          value={target}
-          onChange={(event) => setTarget(event.target.value as typeof target)}
-        >
-          <option value="all">الفيديو وصوت الخلفية</option>
-          <option value="video">الفيديو فقط</option>
-          <option value="audio">الصوت فقط</option>
-        </select>
-        <button
-          disabled={!state || !playlist}
-          onClick={() => send({ action: 'seek', mode: 'relative', seconds: -10, target })}
-        >
-          رجوع ١٠ ثوانٍ على الشاشة
-        </button>
-        <button
-          disabled={!state || !playlist}
-          onClick={() => send({ action: 'seek', mode: 'relative', seconds: 10, target })}
-        >
-          تقديم ١٠ ثوانٍ على الشاشة
-        </button>
-      </div>
-      <label>
-        موضع التشغيل ·{' '}
-        <span dir="ltr">
-          {stamp(seeking ?? track?.position ?? 0)} / {stamp(track?.duration || 0)}
-        </span>
-        <input
-          aria-label="موضع التشغيل على الشاشة"
-          type="range"
-          min="0"
-          max={track?.duration || 0}
-          step=".1"
-          disabled={!track?.duration}
-          value={Math.min(seeking ?? track?.position ?? 0, track?.duration || 0)}
-          onChange={(event) => setSeeking(+event.target.value)}
-          onPointerUp={(event) => {
-            const value = +event.currentTarget.value;
-            send({ action: 'seek', mode: 'absolute', seconds: value, target });
-            setSeeking(null);
-          }}
-          onKeyUp={(event) => {
-            if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
-              send({
-                action: 'seek',
-                mode: 'absolute',
-                seconds: +event.currentTarget.value,
-                target,
-              });
-              setSeeking(null);
-            }
-          }}
-        />
-      </label>
-      <button
-        className="button white"
-        disabled={!state}
-        aria-label={
-          state?.downloadsPaused ? 'متابعة تنزيلات الشاشة' : 'إيقاف تنزيلات الشاشة مؤقتًا'
-        }
-        onClick={() => send({ action: 'set', patch: { downloadsPaused: !state?.downloadsPaused } })}
-      >
-        {state?.downloadsPaused ? 'متابعة تنزيلات الشاشة' : 'إيقاف تنزيلات الشاشة مؤقتًا'}
-      </button>
-      {remote.pending && <small role="status">جارٍ إرسال الأمر للشاشة…</small>}
-      {remote.error && <p role="alert">{remote.error}</p>}
-      <div className="remote-device-reports">
-        {reports.map(([id, report]) => (
-          <article key={id}>
-            <b>{report.label}</b>
-            <small>
-              {now - report.at < 15000
-                ? 'متصل'
-                : 'آخر تقرير منذ ' + Math.round((now - report.at) / 1000) + ' ثانية'}{' '}
-              · {report.paused ? 'متوقف' : 'يعمل'}
-              {report.kind === 'video' || report.kind === 'photos'
-                ? ' · الملف ' + (report.index + 1)
-                : ''}
-            </small>
-            {report.blocked && (
-              <p>
-                التشغيل متوقف على الجهاز؛ قد يحتاج السماح بالتشغيل أو الصوت مرة واحدة من المتصفح.
+      <div className="remote-control-layout">
+        <div className="remote-main-controls">
+          <section className="remote-transport" aria-label="التشغيل والصوت">
+            <div className="remote-section-title">
+              <h3>التشغيل والصوت</h3>
+              <span>يُطبّق على أجهزة العرض</span>
+            </div>
+            {!current && (
+              <p className="remote-waiting-note">
+                لا يوجد تقرير مباشر حاليًا. تُحفظ إعدادات الصوت والإيقاف وتُطبّق عند اتصال الجهاز.
               </p>
             )}
-            {report.tasks.map((task, index) => (
-              <div key={index}>
-                <span>{task.error || task.label}</span>
-                <progress max={task.total || 1} value={task.loaded} />
+            <div className="remote-playback-buttons">
+              <button
+                className="button primary"
+                disabled={!state}
+                aria-label={state?.paused ? 'تشغيل الشاشة عن بعد' : 'إيقاف الشاشة مؤقتًا عن بعد'}
+                onClick={() => send({ action: 'set', patch: { paused: !state?.paused } })}
+              >
+                {state?.paused ? <Play size={18} /> : <Pause size={18} />}
+                {state?.paused ? 'تشغيل / متابعة' : 'إيقاف مؤقت'}
+              </button>
+              <button
+                className="button white"
+                disabled={!state || !playlist}
+                onClick={() => send({ action: 'previous' })}
+              >
+                <SkipBack size={17} />
+                السابق في القائمة
+              </button>
+              <button
+                className="button white"
+                disabled={!state || !playlist}
+                onClick={() => send({ action: 'next' })}
+              >
+                <SkipForward size={17} />
+                التالي في القائمة
+              </button>
+            </div>
+            <label className="remote-volume-label">
+              <span>
+                <Volume2 size={18} />
+                صوت الشاشة · {Math.round(volume * 100)}٪
+              </span>
+              <input
+                aria-label="مستوى صوت الشاشة عن بعد"
+                type="range"
+                min="0"
+                max="1"
+                step=".01"
+                value={volume}
+                disabled={!state}
+                onChange={(event) => {
+                  const value = +event.target.value;
+                  editing.current = true;
+                  setVolume(value);
+                  if (debounce.current) clearTimeout(debounce.current);
+                  debounce.current = setTimeout(() => {
+                    void remote
+                      .send({ action: 'set', patch: { volume: value } })
+                      .catch(() => {})
+                      .finally(() => {
+                        editing.current = false;
+                      });
+                  }, 200);
+                }}
+              />
+            </label>
+          </section>
+          <section className="remote-timeline" aria-label="موضع تشغيل الوسائط">
+            <div className="remote-section-title">
+              <SlidersHorizontal size={18} />
+              <h3>موضع التشغيل</h3>
+            </div>
+            <div className="remote-seek">
+              <select
+                aria-label="الوسائط المراد التحكم بها"
+                value={target}
+                onChange={(event) => setTarget(event.target.value as typeof target)}
+              >
+                <option value="all">الفيديو وصوت الخلفية</option>
+                <option value="video">الفيديو فقط</option>
+                <option value="audio">الصوت فقط</option>
+              </select>
+              <button
+                disabled={!state || !track?.duration}
+                onClick={() => send({ action: 'seek', mode: 'relative', seconds: -10, target })}
+              >
+                رجوع ١٠ ثوانٍ على الشاشة
+              </button>
+              <button
+                disabled={!state || !track?.duration}
+                onClick={() => send({ action: 'seek', mode: 'relative', seconds: 10, target })}
+              >
+                تقديم ١٠ ثوانٍ على الشاشة
+              </button>
+            </div>
+            <label>
+              موضع التشغيل ·{' '}
+              <span dir="ltr">
+                {stamp(seeking ?? track?.position ?? 0)} / {stamp(track?.duration || 0)}
+              </span>
+              <input
+                aria-label="موضع التشغيل على الشاشة"
+                type="range"
+                min="0"
+                max={track?.duration || 0}
+                step=".1"
+                disabled={!track?.duration}
+                value={Math.min(seeking ?? track?.position ?? 0, track?.duration || 0)}
+                onChange={(event) => setSeeking(+event.target.value)}
+                onPointerUp={(event) => {
+                  const value = +event.currentTarget.value;
+                  send({ action: 'seek', mode: 'absolute', seconds: value, target });
+                  setSeeking(null);
+                }}
+                onKeyUp={(event) => {
+                  if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+                    send({
+                      action: 'seek',
+                      mode: 'absolute',
+                      seconds: +event.currentTarget.value,
+                      target,
+                    });
+                    setSeeking(null);
+                  }
+                }}
+              />
+            </label>
+          </section>
+          <section className="remote-downloads" aria-label="تحضير الملفات">
+            <div>
+              <div className="remote-section-title">
+                <Download size={18} />
+                <h3>تحضير الملفات</h3>
               </div>
-            ))}
-            {!report.tasks.length && <small>لا توجد مهام تحضير جارية</small>}
-          </article>
-        ))}
+              <p className="field-hint">
+                التحضير قبل العرض يقلّل الانتظار. قد يُعاد تنزيل الملف غير المكتمل بعد الاستئناف.
+              </p>
+            </div>
+            <button
+              className="button white"
+              disabled={!state}
+              aria-label={
+                state?.downloadsPaused ? 'متابعة تنزيلات الشاشة' : 'إيقاف تنزيلات الشاشة مؤقتًا'
+              }
+              onClick={() =>
+                send({ action: 'set', patch: { downloadsPaused: !state?.downloadsPaused } })
+              }
+            >
+              {state?.downloadsPaused ? 'متابعة تنزيلات الشاشة' : 'إيقاف تنزيلات الشاشة مؤقتًا'}
+            </button>
+          </section>
+          {remote.pending && <small role="status">جارٍ إرسال الأمر للشاشة…</small>}
+          {remote.error && <p role="alert">{remote.error}</p>}
+        </div>
+        <aside className="remote-monitor-column">
+          <PublishedScreenPreview />
+          <RemoteDeviceReports reports={reports} now={now} />
+        </aside>
       </div>
       <p className="field-hint">
-        التحكم مباشر ولا يحتاج إعادة نشر. PowerPoint له أزرار الشرائح الخاصة به. قد يُعاد تنزيل
-        الملف غير المكتمل عند متابعة التحضير.
+        التحكم مباشر ولا يحتاج إعادة نشر. للتحكم بشرائح PowerPoint، افتح محتوى العرض من صفحة
+        المحتوى.
       </p>
     </section>
   );
