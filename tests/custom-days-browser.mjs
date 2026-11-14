@@ -77,6 +77,23 @@ try {
     false,
     'Hidden photo does not reserve layout space',
   );
+  async function assertArabicSpacing() {
+    assert(
+      await frame.locator('#oTitle').evaluate((el) => {
+        const style = getComputedStyle(el);
+        return parseFloat(style.lineHeight) / parseFloat(style.fontSize) >= 1.6;
+      }),
+      'Heading leaves room for Arabic descenders and dots',
+    );
+    assert(
+      await frame.locator('#oSlogan').evaluate((el) => {
+        const style = getComputedStyle(el);
+        return parseFloat(style.marginTop) >= parseFloat(style.fontSize) * 0.4;
+      }),
+      'Subtitle has a separate gap below the heading',
+    );
+  }
+  await assertArabicSpacing();
   assert.equal(await frame.locator('#fab').isVisible(), false);
   assert.equal(
     await frame.locator('#viewport').evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
@@ -109,6 +126,7 @@ try {
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 60),
     'Fitting must not collapse the title to tiny text',
   );
+  await assertArabicSpacing();
   await editor.getByLabel('إظهار لوحة التميز الحالية').check();
   await editor.getByText('طالب الاختبار', { exact: true }).waitFor();
   await editor.getByLabel('إظهار الساعة والتاريخ').uncheck();
