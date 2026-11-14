@@ -1,3 +1,4 @@
+import { CustomDaysEditor } from './CustomDaysEditor';
 import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
@@ -294,6 +295,9 @@ function Studio() {
             {permissions.admin && tab === 'طريقة العرض' && <DisplayModes />}
             {permissions.admin && tab === 'القوالب' && <TemplateTab />}
             {permissions.admin && tab === 'خلفية الحصص' && <LoopTab />}
+            {permissions.admin && tab === 'خلفية الحصص' && (
+              <CustomDaysEditor key={data.screen.id} />
+            )}
             {tab === 'الجدولة' && <ScheduleTab />}
             {tab === 'السجل' && <HistoryTab />}
             {permissions.admin && tab === 'الشاشات' && (

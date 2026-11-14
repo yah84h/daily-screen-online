@@ -1,3 +1,5 @@
+import { CustomDayScreen } from './CustomDayScreen';
+import { activeCustomDay } from '@/lib/customDays';
 import { DailyMedia } from './DailyMedia';
 import { mediaCropStyle } from '@/lib/mediaCrop';
 import { VideoPlaylist } from './VideoPlaylist';
@@ -52,6 +54,8 @@ export function Screen({
   useEffect(() => {
     started.current = Date.now();
   }, [rotation.enabled, rotation.normal, rotation.normalSeconds, rotation.leaderboardSeconds]);
+  const customDay = activeCustomDay(t, now);
+  if (customDay) return <CustomDayScreen day={customDay} template={t} school={school} now={now} />;
   if (rotation.enabled && t.displayMode !== 'presentation') {
     const elapsed = Math.max(0, (now.getTime() - started.current) / 1000);
     const phase = rotationPhase(elapsed, rotation);
