@@ -66,6 +66,17 @@ try {
   const frame = editor.frameLocator('iframe');
   await frame.locator('#oTitle').filter({ hasText: 'اليوم العالمي للسكري' }).waitFor();
   assert.equal(await frame.locator('#main').getAttribute('data-mode'), 'occasion');
+  assert(
+    await frame
+      .locator('#oTitle')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 60),
+    'Default occasion text remains large and readable',
+  );
+  assert.equal(
+    await frame.locator('#photo').isVisible(),
+    false,
+    'Hidden photo does not reserve layout space',
+  );
   assert.equal(await frame.locator('#fab').isVisible(), false);
   assert.equal(
     await frame.locator('#viewport').evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
@@ -91,6 +102,12 @@ try {
       return el.scrollWidth <= box.clientWidth && el.scrollHeight <= box.clientHeight;
     }),
     'Large title and subtitle fit without clipping at 200%',
+  );
+  assert(
+    await frame
+      .locator('#oTitle')
+      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize) >= 60),
+    'Fitting must not collapse the title to tiny text',
   );
   await editor.getByLabel('إظهار لوحة التميز الحالية').check();
   await editor.getByText('طالب الاختبار', { exact: true }).waitFor();
