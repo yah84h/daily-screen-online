@@ -37,7 +37,7 @@ export function customDayDocument(html: string) {
   doc.head.prepend(policy);
   const style = doc.createElement('style');
   style.textContent =
-    'html,body{width:100%;height:100%;margin:0;overflow:hidden}#viewport{min-height:0!important}#fab,#panel,#toast{display:none!important}';
+    'html,body{width:100%;height:100%;margin:0;overflow:hidden}#viewport{min-height:0!important}#fab,#panel,#toast,#photo[hidden]{display:none!important}';
   doc.head.append(style);
   const bridge = doc.createElement('script');
   bridge.textContent = `
@@ -56,7 +56,7 @@ export function customDayDocument(html: string) {
       const box=document.getElementById('content'), inner=document.getElementById('blockOccasion');
       if(!box||!inner) return;
       let k=scale(d.textScale); box.style.setProperty('--k',String(k));
-      while(k>.15 && (inner.scrollHeight>box.clientHeight-8 || inner.scrollWidth>box.clientWidth-8)) { k-=.02; box.style.setProperty('--k',String(Math.max(.15,k))); }
+      while(k>.15 && (inner.scrollHeight>box.clientHeight+1 || inner.scrollWidth>box.clientWidth+1)) { k-=.02; box.style.setProperty('--k',String(Math.max(.15,k))); }
     }
     // Adapter for the supplied Nabd template; other HTML can use data-school-field slots.
     if (document.getElementById('oTitle') && typeof state !== 'undefined' && typeof renderStage === 'function') {
