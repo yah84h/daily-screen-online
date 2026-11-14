@@ -37,7 +37,7 @@ export function customDayDocument(html: string) {
   doc.head.prepend(policy);
   const style = doc.createElement('style');
   style.textContent =
-    'html,body{width:100%;height:100%;margin:0;overflow:hidden}#viewport{min-height:0!important}#fab,#panel,#toast,#photo[hidden]{display:none!important}';
+    'html,body{width:100%;height:100%;margin:0;overflow:hidden}#viewport{min-height:0!important}#fab,#panel,#toast,#photo[hidden]{display:none!important}.occasion h2{line-height:1.65!important;padding-bottom:.12em}.occasion .slogan{margin-top:calc(24px * var(--k,1))!important;line-height:1.7!important}';
   doc.head.append(style);
   const bridge = doc.createElement('script');
   bridge.textContent = `
