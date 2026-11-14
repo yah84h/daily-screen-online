@@ -65,6 +65,7 @@ export type SavedLayout = {
 };
 
 export type Template = {
+  customDays?: import('./customDays').CustomDay[];
   savedLayouts?: SavedLayout[];
   rotation?: import('../../local-test/rotation.mjs').DisplayRotation;
   displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation';
