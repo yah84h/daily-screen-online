@@ -2,11 +2,18 @@
   "name": "daily-screen-online",
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-11-16",
+  "compatibility_flags": ["nodejs_compat"],
   "build": { "command": "npm run build" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/drive-video*"],
+    "run_worker_first": [
+      "/api/drive-video*",
+      "/api/tech-news*",
+      "/api/qudrat-pro*",
+      "/api/qudrat-source*",
+      "/.netlify/functions/*",
+    ],
   },
 }
