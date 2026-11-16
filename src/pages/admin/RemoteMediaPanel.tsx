@@ -36,6 +36,7 @@ function ScreenMediaPanel({
   name: string;
   playlist: boolean;
 }) {
+  const { data, setModal } = useAdmin();
   const remote = useRemoteMedia(screen);
   const [volume, setVolume] = useState(1);
   const [seeking, setSeeking] = useState<number | null>(null);
@@ -71,6 +72,18 @@ function ScreenMediaPanel({
           {current ? 'الشاشة متصلة' : 'بانتظار جهاز العرض'}
         </span>
       </header>
+      {!reports.length && !data?.devices.length && (
+        <div className="remote-empty">
+          <span aria-hidden="true">📺</span>
+          <div>
+            <b>لم يُربط تلفزيون بهذه الشاشة بعد</b>
+            <p>افتح صفحة /tv على التلفزيون، ثم أدخل الرمز الظاهر عليه هنا.</p>
+          </div>
+          <button className="button primary" onClick={() => setModal('pair')}>
+            ربط تلفزيون
+          </button>
+        </div>
+      )}
       <div className="remote-control-layout">
         <div className="remote-main-controls">
           <section className="remote-transport" aria-label="التشغيل والصوت">

@@ -831,3 +831,191 @@
     top: 64px;
   }
 }
+
+/* =================== Stage 3: controls, live screen, sheets =================== */
+/* Checkboxes become friendly on/off switches (still real checkboxes). */
+.admin-studio input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex-shrink: 0;
+  position: relative;
+  width: 46px;
+  height: 28px;
+  margin: 0;
+  border-radius: 999px;
+  background: #dcd9e6;
+  cursor: pointer;
+  transition: background 0.2s var(--studio-ease);
+}
+.admin-studio input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #2b2d4240;
+  transition: transform 0.2s var(--studio-ease);
+}
+.admin-studio input[type='checkbox']:checked {
+  background: var(--studio-accent);
+}
+.admin-studio input[type='checkbox']:checked::after {
+  transform: translateX(-18px);
+}
+.admin-studio input[type='checkbox']:disabled {
+  opacity: 0.5;
+}
+.admin-studio label:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+/* Generic segmented tabs (e.g. single media vs multiple). */
+.admin-studio .segmented:not(.scroll-tabs) {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f2fa;
+}
+.admin-studio .segmented:not(.scroll-tabs) > button {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--studio-muted);
+  font-weight: 700;
+}
+.admin-studio .segmented:not(.scroll-tabs) > button:is([aria-selected='true'], .active) {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+
+/* Live screen control */
+.admin-studio .remote-media-panel {
+  border-radius: var(--studio-radius);
+}
+.admin-studio :is(.remote-transport, .remote-timeline, .remote-downloads) {
+  border-radius: 20px;
+  border-color: var(--studio-line);
+}
+.admin-studio :is(.remote-online, .remote-offline) {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+.admin-studio .remote-online {
+  color: var(--studio-mint-ink);
+  background: var(--studio-mint);
+}
+.admin-studio .remote-offline {
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+}
+.admin-studio .remote-waiting-note {
+  border: 0;
+  border-radius: 16px;
+  background: var(--studio-peach);
+  color: var(--studio-peach-ink);
+}
+.remote-empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #eef0ff, #fdf0f7);
+}
+.remote-empty > span {
+  font-size: 34px;
+  line-height: 1;
+}
+.remote-empty > div {
+  flex: 1;
+}
+.remote-empty b {
+  display: block;
+  font-size: 16px;
+}
+.remote-empty p {
+  margin: 4px 0 0;
+  color: var(--studio-muted);
+  font-size: 13px;
+}
+.admin-studio .remote-playback-buttons .button {
+  border-radius: 999px;
+}
+
+/* Dialogs */
+.admin-studio .modal {
+  border-radius: 28px;
+}
+.admin-studio .modal input[inputmode='numeric'][maxlength='6'] {
+  min-height: 64px;
+  text-align: center;
+  font:
+    800 28px/1 'Cairo',
+    monospace;
+  letter-spacing: 0.4em;
+}
+
+@media (max-width: 760px) {
+  .remote-empty {
+    flex-wrap: wrap;
+  }
+  .remote-empty .button {
+    width: 100%;
+  }
+  /* Dialogs slide up from the bottom like a phone sheet. */
+  .admin-studio .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .admin-studio .modal:not(.wide) {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    margin: 0;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    border-radius: 28px 28px 0 0;
+    animation: studio-sheet-up 0.32s var(--studio-ease) both;
+  }
+  .admin-studio .modal:not(.wide)::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: -8px auto 12px;
+    border-radius: 999px;
+    background: #dcd9e6;
+  }
+  .admin-studio .studio-settings :is(button.primary, .button.primary) {
+    width: 100%;
+  }
+  .admin-studio .remote-playback-buttons .button {
+    min-height: 56px;
+  }
+}
+@keyframes studio-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-studio .modal {
+    animation: none !important;
+  }
+  .admin-studio input[type='checkbox'],
+  .admin-studio input[type='checkbox']::after {
+    transition: none;
+  }
+}
