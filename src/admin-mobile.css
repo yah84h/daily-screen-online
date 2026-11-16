@@ -616,3 +616,218 @@
     transition: none;
   }
 }
+
+/* =================== Design tab (stage 2) =================== */
+/* Pill menus: editor tool sections, template tabs, board styles. */
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs) {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f2fa;
+}
+/* Desktop keeps the section menu as a vertical side list. */
+.admin-studio .editor-section-nav {
+  flex-direction: column;
+  overflow: visible;
+  border-radius: 20px;
+}
+.admin-studio .editor-section-nav > button {
+  justify-content: flex-start;
+}
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs)::-webkit-scrollbar {
+  display: none;
+}
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs) > button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--studio-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-studio .editor-section-nav > button > span {
+  display: none;
+}
+.admin-studio .editor-section-nav > button[aria-current='page'],
+.admin-studio .segmented.scroll-tabs > button.active {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+
+/* Display mode cards */
+.admin-studio .mode-card {
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background: #faf9fd;
+  transition:
+    border-color 0.2s var(--studio-ease),
+    background 0.2s var(--studio-ease);
+}
+.admin-studio .mode-card .mode-icon {
+  border-radius: 14px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+.admin-studio .mode-card.selected {
+  border-color: var(--studio-accent);
+  background: #fff;
+  box-shadow: 0 6px 18px #5b6cf022;
+}
+.admin-studio .mode-card.selected .mode-icon {
+  color: #fff;
+  background: var(--studio-accent);
+}
+.admin-studio .mode-save {
+  border: 0;
+  border-radius: var(--studio-radius);
+  background: var(--studio-mint);
+}
+.admin-studio .display-step {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+  font-weight: 700;
+}
+
+/* Layout pickers (daily templates + classes background) */
+.admin-studio :is(.layout-option, .loop-layout-grid > button) {
+  border-radius: 18px;
+  border: 2px solid var(--studio-line);
+  background: #fff;
+}
+.admin-studio
+  :is(.layout-option, .loop-layout-grid > button):is(.selected, [aria-pressed='true'], .active) {
+  border-color: var(--studio-accent);
+  box-shadow: 0 6px 18px #5b6cf022;
+}
+.admin-studio .settings-section {
+  border-radius: 18px;
+}
+.admin-studio .settings-section > summary {
+  min-height: 56px;
+}
+
+@media (max-width: 760px) {
+  /* Two thumbnails per row instead of one: halves the scrolling. */
+  .admin-studio :is(.loop-layout-grid, .layout-grid) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) {
+    padding: 8px;
+    min-width: 0;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) :is(b, strong, h3) {
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) :is(small, p) {
+    display: none;
+  }
+  .admin-studio .loop-layout-thumbnail {
+    padding: 6px;
+  }
+  .admin-studio .loop-layout-school {
+    font-size: 9px;
+  }
+  /* Section menus scroll sideways and stick under the header. */
+  .admin-studio .editor-section-nav {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    border-radius: 999px;
+    position: sticky;
+    top: 68px;
+    z-index: 20;
+    margin-inline: -4px;
+    box-shadow: 0 6px 16px #2b2d4210;
+  }
+  .admin-studio .editor-section-nav > button {
+    font-size: 14px;
+  }
+  /* One floating save button above the tab bar, never on top of content. */
+  .admin-studio :is(.loop-settings .loop-save, .template-editor .save-dock, .mode-save) {
+    position: sticky !important;
+    bottom: calc(var(--studio-nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+    top: auto !important;
+    z-index: 40;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .admin-studio .loop-settings .loop-save {
+    min-height: 56px;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px #5b6cf04d;
+  }
+  .admin-studio .mode-cards {
+    gap: 10px;
+  }
+  .admin-studio .mode-card {
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+  .admin-studio .mode-save {
+    padding: 12px;
+    box-shadow: 0 10px 24px #2b2d421a;
+  }
+  .admin-studio .mode-save > div {
+    display: none;
+  }
+  .admin-studio .mode-save .button {
+    width: 100%;
+  }
+  .admin-studio :is(.loop-preview-panel, .template-preview) {
+    padding: 12px;
+  }
+  .admin-studio :is(.loop-preview-panel .template-tip, .loop-preview-panel .loop-help) {
+    display: none;
+  }
+}
+.admin-studio .template-editor .save-dock {
+  border-radius: var(--studio-radius);
+  border-color: var(--studio-line);
+}
+.admin-studio .template-editor .save-dock button.primary {
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #6a7bff, #5b6cf0 60%, #7b5cf0);
+  box-shadow: 0 6px 18px #5b6cf040;
+  font-weight: 700;
+}
+@media (max-width: 760px) {
+  .admin-studio .template-editor .save-dock {
+    display: block;
+    padding: 8px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .admin-studio .template-editor .save-dock > :not(button) {
+    display: none;
+  }
+  .admin-studio .template-editor .save-dock button.primary {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .admin-studio .editor-section-nav {
+    top: 64px;
+  }
+}
