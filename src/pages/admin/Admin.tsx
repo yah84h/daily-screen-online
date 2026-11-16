@@ -4,16 +4,19 @@ import { Navigate } from 'react-router-dom';
 import {
   ArrowUpLeft,
   Check,
-  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  KeyRound,
   LogOut,
   Monitor,
+  Newspaper,
   Plus,
-  Settings,
+  Users,
   WifiOff,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { AdminProvider, fmtTime, useAdmin, type Tab } from './store';
-import { navigation, sectionLabels } from './navigation';
+import { moreItems, navigation, sectionLabels } from './navigation';
 import { AssistantTab } from './AssistantTab';
 import { HomeTab } from './HomeTab';
 import { ScheduleTab } from './ScheduleTab';
@@ -24,6 +27,7 @@ import { LoopTab } from './LoopTab';
 import { DisplayModes } from './DisplayModes';
 import { RemoteMediaPanel } from './RemoteMediaPanel';
 import '@/admin-studio.css';
+import '@/admin-mobile.css';
 
 const descriptions: Record<Tab, [string, string]> = {
   المساعد: ['مساعد يعرف شاشتك.', 'اسأل، أرفق ملفًا، وراجع التعديلات قبل تطبيقها.'],
@@ -35,6 +39,7 @@ const descriptions: Record<Tab, [string, string]> = {
   الجدولة: ['خطّط لليوم التالي.', 'رتّب المحتوى القادم وارجع إلى ما نشرته سابقًا.'],
   السجل: ['خطّط لليوم التالي.', 'تحديثات محفوظة يمكنك استعادتها كمسودة.'],
   الشاشات: ['مساحة المدرسة.', 'إدارة الشاشات والأجهزة وهوية المدرسة.'],
+  المزيد: ['كل شيء آخر.', 'المواعيد، السجل، المساعد وإعدادات حسابك.'],
 };
 
 function LoadingStudio() {
@@ -109,6 +114,12 @@ function Studio() {
       (device) => device.last_seen_at && Date.now() - Date.parse(device.last_seen_at) < 90000,
     ).length || 0;
   const title = descriptions[tab];
+  const inMore = group?.label === 'المزيد' && tab !== 'المزيد';
+  const status = onlineDevices
+    ? `${onlineDevices} جهاز متصل`
+    : data?.devices.length
+      ? 'الأجهزة غير متصلة'
+      : 'لم تُربط أجهزة';
   return (
     <div className="admin-studio" dir="rtl">
       <a className="studio-skip" href="#studio-content">
@@ -121,40 +132,9 @@ function Studio() {
             <Monitor size={22} />
           </span>
           <div>
-            الشاشة اليومية<small>مساحة المدرسة</small>
+            الشاشة اليومية<small>{data?.school.name || 'مساحة المدرسة'}</small>
           </div>
         </a>
-        <div className="studio-school">{data?.school.name || 'جارٍ تحميل المدرسة…'}</div>
-        <div className="studio-top-actions">
-          {permissions.admin && (
-            <button
-              className={'studio-utility' + (tab === 'الشاشات' ? ' selected' : '')}
-              onClick={() => navigate('الشاشات')}
-              aria-label="الأجهزة والإعدادات"
-            >
-              <Settings size={18} />
-              <span>الأجهزة</span>
-            </button>
-          )}
-          <details className="studio-account" ref={account}>
-            <summary aria-label="الحساب">
-              <span>{staff?.username?.slice(0, 1) || 'م'}</span>
-              <ChevronDown size={14} />
-            </summary>
-            <div>
-              <b>{staff?.username || 'حساب المدرسة'}</b>
-              <a href="/news">الأخبار والمعرفة</a>
-              {permissions.admin && <a href="/users">الحسابات والصلاحيات</a>}
-              <a href="/password">تغيير كلمة المرور</a>
-              <button onClick={() => void signOut()}>
-                <LogOut size={16} />
-                تسجيل الخروج
-              </button>
-            </div>
-          </details>
-        </div>
-      </header>
-      <div className="studio-nav-wrap">
         <nav className="studio-navigation" aria-label="التنقل الرئيسي">
           {navigation
             .filter((item) => !('admin' in item && item.admin) || permissions.admin)
@@ -164,18 +144,43 @@ function Studio() {
                 <button
                   key={item.label}
                   aria-current={group?.label === item.label ? 'page' : undefined}
-                  onClick={() => navigate(remembered.current[item.label] || item.tabs[0])}
+                  onClick={() =>
+                    navigate(
+                      item.label === 'المزيد'
+                        ? 'المزيد'
+                        : remembered.current[item.label] || item.tabs[0],
+                    )
+                  }
                 >
-                  <Icon size={19} />
+                  <span className="studio-nav-icon">
+                    <Icon size={22} />
+                  </span>
                   <span>{item.label}</span>
-                  {item.label === 'الجدولة والسجل' && !!data?.schedule.length && (
-                    <small>{data.schedule.length}</small>
+                  {item.label === 'المزيد' && !!data?.schedule.length && (
+                    <small aria-hidden="true">
+                      {data.schedule.length}
+                    </small>
                   )}
                 </button>
               );
             })}
         </nav>
-      </div>
+        <details className="studio-account" ref={account}>
+          <summary aria-label="الحساب">
+            <span>{staff?.username?.slice(0, 1) || 'م'}</span>
+          </summary>
+          <div>
+            <b>{staff?.username || 'حساب المدرسة'}</b>
+            <a href="/news">الأخبار والمعرفة</a>
+            {permissions.admin && <a href="/users">الحسابات والصلاحيات</a>}
+            <a href="/password">تغيير كلمة المرور</a>
+            <button onClick={() => void signOut()}>
+              <LogOut size={16} />
+              تسجيل الخروج
+            </button>
+          </div>
+        </details>
+      </header>
       <main className="studio-main" id="studio-content">
         {!online && (
           <div className="studio-notice">
@@ -190,91 +195,81 @@ function Studio() {
           </div>
         )}
         <div className="studio-page-heading">
+          {inMore && (
+            <button className="studio-back" onClick={() => navigate('المزيد')}>
+              <ChevronRight size={20} />
+              المزيد
+            </button>
+          )}
           <div>
             <p className="studio-eyebrow">
-              {tab === 'الشاشات' ? 'الإدارة' : group?.label || 'مساحة العمل'}
+              {inMore ? sectionLabels[tab] : group?.label || 'مساحة العمل'}
             </p>
             <h1 ref={heading} tabIndex={-1}>
               {title[0]}
             </h1>
             <p>{title[1]}</p>
           </div>
-          <div className="studio-date">
-            <span>
-              {new Date().toLocaleDateString('ar-SA-u-ca-gregory', {
-                weekday: 'long',
-                timeZone: 'Asia/Riyadh',
-              })}
-            </span>
-            <b>
-              {new Date().toLocaleDateString('ar-SA-u-ca-gregory', {
-                day: 'numeric',
-                month: 'long',
-                timeZone: 'Asia/Riyadh',
-              })}
-            </b>
-          </div>
         </div>
-        <section className="studio-screenbar" aria-label="الشاشة المحددة">
-          <div className="studio-screen-selector">
-            <span className="studio-device-icon">
-              <Monitor size={22} />
-            </span>
-            <label>
-              مساحة الشاشة
-              <select
-                aria-label="الشاشة المحددة"
-                disabled={!data || busy}
-                value={data?.screen.id || ''}
-                onChange={(event) => selectScreen(event.target.value)}
-              >
-                {data?.screens.map((screen) => (
-                  <option value={screen.id} key={screen.id}>
-                    {screen.name}
-                  </option>
-                ))}
-              </select>
+        {tab !== 'المزيد' && (
+          <section className="studio-screenbar" aria-label="الشاشة المحددة">
+            <label className="studio-screen-selector">
+              <span className="studio-device-icon">
+                <Monitor size={20} />
+              </span>
+              <span className="studio-screen-text">
+                <small>تعمل على شاشة</small>
+                <select
+                  aria-label="الشاشة المحددة"
+                  disabled={!data || busy}
+                  value={data?.screen.id || ''}
+                  onChange={(event) => selectScreen(event.target.value)}
+                >
+                  {data?.screens.map((screen) => (
+                    <option value={screen.id} key={screen.id}>
+                      {screen.name}
+                    </option>
+                  ))}
+                </select>
+              </span>
             </label>
-          </div>
-          <button
-            type="button"
-            className={
-              'studio-connection studio-monitor-shortcut' + (onlineDevices ? ' connected' : '')
-            }
-            aria-label="فتح مراقبة الشاشة"
-            onClick={() => navigate('التحكم')}
-          >
-            <i />
-            {onlineDevices
-              ? `${onlineDevices} جهاز متصل`
-              : data?.devices.length
-                ? 'الأجهزة غير متصلة'
-                : 'لم تُربط أجهزة'}
-          </button>
-          <span className="studio-last-publish">
-            {data?.current ? 'آخر نشر ' + fmtTime(data.current.created_at) : 'لم يُنشر محتوى بعد'}
-          </span>
-          <div className="studio-screen-actions">
             <button
-              className="button white"
-              disabled={!data || busy}
-              onClick={() => setModal('pair')}
+              type="button"
+              className={
+                'studio-connection studio-monitor-shortcut' + (onlineDevices ? ' connected' : '')
+              }
+              aria-label="فتح مراقبة الشاشة"
+              title={status}
+              onClick={() => navigate('التحكم')}
             >
-              <Plus size={16} />
-              ربط جهاز بالكود
+              <i />
+              {status}
             </button>
-            <a
-              className="icon-button"
-              href="/tv"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="فتح صفحة التلفزيون"
-            >
-              <ArrowUpLeft size={19} />
-            </a>
-          </div>
-        </section>
-        {group && group.tabs.length > 1 && (
+            <span className="studio-last-publish">
+              {data?.current ? 'آخر نشر ' + fmtTime(data.current.created_at) : 'لم يُنشر محتوى بعد'}
+            </span>
+            <div className="studio-screen-actions">
+              <button
+                className="button white"
+                disabled={!data || busy}
+                onClick={() => setModal('pair')}
+              >
+                <Plus size={16} />
+                ربط جهاز
+              </button>
+              <a
+                className="icon-button"
+                href="/tv"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="فتح صفحة التلفزيون"
+              >
+                <ArrowUpLeft size={19} />
+              </a>
+            </div>
+          </section>
+        )}
+        {group && group.label !== 'المزيد' && group.tabs.length > 1 && (
           <nav className="studio-subnav" aria-label={group.label}>
             {group.tabs.map((item) => (
               <button
@@ -291,6 +286,90 @@ function Studio() {
           <LoadingStudio />
         ) : (
           <div className="studio-page" key={tab}>
+            {tab === 'المزيد' && (
+              <div className="studio-more">
+                <ul className="studio-more-list">
+                  {moreItems
+                    .filter((item) => !('admin' in item && item.admin) || permissions.admin)
+                    .map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <li key={item.tab}>
+                          <button onClick={() => navigate(item.tab)}>
+                            <span className="studio-more-icon">
+                              <Icon size={22} />
+                            </span>
+                            <span>
+                              <b>{item.title}</b>
+                              <small>{item.hint}</small>
+                            </span>
+                            {item.tab === 'الجدولة' && !!data.schedule.length && (
+                              <em>{data.schedule.length}</em>
+                            )}
+                            <ChevronLeft size={20} aria-hidden="true" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                </ul>
+                <ul className="studio-more-list">
+                  <li>
+                    <button onClick={() => setModal('pair')}>
+                      <span className="studio-more-icon">
+                        <Plus size={22} />
+                      </span>
+                      <span>
+                        <b>ربط جهاز جديد</b>
+                        <small>أدخل الكود الظاهر على التلفزيون</small>
+                      </span>
+                      <ChevronLeft size={20} aria-hidden="true" />
+                    </button>
+                  </li>
+                  <li>
+                    <a href="/news">
+                      <span className="studio-more-icon">
+                        <Newspaper size={22} />
+                      </span>
+                      <span>
+                        <b>الأخبار والمعرفة</b>
+                        <small>شريط الأخبار والأسئلة التقنية</small>
+                      </span>
+                      <ChevronLeft size={20} aria-hidden="true" />
+                    </a>
+                  </li>
+                  {permissions.admin && (
+                    <li>
+                      <a href="/users">
+                        <span className="studio-more-icon">
+                          <Users size={22} />
+                        </span>
+                        <span>
+                          <b>الحسابات والصلاحيات</b>
+                          <small>أضف معلمًا أو غيّر صلاحياته</small>
+                        </span>
+                        <ChevronLeft size={20} aria-hidden="true" />
+                      </a>
+                    </li>
+                  )}
+                  <li>
+                    <a href="/password">
+                      <span className="studio-more-icon">
+                        <KeyRound size={22} />
+                      </span>
+                      <span>
+                        <b>تغيير كلمة المرور</b>
+                        <small>{staff?.username || 'حسابك'}</small>
+                      </span>
+                      <ChevronLeft size={20} aria-hidden="true" />
+                    </a>
+                  </li>
+                </ul>
+                <button className="studio-signout" onClick={() => void signOut()}>
+                  <LogOut size={18} />
+                  تسجيل الخروج
+                </button>
+              </div>
+            )}
             {tab === 'المساعد' && <AssistantTab key={data.screen.id} />}
             {tab === 'الرئيسية' && <HomeTab />}
             {tab === 'التحكم' && <RemoteMediaPanel />}
@@ -310,10 +389,6 @@ function Studio() {
           </div>
         )}
       </main>
-      <footer className="studio-footer">
-        <span>الشاشة اليومية</span>
-        <span>المحتوى يُرسل إلى الشاشة المحددة فقط.</span>
-      </footer>
       {toast && (
         <div className="studio-toast" role="status">
           <Check size={18} />

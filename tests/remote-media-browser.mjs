@@ -139,7 +139,7 @@ try {
   await phone.waitForURL('**/admin');
   await phone
     .getByRole('navigation', { name: 'التنقل الرئيسي' })
-    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .getByRole('button', { name: 'الشاشة', exact: true })
     .click();
   const panel = phone.getByRole('region', { name: 'التحكم عن بعد بالشاشة' });
   await panel.getByText('الشاشة متصلة', { exact: true }).waitFor();
@@ -157,7 +157,7 @@ try {
   assert.equal(await other.locator('.video-playlist video').evaluate((video) => video.volume), 1);
   await phone
     .getByRole('navigation', { name: 'التنقل الرئيسي' })
-    .getByRole('button', { name: 'المحتوى', exact: true })
+    .getByRole('button', { name: 'اليوم', exact: true })
     .click();
   assert.equal(
     await phone
@@ -169,7 +169,7 @@ try {
   );
   await phone
     .getByRole('navigation', { name: 'التنقل الرئيسي' })
-    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .getByRole('button', { name: 'الشاشة', exact: true })
     .click();
   await phone.getByLabel('الوسائط المراد التحكم بها', { exact: true }).selectOption('video');
   await phone.getByLabel('موضع التشغيل على الشاشة', { exact: true }).fill('0.8');
@@ -213,7 +213,7 @@ try {
   // A new publication keeps screen playback preferences without needing another control command.
   await phone
     .getByRole('navigation', { name: 'التنقل الرئيسي' })
-    .getByRole('button', { name: 'المحتوى', exact: true })
+    .getByRole('button', { name: 'اليوم', exact: true })
     .click();
   await phone.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
   await tv.waitForTimeout(3500);
@@ -224,7 +224,7 @@ try {
   assert.deepEqual(errors, []);
   await phone
     .getByRole('navigation', { name: 'التنقل الرئيسي' })
-    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .getByRole('button', { name: 'الشاشة', exact: true })
     .click();
   await panel.screenshot({ path: 'work/remote-admin-panel.png' });
   const singleContext = await context();

@@ -100,10 +100,10 @@ try {
   );
   await admin
     .getByRole('navigation')
-    .getByRole('button', { name: 'التحكم المباشر', exact: true })
+    .getByRole('button', { name: 'الشاشة', exact: true })
     .click();
 
-  await admin.getByRole('navigation').getByRole('button', { name: 'المحتوى', exact: true }).click();
+  await admin.getByRole('navigation').getByRole('button', { name: 'اليوم', exact: true }).click();
   await admin.getByRole('button', { name: 'الصور والفيديو', exact: true }).click();
   await admin
     .getByLabel('رابط وسائط الشاشة اليومية', { exact: true })
@@ -116,7 +116,7 @@ try {
   await admin.getByRole('navigation').getByRole('button', { name: 'التصميم', exact: true }).click();
   await admin.getByRole('radio', { name: /صورة \/ فيديو فقط/ }).click();
   await admin.getByRole('button', { name: 'تطبيق على الشاشة', exact: true }).click();
-  await admin.getByRole('navigation').getByRole('button', { name: 'المحتوى', exact: true }).click();
+  await admin.getByRole('navigation').getByRole('button', { name: 'اليوم', exact: true }).click();
   let driveRequests = 0;
   await context.route('**/api/drive-video?**', (route) => {
     driveRequests++;
