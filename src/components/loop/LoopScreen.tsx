@@ -1,3 +1,4 @@
+import { DailyMedia } from '../DailyMedia';
 import { fitLoopPosition } from '@/lib/loopPositions';
 import { loopLayout } from '@/lib/loopLayouts';
 import { LoopExtras } from './LoopExtras';
@@ -199,6 +200,24 @@ export function LoopScreen({
               aria-label="عرض صور وسط الشاشة"
             >
               <BackgroundSlideshow template={{ slideshow: template.centerSlideshow }} />
+            </section>
+          )}
+        {layout.showPhoto !== false &&
+          !template.loopHidePhoto &&
+          content.image &&
+          !(template.centerSlideshow?.enabled && template.centerSlideshow.images.length > 0) && (
+            <section
+              className={'loop-center-slideshow loop-center-media shape-' + shape}
+              aria-label="وسائط خلفية الحصص"
+            >
+              <DailyMedia
+                src={content.image}
+                type={content.imageType}
+                large={large}
+                sound={content.videoSound}
+                fit={template.fit}
+                crop={content.imageCrop}
+              />
             </section>
           )}
         {layout.showBoard !== false && <RecognitionBoard board={recognitionOf(template)} />}

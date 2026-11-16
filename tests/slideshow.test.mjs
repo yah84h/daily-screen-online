@@ -82,3 +82,17 @@ test('legacy fullscreen photo list is retained without contaminating normal back
   assert.equal(mediaSlideshowOf(next).images[0].url, 'old.jpg');
   assert.equal(old.slideshow.enabled, true);
 });
+
+test('manual display selection stops automatic rotation while preserving its timings', () => {
+  const template = {
+    displayMode: 'loop',
+    rotation: { enabled: true, normal: 'loop', normalSeconds: 40, leaderboardSeconds: 15 },
+  };
+  for (const mode of ['daily', 'loop', 'media', 'slideshow', 'presentation']) {
+    const next = withDisplayMode(template, mode);
+    assert.equal(next.displayMode, mode);
+    assert.equal(next.rotation.enabled, false);
+    assert.equal(next.rotation.normalSeconds, 40);
+  }
+  assert.equal(template.rotation.enabled, true);
+});

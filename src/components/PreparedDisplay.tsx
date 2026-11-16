@@ -1,3 +1,6 @@
+import { activeCustomDay } from '@/lib/customDays';
+import { loopLayout } from '@/lib/loopLayouts';
+import { rotationOptions } from '../../local-test/rotation.mjs';
 import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Screen } from './Screen';
@@ -20,7 +23,7 @@ export function PreparedDisplay(props: Props) {
   const { downloadsPaused } = useDevicePlayback();
   // Select the media to prepare; ordinary content stays visible in the meantime.
   const queue = props.content.videoPlaylist?.enabled ? props.content.videoPlaylist.items : [];
-  const sources = getPreparationSources(props.content);
+  const sources = getPreparationSources(props.content, props.template);
   const signature = JSON.stringify([
     sources,
     queue.map((item) => item.type),
@@ -60,7 +63,11 @@ export function PreparedDisplay(props: Props) {
   }, [note]);
   // Prepare a replacement without interrupting the currently adopted display.
   useEffect(() => {
-    if (downloadsPaused || (preparedKey.current === signature && active.current)) return;
+    if (
+      (downloadsPaused && sources.length > 0) ||
+      (preparedKey.current === signature && active.current)
+    )
+      return;
     const controller = new AbortController();
     const urls: string[] = [];
     let adopted = false;
@@ -69,7 +76,7 @@ export function PreparedDisplay(props: Props) {
     setStatus(sources.length ? { loaded: 0, total: sources.length } : null);
     async function prepare() {
       try {
-        if (queue.length > 30) throw Error('الحد الأقصى للقائمة ٣٠ ملفًا.');
+        if (sources.length > 30) throw Error('الحد الأقصى للقائمة ٣٠ ملفًا.');
         const mapping = new Map<string, string>();
         let bytes = 0;
         let persistent = true;
@@ -201,13 +208,36 @@ export function PreparedDisplay(props: Props) {
   );
 }
 
-function getPreparationSources(content: Content): string[] {
-  const sources = content.videoPlaylist?.enabled
-    ? content.videoPlaylist.items.map((item) => item.url)
-    : [];
-  if (content.image && (content.imageType === 'video' || /\.gif(?:[?#]|$)/i.test(content.image)))
+function getPreparationSources(content: Content, template: Partial<Template>): string[] {
+  if (activeCustomDay(template)) return [];
+  const rotation = rotationOptions(template.rotation);
+  const mode =
+    rotation.enabled && template.displayMode !== 'presentation'
+      ? rotation.normal
+      : template.displayMode || 'daily';
+  // Never gate a layout switch on media that the selected layout cannot display.
+  if (['presentation', 'slideshow', 'photos'].includes(mode)) return [];
+  if (
+    mode === 'loop' &&
+    (template.loopHidePhoto ||
+      loopLayout(template.loopLayout).showPhoto === false ||
+      (template.centerSlideshow?.enabled && template.centerSlideshow.images.length > 0))
+  )
+    return [];
+  const sources: string[] = [];
+  if (mode === 'media') {
+    if (content.videoPlaylist?.enabled && content.videoPlaylist.items.length)
+      sources.push(...content.videoPlaylist.items.map((item) => item.url));
+    else if (
+      content.fullMedia &&
+      (content.fullType === 'image' || content.videoPreparation === 'cache')
+    )
+      sources.push(content.fullMedia);
+  } else if (
+    content.image &&
+    (content.imageType === 'video' || /\.gif(?:[?#]|$)/i.test(content.image))
+  ) {
     sources.push(content.image);
-  if (content.fullMedia && (content.fullType === 'image' || content.videoPreparation === 'cache'))
-    sources.push(content.fullMedia);
+  }
   return [...new Set(sources)];
 }

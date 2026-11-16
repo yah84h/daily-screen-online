@@ -89,5 +89,6 @@ export function withDisplayMode<T extends Partial<Template>>(
         }
       : {}),
     displayMode: mode,
+    rotation: t.rotation ? { ...t.rotation, enabled: false } : t.rotation,
   };
 }
