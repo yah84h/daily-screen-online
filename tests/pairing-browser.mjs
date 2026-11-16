@@ -1,6 +1,27 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
-const origin = 'http://127.0.0.1:5173';
+import { spawn } from 'node:child_process';
+// Own Vite server pointed at the mocked Supabase origin, so a running dev:local session can't interfere.
+const port = 24000 + Math.floor(Math.random() * 2000);
+const origin = 'http://127.0.0.1:' + port;
+const vite = spawn(
+  process.execPath,
+  ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
+  {
+    env: {
+      ...process.env,
+      VITE_SUPABASE_URL: 'https://mock.school.test',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+    },
+    stdio: 'ignore',
+  },
+);
+for (let i = 0; i < 200; i++) {
+  try {
+    if ((await fetch(origin)).ok) break;
+  } catch {}
+  await new Promise((r) => setTimeout(r, 100));
+}
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
   args: ['--no-sandbox'],
@@ -58,7 +79,15 @@ try {
       };
       if (req.method() === 'OPTIONS') return route.fulfill({ status: 200, headers });
       let body = [];
-      if (u.pathname.endsWith('/rpc/request_pairing')) {
+      if (u.pathname.endsWith('/rpc/current_staff'))
+        body = {
+          id: 'u1',
+          username: 'Archo',
+          permissions: { admin: true, news: true, daily: true },
+          active: true,
+          owner: true,
+        };
+      else if (u.pathname.endsWith('/rpc/request_pairing')) {
         requestCount++;
         body = { code: '482913', token: 'test-device-token' };
       } else if (u.pathname.endsWith('/rpc/get_screen_by_token'))
@@ -145,14 +174,19 @@ try {
   await tv.goto(origin + '/display');
   await tv.locator('.pair-code').waitFor();
   assert.equal((await tv.locator('.pair-code').innerText()).trim(), '482913');
-  assert.equal(new URL(tv.url()).pathname, '/tv');
+  // /display is served directly (older TV launchers open it); no redirect needed.
+  assert.equal(new URL(tv.url()).pathname, '/display');
   const admin = await adminContext.newPage();
   await admin.goto(origin + '/admin');
-  await admin.getByRole('button', { name: 'إعداد الشاشة', exact: true }).click();
-  assert.equal(await admin.getByLabel('رابط التلفزيون').inputValue(), origin + '/tv');
-  await admin.getByRole('button', { name: 'ربط تلفزيون', exact: true }).click();
+  await admin
+    .getByRole('navigation', { name: 'التنقل الرئيسي' })
+    .getByRole('button', { name: 'المزيد', exact: true })
+    .click();
+  await admin.getByRole('button', { name: /ربط جهاز جديد/ }).click();
   await admin.getByPlaceholder('000000').fill('482913');
   await admin.getByRole('button', { name: 'ربط الشاشة', exact: true }).click();
+  // After pairing, the setup sheet shows the same-origin TV link.
+  assert.equal(await admin.getByLabel('رابط التلفزيون').inputValue(), origin + '/tv');
   await tv.waitForFunction(() => !!document.querySelector('.screen .qr'), undefined, {
     timeout: 65000,
     polling: 500,
@@ -170,8 +204,9 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS: /display redirect, same-origin setup link, fresh 6-digit pairing across isolated devices, QR image display, saved TV token, no TV login, zero page errors.',
+    'PASS: /display TV page, same-origin setup link, fresh 6-digit pairing across isolated devices, QR image display, saved TV token, no TV login, zero page errors.',
   );
 } finally {
   await browser.close();
+  vite.kill();
 }
