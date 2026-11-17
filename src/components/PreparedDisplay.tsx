@@ -7,6 +7,7 @@ import { Screen } from './Screen';
 import { waitForMediaReady } from '@/lib/mediaReadiness';
 import { prepareAsset, removeShowAsset, SHOW_LIMIT } from '@/lib/assetCache';
 import { useCacheTask } from '@/lib/cacheStatus';
+import { useAutoHide } from '@/lib/autoHide';
 import type { Content, School, Template } from '@/lib/types';
 import type { PresentationContext } from '@/lib/presentation';
 type Props = {
@@ -216,10 +217,11 @@ export function PreparedDisplay(props: Props) {
     },
     template: { ...props.template, displayMode: 'daily' as const, rotation: undefined },
   };
+  const retryHidden = useAutoHide(status?.error && !status.loaded ? status.error : null);
   return (
     <>
       <Screen {...(view || fallback)} />
-      {status?.error && (
+      {status?.error && !retryHidden && (
         <button className="cache-retry" onClick={() => setRetry((n) => n + 1)}>
           إعادة تجهيز الوسائط
         </button>
