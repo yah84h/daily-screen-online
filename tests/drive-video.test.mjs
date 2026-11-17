@@ -151,3 +151,17 @@ test('Cloudflare handler reports upstream failures as 424 so the edge keeps the 
     globalThis.fetch = realFetch;
   }
 });
+test('images are only proxied when the caller asks for an image (presenting mode)', async () => {
+  const png = () =>
+    new Response(new Uint8Array(10), {
+      status: 206,
+      headers: { 'Content-Type': 'image/png', 'Content-Range': 'bytes 0-9/10' },
+    });
+  await assert.rejects(driveVideoResponse(request('bytes=0-'), { fetcher: async () => png() }));
+  const image = new Request('http://localhost/api/drive-video?id=' + id + '&image=1', {
+    headers: { Range: 'bytes=0-' },
+  });
+  const r = await driveVideoResponse(image, { fetcher: async () => png() });
+  assert.equal(r.status, 206);
+  assert.equal(r.headers.get('Content-Type'), 'image/png');
+});

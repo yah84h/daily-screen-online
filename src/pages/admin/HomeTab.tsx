@@ -20,6 +20,7 @@ import { DailyMediaFields } from './studio/DailyMediaFields';
 import { BackgroundAudioEditor } from './BackgroundAudioEditor';
 import { PresentationEditor } from './PresentationEditor';
 import { MediaOnlyEditor } from './DisplayModes';
+import { ShowEditor } from './ShowEditor';
 
 const modeNames = {
   daily: 'الشاشة اليومية',
@@ -27,6 +28,7 @@ const modeNames = {
   media: 'صورة أو فيديو',
   slideshow: 'شرائح الصور',
   presentation: 'PowerPoint',
+  show: 'وضع التقديم',
 };
 
 export function HomeTab() {
@@ -63,6 +65,22 @@ export function HomeTab() {
               (content.videoPlaylist?.enabled && content.videoPlaylist.items.length)
             )
           : !!content.title.trim();
+  if (mode === 'show')
+    return (
+      <div className="studio-composer">
+        <div className="studio-mode-strip">
+          <span>
+            <Monitor size={18} />
+            <b>{modeNames[mode]}</b>
+            <small>نوع العرض الحالي</small>
+          </span>
+          {permissions.admin && (
+            <button onClick={() => setTab('طريقة العرض')}>تغيير نوع العرض</button>
+          )}
+        </div>
+        <ShowEditor />
+      </div>
+    );
   return (
     <div className="studio-composer">
       <div className="studio-mode-strip">

@@ -167,22 +167,48 @@ export const supabase: any = {
         '&displayIndex=' +
         (/^\/(?:display|tv)(\d+)$/.exec(location.pathname)?.[1] || '1'),
     }),
-  channel: () => {
-    let handler = () => {};
+  channel: (topic: string) => {
+    // Legacy "refresh" listeners fire on every local update; named broadcast events
+    // (presenting mode signalling) are relayed with their payload, like Supabase broadcast.
+    const handlers: { event: string; fn: (message: any) => void }[] = [];
+    const self = Math.random().toString(36).slice(2);
     let events: EventSource | undefined;
     const ch: any = {
       state: 'joined',
-      on: (_k: any, _f: any, fn: any) => {
-        handler = fn;
+      on: (_k: any, filter: any, fn: any) => {
+        handlers.push({ event: filter?.event || 'refresh', fn });
         return ch;
       },
       subscribe: (callback?: any) => {
         events = new EventSource('/local/events');
-        events.onmessage = () => handler();
+        events.onmessage = () =>
+          handlers.filter((h) => h.event === 'refresh').forEach((h) => h.fn({}));
+        events.addEventListener('signal', (event) => {
+          try {
+            const data = JSON.parse((event as MessageEvent).data);
+            if (data.topic !== topic || data.from === self) return;
+            handlers
+              .filter((h) => h.event === data.event)
+              .forEach((h) => h.fn({ payload: data.payload }));
+          } catch {}
+        });
         callback?.('SUBSCRIBED');
         return ch;
       },
-      send: () => call('notify', {}),
+      send: async (message: any) => {
+        if (!message?.event || message.event === 'refresh') return call('notify', {});
+        await fetch('/local/signal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            event: message.event,
+            payload: message.payload,
+            from: self,
+          }),
+        });
+        return 'ok';
+      },
       unsubscribe: async () => {
         events?.close();
       },

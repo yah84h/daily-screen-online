@@ -1,0 +1,83 @@
+/* Presenting mode: TV side. Calm dark-blue standby; content fills the screen on black. */
+.show-screen {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #e8eefc;
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+}
+.show-standby {
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(60% 55% at 50% 45%, #1d3b73 0%, transparent 70%),
+    linear-gradient(160deg, #0b1a33, #132a52);
+}
+.show-standby-card {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 2cqw;
+  animation: show-breathe 6s ease-in-out infinite;
+}
+.show-standby-card img {
+  width: auto;
+  height: 14.6cqw;
+  max-width: 50cqw;
+  object-fit: contain;
+  filter: drop-shadow(0 0 2.25cqw #6f9cff33);
+}
+.show-standby-card svg {
+  width: 10cqw;
+  height: 10cqw;
+  color: #b9cdf6;
+}
+.show-standby-card h1 {
+  max-width: 80cqw;
+  margin: 0;
+  text-wrap: balance;
+  font-size: 2.9cqw;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #e8eefc;
+  text-align: center;
+}
+.show-standby-note {
+  position: absolute;
+  bottom: 1.25cqw;
+  left: 2.4cqw;
+  font-size: 0.9cqw;
+  color: #7f97c6;
+  opacity: 0.7;
+  direction: ltr;
+}
+.show-layer {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  animation: show-fade 0.45s ease-out both;
+}
+.show-layer :is(img, video) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+@keyframes show-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes show-breathe {
+  50% {
+    transform: scale(1.015);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .show-layer,
+  .show-standby-card {
+    animation: none;
+  }
+}

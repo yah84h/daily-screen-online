@@ -1,0 +1,83 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  emptyShow,
+  showReduce,
+  showSteps,
+  showReadiness,
+  partKey,
+} from '../local-test/show-state.mjs';
+
+const video = { op: 'add', item: { id: 'video-1', kind: 'video', name: 'intro.mp4' } };
+const deck = { op: 'add', item: { id: 'deck-01', kind: 'deck', name: 'a.pptx', parts: 3 } };
+
+test('decks expand to one step per slide, in item order', () => {
+  let s = showReduce(emptyShow(), video);
+  s = showReduce(s, deck);
+  assert.deepEqual(
+    showSteps(s.items).map((step) => step.item + ':' + step.part),
+    ['video-1:0', 'deck-01:0', 'deck-01:1', 'deck-01:2'],
+  );
+});
+
+test('start, next, previous, pause and end stay in range', () => {
+  let s = showReduce(showReduce(emptyShow(), video), deck);
+  assert.throws(() => showReduce(emptyShow(), { op: 'start' }));
+  s = showReduce(s, { op: 'next' });
+  assert.equal(s.step, 0, 'next before start does nothing');
+  s = showReduce(s, { op: 'start' });
+  for (let i = 0; i < 10; i++) s = showReduce(s, { op: 'next' });
+  assert.equal(s.step, 3);
+  s = showReduce(s, { op: 'standby' });
+  assert.equal(s.phase, 'paused');
+  s = showReduce(s, { op: 'resume' });
+  assert.equal(s.phase, 'live');
+  assert.equal(s.step, 3, 'resume keeps the position');
+  s = showReduce(s, { op: 'end' });
+  assert.deepEqual([s.phase, s.step], ['standby', 0]);
+});
+
+test('files cannot change while live; reorder and remove work in standby', () => {
+  let s = showReduce(showReduce(emptyShow(), video), deck);
+  s = showReduce(s, { op: 'start' });
+  assert.throws(() => showReduce(s, { op: 'remove', id: 'video-1' }));
+  s = showReduce(s, { op: 'end' });
+  s = showReduce(s, { op: 'move', id: 'deck-01', by: -1 });
+  assert.deepEqual(
+    s.items.map((item) => item.id),
+    ['deck-01', 'video-1'],
+  );
+  s = showReduce(s, { op: 'remove', id: 'deck-01' });
+  assert.deepEqual(
+    s.items.map((item) => item.id),
+    ['video-1'],
+  );
+});
+
+test('links must be https and items are sanitised', () => {
+  assert.throws(() =>
+    showReduce(emptyShow(), {
+      op: 'add',
+      item: { id: 'link-01', kind: 'video', source: 'link', url: 'http://x' },
+    }),
+  );
+  assert.throws(() => showReduce(emptyShow(), { op: 'add', item: { id: '../x', kind: 'video' } }));
+  const s = showReduce(emptyShow(), {
+    op: 'add',
+    item: { id: 'link-01', kind: 'image', source: 'link', url: 'https://drive.google.com/x' },
+  });
+  assert.equal(s.items[0].source, 'link');
+});
+
+test('readiness counts every slide of a deck', () => {
+  const s = showReduce(showReduce(emptyShow(), video), deck);
+  assert.deepEqual(showReadiness(s.items, { [partKey('video-1')]: true }), {
+    total: 4,
+    ready: 1,
+    complete: false,
+  });
+  const all = Object.fromEntries(
+    ['video-1#0', 'deck-01#0', 'deck-01#1', 'deck-01#2'].map((key) => [key, true]),
+  );
+  assert.equal(showReadiness(s.items, all).complete, true);
+});

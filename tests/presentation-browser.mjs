@@ -39,9 +39,10 @@ try {
   await phone.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await phone.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
   await phone.waitForURL('**/admin');
-  await phone
-    .getByRole('button', { name: 'ملف PowerPoint شرائح مع تحكم من الجوال والمؤشر', exact: true })
-    .click();
+  const nav = phone.getByRole('navigation', { name: 'التنقل الرئيسي' });
+  await nav.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await phone.getByRole('radio', { name: /ملف PowerPoint/ }).click();
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
   const chooser = phone.waitForEvent('filechooser');
   await phone.getByRole('button', { name: 'رفع ملف PowerPoint', exact: true }).click();
   await (await chooser).setFiles(resolve('tests/fixtures/presentation-test.pptx'));
@@ -142,6 +143,10 @@ try {
   wav.writeUInt32LE(400000, 40);
   const audioFile = join(folder, 'tone.wav');
   await writeFile(audioFile, wav);
+  await phone
+    .getByRole('navigation', { name: 'تحرير المحتوى' })
+    .getByRole('button', { name: 'صوت الخلفية' })
+    .click();
   const audioChooser = phone.waitForEvent('filechooser');
   await phone.getByRole('button', { name: 'رفع ملف صوت', exact: true }).click();
   await (await audioChooser).setFiles(audioFile);

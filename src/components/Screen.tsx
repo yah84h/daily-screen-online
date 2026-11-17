@@ -6,6 +6,7 @@ import { VideoPlaylist } from './VideoPlaylist';
 import { MediaAudio } from './MediaAudio';
 import { rotationOptions, rotationPhase } from '../../local-test/rotation.mjs';
 import { PresentationPlayer } from './PresentationPlayer';
+import { ShowPlayer } from './ShowPlayer';
 import type { PresentationContext } from '@/lib/presentation';
 import { parseDriveLink } from '@/lib/driveVideo';
 import { DriveVideo } from './DriveVideo';
@@ -54,6 +55,16 @@ export function Screen({
   useEffect(() => {
     started.current = Date.now();
   }, [rotation.enabled, rotation.normal, rotation.normalSeconds, rotation.leaderboardSeconds]);
+  // A presentation is never interrupted by special days or rotation.
+  if (t.displayMode === 'show')
+    return (
+      <ShowPlayer
+        screenId={presentationContext?.token ? presentationContext.screenId : ''}
+        showKey={t.showKey || ''}
+        template={t}
+        school={school}
+      />
+    );
   const customDay = activeCustomDay(t, now);
   if (customDay) return <CustomDayScreen day={customDay} template={t} school={school} now={now} />;
   if (rotation.enabled && t.displayMode !== 'presentation') {

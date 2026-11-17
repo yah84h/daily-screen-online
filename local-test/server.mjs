@@ -566,6 +566,23 @@ const server = http.createServer(async (req, res) => {
         }
         return reply(res, { data: rpc(input, staff), error: null });
       }
+      if (url.pathname === '/local/signal') {
+        // Presenting-mode relay: like Supabase broadcast, nothing is stored.
+        const message = JSON.stringify({
+          topic: String(input.topic || '').slice(0, 120),
+          event: String(input.event || '').slice(0, 40),
+          from: String(input.from || '').slice(0, 40),
+          payload: input.payload ?? null,
+        });
+        if (message.length > 256 * 1024) throw Object.assign(Error('Too large'), { status: 413 });
+        for (const response of streams)
+          try {
+            response.write('event: signal\ndata: ' + message + '\n\n');
+          } catch {
+            streams.delete(response);
+          }
+        return reply(res, 'ok');
+      }
       if (url.pathname === '/local/notify') {
         accounts.requireUser(req);
         save();
