@@ -70,7 +70,7 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   const nav = page.getByRole('navigation', { name: 'التنقل الرئيسي' });
   await page.getByRole('heading', { name: 'محتوى يستحق العرض.' }).waitFor();
-  assert.equal(await nav.getByRole('button').count(), 5);
+  assert.equal(await nav.getByRole('button').count(), 4);
   await page.screenshot({
     path: 'work/studio-desktop.png',
     fullPage: true,
@@ -102,7 +102,7 @@ try {
   );
   await page.getByRole('button', { name: 'صوت الخلفية', exact: true }).click();
   await page.getByRole('region', { name: 'صوت الخلفية', exact: true }).waitFor();
-  await nav.getByRole('button', { name: 'التحكم المباشر', exact: true }).click();
+  await nav.getByRole('button', { name: 'الشاشة', exact: true }).click();
   await page.getByRole('region', { name: 'التحكم عن بعد بالشاشة' }).waitFor();
   await page.getByRole('region', { name: 'مراقبة أجهزة العرض' }).waitFor();
   await page.getByRole('region', { name: 'معاينة المحتوى المنشور' }).waitFor();
@@ -173,14 +173,15 @@ try {
             };
     await route.fulfill({ json: result });
   });
-  await nav.getByRole('button', { name: 'ChatGPT', exact: true }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /المساعد الذكي/ }).click();
   await page.getByLabel('طلبك للمساعد').fill('غيّر عنوان اليوم');
   await page.getByRole('button', { name: 'إرسال', exact: true }).click();
   await page.getByRole('button', { name: 'تطبيق على المسودة', exact: true }).waitFor();
   await page.screenshot({ path: 'work/assistant-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'تطبيق على المسودة', exact: true }).click();
   await page.getByRole('button', { name: 'تم التطبيق على المسودة', exact: true }).waitFor();
-  await nav.getByRole('button', { name: 'المحتوى', exact: true }).click();
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
   assert.equal(
     await page.getByLabel('عنوان اليوم', { exact: true }).inputValue(),
     'رسالة من المساعد',
@@ -195,7 +196,8 @@ try {
   );
   await page.getByLabel('العنوان الفرعي', { exact: true }).fill('تعديل يدوي');
   assert.equal(await page.getByLabel('العنوان الفرعي', { exact: true }).inputValue(), 'تعديل يدوي');
-  await nav.getByRole('button', { name: 'ChatGPT', exact: true }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /المساعد الذكي/ }).click();
   await page.locator('.assistant-composer input[type=file]').setInputFiles({
     name: 'broadcast.csv',
     mimeType: 'text/csv',
@@ -226,7 +228,8 @@ try {
   await page.getByRole('button', { name: 'تم حفظ خطة الإذاعة', exact: true }).waitFor();
   const conversationId = await page.getByLabel('المحادثات المحفوظة').inputValue();
   await page.reload();
-  await nav.getByRole('button', { name: 'ChatGPT', exact: true }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /المساعد الذكي/ }).click();
   await page.getByRole('region', { name: 'مراجعة خطة الإذاعة الأسبوعية' }).waitFor();
   assert.equal(
     await page.getByLabel('المحادثات المحفوظة').inputValue(),
@@ -258,9 +261,10 @@ try {
     animations: 'disabled',
   });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await nav.getByRole('button', { name: /الجدولة والسجل/ }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /المواعيد القادمة/ }).click();
   await page.getByText('إذاعة التعاون', { exact: true }).waitFor();
-  await nav.getByRole('button', { name: 'المحتوى', exact: true }).click();
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
   await page.getByLabel('استخدام تاريخ اليوم تلقائيًا', { exact: true }).uncheck();
   const scheduledDate = new Date(Date.now() + 3 * 86400000).toLocaleDateString('en-CA', {
     timeZone: 'Asia/Riyadh',
@@ -282,14 +286,17 @@ try {
     '',
     'Unspecified weekly subtitle must not inherit an old topic',
   );
-  await nav.getByRole('button', { name: /الجدولة والسجل/ }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /المواعيد القادمة/ }).click();
 
-  await page.getByRole('button', { name: 'سجل النشر', exact: true }).click();
-  await page.getByRole('button', { name: 'الأجهزة والإعدادات', exact: true }).click();
+  await page.getByRole('button', { name: 'المزيد', exact: true }).first().click();
+  await page.getByRole('button', { name: /سجل النشر/ }).click();
+  await nav.getByRole('button', { name: 'المزيد', exact: true }).click();
+  await page.getByRole('button', { name: /الأجهزة والإعدادات/ }).click();
   await page.getByRole('heading', { name: 'مساحة المدرسة.', exact: true }).waitFor();
   await page.setViewportSize({ width: 390, height: 844 });
-  await nav.getByRole('button', { name: 'المحتوى', exact: true }).click();
-  assert.equal(await nav.getByRole('button').count(), 5);
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
+  assert.equal(await nav.getByRole('button').count(), 4);
   for (const button of await nav.getByRole('button').all()) assert(await button.isVisible());
   await page.getByRole('button', { name: 'فتح مراقبة الشاشة', exact: true }).click();
   await page.getByRole('region', { name: 'التحكم عن بعد بالشاشة' }).waitFor();
@@ -302,7 +309,7 @@ try {
     fullPage: true,
     animations: 'disabled',
   });
-  await nav.getByRole('button', { name: 'المحتوى', exact: true }).click();
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
   assert(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
     'No mobile horizontal overflow',

@@ -22,7 +22,8 @@ export type Tab =
   | 'طريقة العرض'
   | 'القوالب'
   | 'السجل'
-  | 'خلفية الحصص';
+  | 'خلفية الحصص'
+  | 'المزيد';
 export type Modal = '' | 'preview' | 'pair' | 'schedule' | 'optional' | 'settings' | 'setup';
 export type UploadTarget =
   | 'image'

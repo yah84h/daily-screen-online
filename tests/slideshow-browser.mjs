@@ -34,9 +34,17 @@ try {
   a = await ctx.newPage();
   a.setDefaultTimeout(30000);
   await a.goto(base + '/admin');
-  await a.getByRole('button', { name: 'المحتوى اليومي رسالة وصورة بهوية المدرسة' }).click();
-  await a.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
-  await a.getByRole('button', { name: 'القوالب', exact: true }).click();
+  await a.getByLabel('اسم المستخدم', { exact: true }).fill('Archo');
+  await a.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
+  await a.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
+  const nav = a.getByRole('navigation', { name: 'التنقل الرئيسي' });
+  await nav.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await a.getByRole('radio', { name: /المحتوى اليومي/ }).click();
+  await a.getByRole('button', { name: 'تطبيق على الشاشة', exact: true }).click();
+  await a
+    .getByRole('navigation', { name: 'التصميم' })
+    .getByRole('button', { name: 'تصميم اليومي' })
+    .click();
   await a.getByRole('tab', { name: 'الخلفية والمؤثرات', exact: true }).click();
   const make = async (color) =>
     Buffer.from(
@@ -115,7 +123,11 @@ try {
   await a.getByRole('button', { name: 'حفظ القالب', exact: true }).click();
   await tv.waitForSelector('.background-slideshow', { state: 'detached' });
   await a.reload();
-  await a.getByRole('button', { name: 'القوالب', exact: true }).click();
+  await nav.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await a
+    .getByRole('navigation', { name: 'التصميم' })
+    .getByRole('button', { name: 'تصميم اليومي' })
+    .click();
   await a.getByRole('tab', { name: 'الخلفية والمؤثرات', exact: true }).click();
   assert.equal(await a.locator('.background-slide-editor').count(), 2);
   assert.equal(await a.getByLabel('تفعيل عرض الشرائح', { exact: true }).isChecked(), false);

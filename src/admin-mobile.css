@@ -1,0 +1,1021 @@
+/* Soft & friendly, phone-first admin shell. Loaded after admin-studio.css and overrides it. */
+.admin-studio {
+  --studio-ink: #2b2d42;
+  --studio-muted: #7a7d93;
+  --studio-accent: #5b6cf0;
+  --studio-accent-ink: #3d4bc4;
+  --studio-accent-soft: #eef0ff;
+  --studio-mint: #e3f7ee;
+  --studio-mint-ink: #1f8a5b;
+  --studio-peach: #fff1e6;
+  --studio-peach-ink: #c26a2a;
+  --studio-line: #ece9f3;
+  --studio-surface: #fff;
+  --studio-canvas: #f7f5fc;
+  --studio-radius: 22px;
+  --studio-radius-sm: 14px;
+  --studio-shadow: 0 1px 2px #2b2d420a, 0 8px 24px #5b6cf012;
+  --studio-nav-h: 72px;
+  --heading-4: 800 28px/38px 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --heading-6: 700 19px/28px 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --title-3: 600 16px/24px 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --body-6: 400 15px/24px 'Cairo', 'Noto Sans Arabic', sans-serif;
+  --caption-5: 400 13px/18px 'Cairo', 'Noto Sans Arabic', sans-serif;
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+  font-size: 15px;
+  background:
+    radial-gradient(60rem 30rem at 110% -10%, #e9e6ff 0, transparent 60%),
+    radial-gradient(40rem 24rem at -10% 0, #ffeede 0, transparent 60%), var(--studio-canvas);
+  background-attachment: fixed;
+  padding-bottom: 32px;
+}
+.admin-studio :focus-visible {
+  outline: 3px solid #a9b2ff;
+  outline-offset: 3px;
+}
+
+/* ---------- Shared soft surfaces ---------- */
+.admin-studio
+  :is(
+    .studio-editor,
+    .studio-preview,
+    .studio-screenbar,
+    .studio-publish-bar,
+    .studio-settings,
+    .studio-notice,
+    section[class$='-editor'],
+    .display-control-room > div
+  ) {
+  border-radius: var(--studio-radius);
+  border-color: var(--studio-line);
+  box-shadow: var(--studio-shadow);
+}
+.admin-studio
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color']),
+    select,
+    textarea
+  ) {
+  min-height: 48px;
+  border-radius: var(--studio-radius-sm);
+  font-size: 16px; /* stops iOS zooming into fields */
+}
+.admin-studio :is(.button, button.button, a.button) {
+  min-height: 48px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.admin-studio .button.primary {
+  background: linear-gradient(135deg, #6a7bff, #5b6cf0 60%, #7b5cf0);
+  box-shadow: 0 6px 18px #5b6cf040;
+}
+
+/* ---------- Top bar ---------- */
+.admin-studio > .studio-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  min-height: 72px;
+  gap: 24px;
+  padding: 12px max(24px, calc((100vw - 1280px) / 2));
+  background: #ffffffd9;
+  border-bottom: 1px solid var(--studio-line);
+  -webkit-backdrop-filter: saturate(1.4) blur(18px);
+  backdrop-filter: saturate(1.4) blur(18px);
+}
+.admin-studio .studio-brand {
+  min-width: 0;
+}
+.admin-studio .studio-brand > span {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #7b8cff, #5b6cf0);
+}
+.admin-studio .studio-brand > div {
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 22px;
+}
+.admin-studio .studio-brand small {
+  display: block;
+  max-width: 40vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--studio-muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+.admin-studio .studio-account {
+  margin-inline-start: 0;
+}
+.admin-studio .studio-account > summary > span {
+  width: 44px;
+  height: 44px;
+  font-weight: 800;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+
+/* Desktop: the four tabs sit in the top bar as soft pills. */
+.admin-studio .studio-navigation {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  gap: 6px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 6px;
+  border-radius: 999px;
+  background: #f1eff8;
+}
+.admin-studio .studio-navigation > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 44px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: var(--studio-muted);
+  font:
+    700 15px/20px 'Cairo',
+    sans-serif;
+  position: relative;
+  transition:
+    background 0.2s var(--studio-ease),
+    color 0.2s var(--studio-ease);
+}
+.admin-studio .studio-navigation > button:hover {
+  color: var(--studio-ink);
+}
+.admin-studio .studio-navigation > button[aria-current='page'] {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+.admin-studio .studio-nav-icon {
+  display: grid;
+  place-items: center;
+}
+.admin-studio .studio-navigation small {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  color: #fff;
+  background: #f0715a;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* ---------- Page heading ---------- */
+.admin-studio > .studio-main {
+  max-width: 1280px;
+  padding: 32px 24px 0;
+}
+.admin-studio .studio-page-heading {
+  display: block;
+  margin-bottom: 20px;
+}
+.admin-studio .studio-page-heading h1 {
+  font: var(--heading-4);
+  margin: 2px 0 4px;
+}
+.admin-studio .studio-page-heading p:last-child {
+  color: var(--studio-muted);
+  margin: 0;
+}
+.admin-studio .studio-eyebrow {
+  display: inline-block;
+  padding: 2px 12px;
+  border-radius: 999px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+  font-weight: 700;
+  font-size: 13px;
+}
+.admin-studio .studio-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin: 0 -8px 8px 0;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: var(--studio-accent-ink);
+  font-weight: 700;
+}
+
+/* ---------- Screen bar: one friendly card ---------- */
+.admin-studio .studio-screenbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--studio-line);
+}
+.admin-studio .studio-screen-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 220px;
+  min-width: 0;
+  cursor: pointer;
+}
+.admin-studio .studio-device-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+}
+.admin-studio .studio-screen-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.admin-studio .studio-screen-text small {
+  color: var(--studio-muted);
+  font-size: 12px;
+}
+.admin-studio .studio-screen-text select {
+  min-height: 32px;
+  padding: 0 0 0 24px;
+  border: 0;
+  background-color: transparent;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--studio-ink);
+}
+.admin-studio .studio-connection {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+}
+.admin-studio .studio-connection.connected {
+  color: var(--studio-mint-ink);
+  background: var(--studio-mint);
+}
+.admin-studio .studio-screen-actions .icon-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+/* ---------- Sub-tabs (Design) as a soft segmented control ---------- */
+.admin-studio .studio-subnav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--studio-line);
+}
+.admin-studio .studio-subnav::-webkit-scrollbar {
+  display: none;
+}
+.admin-studio .studio-subnav > button {
+  flex: 1 0 auto;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  color: var(--studio-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-studio .studio-subnav > button[aria-current='page'] {
+  color: #fff;
+  background: var(--studio-accent);
+}
+
+/* ---------- Today: write → check → publish ---------- */
+.admin-studio .studio-mode-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  margin-bottom: 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--studio-mint);
+  color: var(--studio-mint-ink);
+}
+.admin-studio .studio-mode-strip > button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--studio-mint-ink);
+  font-weight: 700;
+}
+.admin-studio .studio-compose-grid {
+  counter-reset: step;
+}
+.admin-studio :is(.studio-editor, .studio-preview) > .studio-panel-heading h2::before {
+  counter-increment: step;
+  content: counter(step, arabic-indic);
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-inline-end: 10px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--studio-accent);
+  font-size: 15px;
+  vertical-align: 2px;
+}
+.admin-studio .studio-editor-nav {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+  background: #f4f2fa;
+}
+.admin-studio .studio-editor-nav > button {
+  flex: 1 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+.admin-studio .studio-editor-nav > button[aria-current='page'] {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+.admin-studio .studio-draft-tag {
+  border-radius: 999px;
+}
+.admin-studio .studio-publish-bar {
+  border-radius: var(--studio-radius);
+  background: #ffffffee;
+}
+
+/* ---------- "More" page ---------- */
+.studio-more {
+  display: grid;
+  gap: 16px;
+  max-width: 640px;
+}
+.studio-more-list {
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--studio-radius);
+  background: #fff;
+  border: 1px solid var(--studio-line);
+  box-shadow: var(--studio-shadow);
+}
+.studio-more-list > li + li {
+  border-top: 1px solid #f2f0f7;
+}
+.studio-more-list :is(button, a) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  color: var(--studio-ink);
+  text-align: start;
+  text-decoration: none;
+}
+.studio-more-list :is(button, a):active {
+  background: #f5f3fb;
+}
+.studio-more-list :is(button, a) > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.studio-more-list b {
+  font-weight: 700;
+  font-size: 16px;
+}
+.studio-more-list small {
+  color: var(--studio-muted);
+  font-size: 13px;
+}
+.studio-more-list em {
+  font-style: normal;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: #f0715a;
+  font-weight: 800;
+  font-size: 12px;
+}
+.studio-more-list > li > :is(button, a) > svg {
+  color: #b9b6c9;
+}
+.studio-more-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+.studio-more-list li:nth-child(4n + 2) .studio-more-icon {
+  color: var(--studio-mint-ink);
+  background: var(--studio-mint);
+}
+.studio-more-list li:nth-child(4n + 3) .studio-more-icon {
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+}
+.studio-more-list li:nth-child(4n + 4) .studio-more-icon {
+  color: #b2457a;
+  background: #fde8f1;
+}
+.studio-signout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+  border-radius: var(--studio-radius);
+  color: #c2413a;
+  background: #fff;
+  border: 1px solid #f6dcda;
+  font-weight: 700;
+}
+
+/* ---------- Toast ---------- */
+.admin-studio .studio-toast {
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* =================== Phones =================== */
+@media (max-width: 760px) {
+  .admin-studio {
+    padding-bottom: calc(var(--studio-nav-h) + env(safe-area-inset-bottom) + 24px);
+    background-attachment: scroll;
+  }
+  .admin-studio > .studio-topbar {
+    min-height: 60px;
+    padding: 8px 16px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    gap: 12px;
+    justify-content: space-between;
+    /* A backdrop-filter here would trap the fixed tab bar inside the header. */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #fffffff2;
+  }
+  .admin-studio .studio-brand > span {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+  .admin-studio .studio-account > summary > span {
+    width: 40px;
+    height: 40px;
+  }
+  /* Bottom tab bar */
+  .admin-studio .studio-navigation {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 80;
+    max-width: none;
+    gap: 0;
+    margin: 0;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    border-radius: 24px 24px 0 0;
+    background: #ffffffeb;
+    border-top: 1px solid var(--studio-line);
+    box-shadow: 0 -8px 24px #2b2d4214;
+    -webkit-backdrop-filter: saturate(1.4) blur(18px);
+    backdrop-filter: saturate(1.4) blur(18px);
+  }
+  .admin-studio .studio-navigation > button {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 60px;
+    padding: 4px 2px;
+    border-radius: 18px;
+    font-size: 12px;
+    line-height: 16px;
+    background: transparent;
+    box-shadow: none;
+  }
+  .admin-studio .studio-navigation > button[aria-current='page'] {
+    background: transparent;
+    box-shadow: none;
+  }
+  .admin-studio .studio-nav-icon {
+    width: 56px;
+    height: 32px;
+    border-radius: 999px;
+    transition: background 0.2s var(--studio-ease);
+  }
+  .admin-studio .studio-navigation > button[aria-current='page'] .studio-nav-icon {
+    background: var(--studio-accent-soft);
+  }
+  .admin-studio .studio-navigation small {
+    position: absolute;
+    top: 2px;
+    left: calc(50% - 26px);
+  }
+  .admin-studio > .studio-main {
+    padding: 20px 16px 0;
+  }
+  .admin-studio .studio-page-heading {
+    margin-bottom: 16px;
+  }
+  .admin-studio .studio-page-heading h1 {
+    font-size: 24px;
+    line-height: 34px;
+  }
+  .admin-studio .studio-page-heading p:last-child {
+    font-size: 14px;
+  }
+  /* Screen card: name + status on one row, extras hidden (they live in More / Screen). */
+  .admin-studio .studio-screenbar {
+    flex-wrap: nowrap;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .admin-studio .studio-screen-selector {
+    flex: 1 1 auto;
+  }
+  .admin-studio .studio-last-publish,
+  .admin-studio .studio-screen-actions {
+    display: none;
+  }
+  .admin-studio .studio-connection {
+    flex-shrink: 0;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+  .admin-studio .studio-subnav > button {
+    padding: 0 14px;
+  }
+  /* Write first, then glance at the preview. */
+  .admin-studio .studio-editor {
+    order: 0;
+  }
+  .admin-studio .studio-preview {
+    order: 1;
+  }
+  .admin-studio .studio-mode-strip small {
+    display: none;
+  }
+  .admin-studio .studio-publish-bar {
+    padding: 10px;
+  }
+  .admin-studio .studio-publish-actions .button {
+    min-height: 52px;
+  }
+  /* Keep sticky publish bars above the tab bar. */
+  .admin-studio :is(.studio-publish-bar, .mode-save) {
+    bottom: calc(var(--studio-nav-h) + env(safe-area-inset-bottom) + 8px) !important;
+  }
+  .admin-studio .studio-toast {
+    bottom: calc(var(--studio-nav-h) + env(safe-area-inset-bottom) + 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-studio .studio-navigation > button,
+  .admin-studio .studio-nav-icon {
+    transition: none;
+  }
+}
+
+/* =================== Design tab (stage 2) =================== */
+/* Pill menus: editor tool sections, template tabs, board styles. */
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs) {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f2fa;
+}
+/* Desktop keeps the section menu as a vertical side list. */
+.admin-studio .editor-section-nav {
+  flex-direction: column;
+  overflow: visible;
+  border-radius: 20px;
+}
+.admin-studio .editor-section-nav > button {
+  justify-content: flex-start;
+}
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs)::-webkit-scrollbar {
+  display: none;
+}
+.admin-studio :is(.editor-section-nav, .segmented.scroll-tabs) > button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--studio-muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-studio .editor-section-nav > button > span {
+  display: none;
+}
+.admin-studio .editor-section-nav > button[aria-current='page'],
+.admin-studio .segmented.scroll-tabs > button.active {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+
+/* Display mode cards */
+.admin-studio .mode-card {
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background: #faf9fd;
+  transition:
+    border-color 0.2s var(--studio-ease),
+    background 0.2s var(--studio-ease);
+}
+.admin-studio .mode-card .mode-icon {
+  border-radius: 14px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+.admin-studio .mode-card.selected {
+  border-color: var(--studio-accent);
+  background: #fff;
+  box-shadow: 0 6px 18px #5b6cf022;
+}
+.admin-studio .mode-card.selected .mode-icon {
+  color: #fff;
+  background: var(--studio-accent);
+}
+.admin-studio .mode-save {
+  border: 0;
+  border-radius: var(--studio-radius);
+  background: var(--studio-mint);
+}
+.admin-studio .display-step {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+  font-weight: 700;
+}
+
+/* Layout pickers (daily templates + classes background) */
+.admin-studio :is(.layout-option, .loop-layout-grid > button) {
+  border-radius: 18px;
+  border: 2px solid var(--studio-line);
+  background: #fff;
+}
+.admin-studio
+  :is(.layout-option, .loop-layout-grid > button):is(.selected, [aria-pressed='true'], .active) {
+  border-color: var(--studio-accent);
+  box-shadow: 0 6px 18px #5b6cf022;
+}
+.admin-studio .settings-section {
+  border-radius: 18px;
+}
+.admin-studio .settings-section > summary {
+  min-height: 56px;
+}
+
+@media (max-width: 760px) {
+  /* Two thumbnails per row instead of one: halves the scrolling. */
+  .admin-studio :is(.loop-layout-grid, .layout-grid) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) {
+    padding: 8px;
+    min-width: 0;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) :is(b, strong, h3) {
+    font-size: 13px;
+    line-height: 18px;
+  }
+  .admin-studio :is(.loop-layout-grid > button, .layout-option) :is(small, p) {
+    display: none;
+  }
+  .admin-studio .loop-layout-thumbnail {
+    padding: 6px;
+  }
+  .admin-studio .loop-layout-school {
+    font-size: 9px;
+  }
+  /* Section menus scroll sideways and stick under the header. */
+  .admin-studio .editor-section-nav {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    border-radius: 999px;
+    position: sticky;
+    top: 68px;
+    z-index: 20;
+    margin-inline: -4px;
+    box-shadow: 0 6px 16px #2b2d4210;
+  }
+  .admin-studio .editor-section-nav > button {
+    font-size: 14px;
+  }
+  /* One floating save button above the tab bar, never on top of content. */
+  .admin-studio :is(.loop-settings .loop-save, .template-editor .save-dock, .mode-save) {
+    position: sticky !important;
+    bottom: calc(var(--studio-nav-h) + env(safe-area-inset-bottom) + 10px) !important;
+    top: auto !important;
+    z-index: 40;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .admin-studio .loop-settings .loop-save {
+    min-height: 56px;
+    border-radius: 999px;
+    box-shadow: 0 10px 24px #5b6cf04d;
+  }
+  .admin-studio .mode-cards {
+    gap: 10px;
+  }
+  .admin-studio .mode-card {
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+  .admin-studio .mode-save {
+    padding: 12px;
+    box-shadow: 0 10px 24px #2b2d421a;
+  }
+  .admin-studio .mode-save > div {
+    display: none;
+  }
+  .admin-studio .mode-save .button {
+    width: 100%;
+  }
+  .admin-studio :is(.loop-preview-panel, .template-preview) {
+    padding: 12px;
+  }
+  .admin-studio :is(.loop-preview-panel .template-tip, .loop-preview-panel .loop-help) {
+    display: none;
+  }
+}
+.admin-studio .template-editor .save-dock {
+  border-radius: var(--studio-radius);
+  border-color: var(--studio-line);
+}
+.admin-studio .template-editor .save-dock button.primary {
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(135deg, #6a7bff, #5b6cf0 60%, #7b5cf0);
+  box-shadow: 0 6px 18px #5b6cf040;
+  font-weight: 700;
+}
+@media (max-width: 760px) {
+  .admin-studio .template-editor .save-dock {
+    display: block;
+    padding: 8px;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+  .admin-studio .template-editor .save-dock > :not(button) {
+    display: none;
+  }
+  .admin-studio .template-editor .save-dock button.primary {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  .admin-studio .editor-section-nav {
+    top: 64px;
+  }
+}
+
+/* =================== Stage 3: controls, live screen, sheets =================== */
+/* Checkboxes become friendly on/off switches (still real checkboxes). */
+.admin-studio input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex-shrink: 0;
+  position: relative;
+  width: 46px;
+  height: 28px;
+  margin: 0;
+  border-radius: 999px;
+  background: #dcd9e6;
+  cursor: pointer;
+  transition: background 0.2s var(--studio-ease);
+}
+.admin-studio input[type='checkbox']::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #2b2d4240;
+  transition: transform 0.2s var(--studio-ease);
+}
+.admin-studio input[type='checkbox']:checked {
+  background: var(--studio-accent);
+}
+.admin-studio input[type='checkbox']:checked::after {
+  transform: translateX(-18px);
+}
+.admin-studio input[type='checkbox']:disabled {
+  opacity: 0.5;
+}
+.admin-studio label:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+
+/* Generic segmented tabs (e.g. single media vs multiple). */
+.admin-studio .segmented:not(.scroll-tabs) {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f2fa;
+}
+.admin-studio .segmented:not(.scroll-tabs) > button {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--studio-muted);
+  font-weight: 700;
+}
+.admin-studio .segmented:not(.scroll-tabs) > button:is([aria-selected='true'], .active) {
+  color: var(--studio-accent-ink);
+  background: #fff;
+  box-shadow: 0 2px 8px #5b6cf026;
+}
+
+/* Live screen control */
+.admin-studio .remote-media-panel {
+  border-radius: var(--studio-radius);
+}
+.admin-studio :is(.remote-transport, .remote-timeline, .remote-downloads) {
+  border-radius: 20px;
+  border-color: var(--studio-line);
+}
+.admin-studio :is(.remote-online, .remote-offline) {
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+.admin-studio .remote-online {
+  color: var(--studio-mint-ink);
+  background: var(--studio-mint);
+}
+.admin-studio .remote-offline {
+  color: var(--studio-peach-ink);
+  background: var(--studio-peach);
+}
+.admin-studio .remote-waiting-note {
+  border: 0;
+  border-radius: 16px;
+  background: var(--studio-peach);
+  color: var(--studio-peach-ink);
+}
+.remote-empty {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #eef0ff, #fdf0f7);
+}
+.remote-empty > span {
+  font-size: 34px;
+  line-height: 1;
+}
+.remote-empty > div {
+  flex: 1;
+}
+.remote-empty b {
+  display: block;
+  font-size: 16px;
+}
+.remote-empty p {
+  margin: 4px 0 0;
+  color: var(--studio-muted);
+  font-size: 13px;
+}
+.admin-studio .remote-playback-buttons .button {
+  border-radius: 999px;
+}
+
+/* Dialogs */
+.admin-studio .modal {
+  border-radius: 28px;
+}
+.admin-studio .modal input[inputmode='numeric'][maxlength='6'] {
+  min-height: 64px;
+  text-align: center;
+  font:
+    800 28px/1 'Cairo',
+    monospace;
+  letter-spacing: 0.4em;
+}
+
+@media (max-width: 760px) {
+  .remote-empty {
+    flex-wrap: wrap;
+  }
+  .remote-empty .button {
+    width: 100%;
+  }
+  /* Dialogs slide up from the bottom like a phone sheet. */
+  .admin-studio .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .admin-studio .modal:not(.wide) {
+    width: 100%;
+    max-width: none;
+    max-height: 92dvh;
+    margin: 0;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    border-radius: 28px 28px 0 0;
+    animation: studio-sheet-up 0.32s var(--studio-ease) both;
+  }
+  .admin-studio .modal:not(.wide)::before {
+    content: '';
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: -8px auto 12px;
+    border-radius: 999px;
+    background: #dcd9e6;
+  }
+  .admin-studio .studio-settings :is(button.primary, .button.primary) {
+    width: 100%;
+  }
+  .admin-studio .remote-playback-buttons .button {
+    min-height: 56px;
+  }
+}
+@keyframes studio-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-studio .modal {
+    animation: none !important;
+  }
+  .admin-studio input[type='checkbox'],
+  .admin-studio input[type='checkbox']::after {
+    transition: none;
+  }
+}
