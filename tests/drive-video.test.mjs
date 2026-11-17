@@ -133,3 +133,21 @@ test('audio links accept audio MIME only with explicit audio mode', async () => 
   assert.equal(r.headers.get('Content-Type'), 'audio/mpeg');
   assert.equal((await r.arrayBuffer()).byteLength, 4);
 });
+
+test('Cloudflare handler reports upstream failures as 424 so the edge keeps the JSON code', async () => {
+  const { onRequest } = await import('../functions/api/drive-video.js');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    new Response('<html>', { status: 403, headers: { 'Content-Type': 'text/html' } });
+  try {
+    const r = await onRequest({
+      request: new Request('https://x.test/api/drive-video?id=AAAAAAAAAAAAAAAAAAAA'),
+    });
+    assert.equal(r.status, 424);
+    assert.deepEqual(await r.json(), { error: 'DRIVE_NOT_PUBLIC' });
+    const bad = await onRequest({ request: new Request('https://x.test/api/drive-video?id=x') });
+    assert.equal(bad.status, 400);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

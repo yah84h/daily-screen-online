@@ -39,6 +39,8 @@ export function PreparedDisplay(props: Props) {
   const visible = useRef<Props | null>(null);
   const active = useRef<Display | null>(null);
   const preparedKey = useRef('');
+  // A layout whose media failed to prepare is still shown, streaming its original URLs.
+  const [failedKey, setFailedKey] = useState('');
   const pendingStatus: PreparationStatus | null =
     status ||
     (downloadsPaused && preparedKey.current !== signature && sources.length
@@ -71,6 +73,15 @@ export function PreparedDisplay(props: Props) {
     const controller = new AbortController();
     const urls: string[] = [];
     let adopted = false;
+    let stalled = false;
+    let lastProgress = Date.now();
+    // A download that stops progressing (e.g. a hung proxy) must not block the switch forever.
+    const watchdog = setInterval(() => {
+      if (Date.now() - lastProgress > STALL_MS) {
+        stalled = true;
+        controller.abort();
+      }
+    }, 5000);
     const release = () => urls.forEach((url) => URL.revokeObjectURL(url));
     setNote('');
     setStatus(sources.length ? { loaded: 0, total: sources.length } : null);
@@ -90,6 +101,7 @@ export function PreparedDisplay(props: Props) {
             continue;
           }
           const result = await prepareAsset(source, controller.signal, (loaded, total) => {
+            lastProgress = Date.now();
             if (!controller.signal.aborted)
               setStatus({ loaded: i + (total ? loaded / total : 0), total: sources.length, name });
           });
@@ -114,6 +126,7 @@ export function PreparedDisplay(props: Props) {
             throw error;
           }
           controller.signal.throwIfAborted();
+          lastProgress = Date.now();
           setStatus({ loaded: i + 1, total: sources.length, name });
         }
         controller.signal.throwIfAborted();
@@ -141,20 +154,25 @@ export function PreparedDisplay(props: Props) {
         // React commits the replacement before old Blob URLs are revoked.
         if (old) setTimeout(old.release, 1000);
       } catch (error) {
-        if (!controller.signal.aborted)
+        if (stalled || !controller.signal.aborted) {
+          setFailedKey(signature);
           setStatus({
             loaded: 0,
             total: sources.length,
             error:
               error instanceof Error && /[ء-ي]/.test(error.message)
                 ? error.message
-                : 'تعذر تجهيز الوسائط. يبقى العرض السابق ظاهرًا؛ تحقق من الرابط والاتصال.',
+                : 'تعذر تجهيز الوسائط. تُعرض مباشرة من الرابط؛ تحقق من الرابط والاتصال.',
           });
+        }
         if (!adopted) release();
+      } finally {
+        clearInterval(watchdog);
       }
     }
     void prepare();
     return () => {
+      clearInterval(watchdog);
       controller.abort();
       if (!adopted) release();
     };
@@ -184,7 +202,9 @@ export function PreparedDisplay(props: Props) {
               : undefined,
           },
         }
-      : visible.current || display?.props;
+      : failedKey === signature
+        ? props
+        : visible.current || display?.props;
   useLayoutEffect(() => {
     if (display && preparedKey.current === signature && view) visible.current = view;
   }, [view, display, signature]);
@@ -207,6 +227,8 @@ export function PreparedDisplay(props: Props) {
     </>
   );
 }
+
+const STALL_MS = 60_000;
 
 function getPreparationSources(content: Content, template: Partial<Template>): string[] {
   if (activeCustomDay(template)) return [];
