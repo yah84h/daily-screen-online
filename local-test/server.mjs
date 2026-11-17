@@ -566,6 +566,14 @@ const server = http.createServer(async (req, res) => {
         }
         return reply(res, { data: rpc(input, staff), error: null });
       }
+      if (url.pathname === '/local/turn')
+        // Local network only: direct connections need no relay.
+        return reply(
+          res,
+          process.env.SHOW_TEST_TURN
+            ? JSON.parse(process.env.SHOW_TEST_TURN) // tests: force a relay path
+            : { iceServers: [], relay: false },
+        );
       if (url.pathname === '/local/signal') {
         // Presenting-mode relay: like Supabase broadcast, nothing is stored.
         const message = JSON.stringify({

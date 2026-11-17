@@ -60,6 +60,7 @@ export function Screen({
     return (
       <ShowPlayer
         screenId={presentationContext?.token ? presentationContext.screenId : ''}
+        token={presentationContext?.token}
         showKey={t.showKey || ''}
         template={t}
         school={school}

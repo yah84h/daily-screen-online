@@ -170,10 +170,12 @@ try {
   const device = await separate.newPage();
   await device.goto(base + '/display');
   await device.locator('audio').waitFor({ state: 'attached' });
-  assert(
-    await device.locator('audio').evaluate((a) => a.paused),
-    'Another device starts with audio disabled',
-  );
+  // Since admin remote control, every display of a screen follows the screen's shared
+  // play/pause state (see remote-media-browser), so another device plays along.
+  await device.waitForFunction(() => {
+    const audio = document.querySelector('audio');
+    return audio && !audio.paused;
+  });
   await separate.close();
   await tv.getByRole('button', { name: 'إيقاف مؤقت', exact: true }).click();
   assert(await tv.locator('audio').evaluate((a) => a.paused));
@@ -208,7 +210,7 @@ try {
   await tv.screenshot({ path: 'work/pptx-test-display.png' });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS mouse-only display controls, looping uploaded device audio and independent devices; real PPTX conversion: 3 rendered slides, authenticated upload, phone next/goto/blackout, presenter PageDown/Home/B, synchronized status, bounds, mobile fit.',
+    'PASS mouse-only display controls, looping uploaded device audio, other devices following the shared screen playback; real PPTX conversion: 3 rendered slides, authenticated upload, phone next/goto/blackout, presenter PageDown/Home/B, synchronized status, bounds, mobile fit.',
   );
 } finally {
   await browser?.close();

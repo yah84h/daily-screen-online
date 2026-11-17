@@ -8,7 +8,7 @@
  * The phone is a remote: it sends commands signed with the screen's `showKey`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { supabase } from './supabase';
+import { supabase, isLocalBackend } from './supabase';
 import { parseDriveLink, drivePlaybackURL, downloadDriveMedia } from './driveVideo';
 import {
   emptyShow,
@@ -43,7 +43,38 @@ type Message =
       candidate?: RTCIceCandidateInit;
     };
 
-const ICE: RTCConfiguration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const STUN: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }];
+let iceCache: { at: number; config: RTCConfiguration } | null = null;
+/**
+ * STUN for same-network sends, plus TURN relay servers (when configured) so a phone on
+ * mobile data can still reach the TV. TURN relays the encrypted stream; it stores nothing.
+ */
+async function iceServers(token = ''): Promise<RTCConfiguration> {
+  if (iceCache && Date.now() - iceCache.at < 60 * 60 * 1000) return iceCache.config;
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (!token && !isLocalBackend) {
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.access_token) headers.Authorization = 'Bearer ' + data.session.access_token;
+    }
+    const response = await fetch(isLocalBackend ? '/local/turn' : '/.netlify/functions/turn', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ token }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const data = await response.json();
+    if (!response.ok || !Array.isArray(data.iceServers)) throw Error('no ice');
+    const config: RTCConfiguration = {
+      iceServers: data.iceServers,
+      ...(data.policy === 'relay' ? { iceTransportPolicy: 'relay' as const } : {}),
+    };
+    iceCache = { at: Date.now(), config };
+    return config;
+  } catch {
+    return { iceServers: isLocalBackend ? [] : STUN };
+  }
+}
 const CHUNK = 64 * 1024;
 export const SHOW_FILE_LIMIT = 2 * 1024 * 1024 * 1024;
 
@@ -148,7 +179,7 @@ export type ShowHost = {
 };
 
 /** Runs on the TV: receives files and commands, keeps the show on the device. */
-export function useShowHost(screen: string, key: string): ShowHost {
+export function useShowHost(screen: string, key: string, token = ''): ShowHost {
   const [show, setShow] = useState<Show>(emptyShow());
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<ShowProgress>({});
@@ -360,7 +391,7 @@ export function useShowHost(screen: string, key: string): ShowHost {
         if (message.sdp) {
           if (message.key !== key) return;
           peers.get(message.session)?.close();
-          const pc = new RTCPeerConnection(ICE);
+          const pc = new RTCPeerConnection(await iceServers(token));
           peers.set(message.session, pc);
           receive(message.session, pc);
           await pc.setRemoteDescription(message.sdp);
@@ -420,7 +451,7 @@ export function useShowHost(screen: string, key: string): ShowHost {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
       channel.close();
     };
-  }, [screen, key]);
+  }, [screen, key, token]);
   return { show, urls, stored, progress, videoCommand };
 }
 
@@ -499,7 +530,7 @@ export function useShowRemote(screen: string, key: string) {
         });
       update({ sent: 0, total });
       const session = crypto.randomUUID();
-      const pc = new RTCPeerConnection(ICE);
+      const pc = new RTCPeerConnection(await iceServers());
       try {
         const dc = pc.createDataChannel('file', { ordered: true });
         dc.binaryType = 'arraybuffer';
@@ -524,7 +555,7 @@ export function useShowRemote(screen: string, key: string) {
             () =>
               reject(
                 Error(
-                  'تعذر الاتصال المباشر بالتلفزيون. اجعل الجوال والتلفزيون على شبكة الواي فاي نفسها، أو استخدم رابط Google Drive.',
+                  'تعذر الاتصال بالتلفزيون. تأكد أن التلفزيون متصل بالإنترنت ثم أعد المحاولة، أو استخدم رابط Google Drive.',
                 ),
               ),
             25000,

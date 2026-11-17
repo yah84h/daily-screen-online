@@ -28,6 +28,10 @@ export function BackgroundAudio({
   const audio = useRef<HTMLAudioElement>(null);
   const [prefs, setPrefs] = useState(saved);
   const [error, setError] = useState('');
+  // Pause pressed on this display wins until someone presses play here or the screen's
+  // shared (remote) play/pause state changes; otherwise remote sync restarted it instantly.
+  const [pausedHere, setPausedHere] = useState(false);
+  useEffect(() => setPausedHere(false), [device.paused]);
   const [playing, setPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -114,11 +118,11 @@ export function BackgroundAudio({
     const el = audio.current;
     if (!el || !preparedURL) return;
     setError('');
-    if ((prefs.enabled || device.remoteActive) && !device.paused)
+    if ((prefs.enabled || device.remoteActive) && !device.paused && !pausedHere)
       el.play().catch(() => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'));
     else el.pause();
     return () => el.pause();
-  }, [preparedURL, prefs.enabled, device.paused, device.remoteActive]);
+  }, [preparedURL, prefs.enabled, device.paused, device.remoteActive, pausedHere]);
 
   if (!url) return controls ? <p>لا يوجد صوت خلفية منشور. أضفه من لوحة الإدارة.</p> : null;
   return (
@@ -162,8 +166,10 @@ export function BackgroundAudio({
               if (!el) return;
               if (playing) {
                 el.pause();
+                setPausedHere(true);
                 setPrefs((p) => ({ ...p, enabled: false }));
               } else {
+                setPausedHere(false);
                 el.volume = prefs.volume * device.volume;
                 el.play()
                   .then(() => setError(''))

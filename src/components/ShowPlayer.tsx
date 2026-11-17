@@ -5,13 +5,19 @@ import { useShowHost } from '@/lib/show';
 import { partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
 import type { School, Template } from '@/lib/types';
 
-type Props = { screenId: string; showKey: string; template: Template; school: School };
+type Props = {
+  screenId: string;
+  token?: string;
+  showKey: string;
+  template: Template;
+  school: School;
+};
 
 /** Presenting mode on the TV. Without a paired TV (admin preview) only the standby card shows. */
-export function ShowPlayer({ screenId, showKey, template, school }: Props) {
+export function ShowPlayer({ screenId, token = '', showKey, template, school }: Props) {
   const logo = template.schoolLogo || school.logo_url || '';
   if (!screenId || !showKey) return <Standby logo={logo} title="وضع التقديم" note="" />;
-  return <LiveShow screenId={screenId} showKey={showKey} logo={logo} />;
+  return <LiveShow screenId={screenId} token={token} showKey={showKey} logo={logo} />;
 }
 
 function Standby({ logo, title, note }: { logo: string; title: string; note: string }) {
@@ -28,14 +34,16 @@ function Standby({ logo, title, note }: { logo: string; title: string; note: str
 
 function LiveShow({
   screenId,
+  token,
   showKey,
   logo,
 }: {
   screenId: string;
+  token: string;
   showKey: string;
   logo: string;
 }) {
-  const { show, urls, stored, videoCommand } = useShowHost(screenId, showKey);
+  const { show, urls, stored, videoCommand } = useShowHost(screenId, showKey, token);
   const steps = showSteps(show.items);
   const step = steps[Math.min(show.step, Math.max(0, steps.length - 1))];
   const url = step ? urls[partKey(step.item, step.part)] : '';
