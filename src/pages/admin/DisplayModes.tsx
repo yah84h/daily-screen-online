@@ -1,7 +1,4 @@
-import { CropEditor } from './CropEditor';
-import { VideoPlaylistEditor } from './VideoPlaylistEditor';
 import { RotationEditor } from './RotationEditor';
-import { DriveVideoEditor } from './DriveVideoEditor';
 import { useAuth } from '@/lib/auth';
 import { withDisplayMode } from '@/lib/slideshow';
 import {
@@ -11,10 +8,9 @@ import {
   PanelsTopLeft,
   Presentation,
   Monitor,
-  Upload,
-  X,
 } from 'lucide-react';
 import { SlideshowEditor } from './SlideshowEditor';
+import { MediaEditor } from './MediaEditor';
 import { useAdmin } from './store';
 const modes = [
   ['daily', 'المحتوى اليومي', 'رسالة وصورة بهوية المدرسة', PanelsTopLeft],
@@ -110,89 +106,6 @@ export function DisplayModes() {
   );
 }
 
-export function FullMediaEditor() {
-  const { content, edit, chooseImage, busy } = useAdmin();
-  return (
-    <section className="full-media-editor">
-      <h2>صورة / فيديو بملء الشاشة</h2>
-      <DriveVideoEditor />
-      {content.fullMedia && (
-        <CropEditor
-          value={content.fullCrop}
-          onChange={(value) => edit('fullCrop', value)}
-          label="قص وسائط ملء الشاشة"
-        />
-      )}
-      <VideoPlaylistEditor />
-      <p className="field-hint">
-        MP4 أو WEBM أو GIF متحرك، أو صورة PNG / JPG / WEBP. بلا حد حجم ثابت داخل التطبيق؛ حدود
-        التخزين السحابي ومساحة الجهاز تظل مطبّقة.
-      </p>
-      <button className="button white" disabled={busy} onClick={() => chooseImage('fullMedia')}>
-        <Upload size={18} />
-        {content.fullMedia ? 'تغيير الوسائط' : 'رفع صورة أو فيديو'}
-      </button>
-      {content.fullMedia && (
-        <>
-          <p className="field-hint">
-            {content.fullType === 'audio'
-              ? 'الصوت جاهز'
-              : content.fullType === 'video'
-                ? 'الفيديو جاهز'
-                : 'الصورة جاهزة'}{' '}
-            · انشر المحتوى لتطبيقه.
-          </p>
-          <button className="text-button" onClick={() => edit('fullMedia', '')}>
-            <X size={16} />
-            إزالة الوسائط
-          </button>
-        </>
-      )}
-      <label className="loop-checkbox">
-        <input
-          type="checkbox"
-          checked={content.videoSound !== false}
-          onChange={(e) => edit('videoSound', e.target.checked)}
-        />
-        تشغيل الصوت على التلفزيون
-      </label>
-      <p className="field-hint">
-        قد يطلب المتصفح ضغطة واحدة على شاشة التلفزيون للسماح بالصوت. المعاينة صامتة.
-      </p>
-      <label>
-        بعد انتهاء الفيديو
-        <select
-          aria-label="بعد انتهاء الفيديو"
-          value={content.videoLoop === false ? 'stop' : 'loop'}
-          onChange={(e) => edit('videoLoop', e.target.value === 'loop')}
-        >
-          <option value="loop">تكرار الفيديو</option>
-          <option value="stop">إيقاف عند آخر إطار</option>
-        </select>
-      </label>
-      <label className="loop-checkbox">
-        <input
-          type="checkbox"
-          checked={!!content.videoControls}
-          onChange={(e) => edit('videoControls', e.target.checked)}
-        />
-        إظهار أزرار تشغيل وإيقاف الفيديو
-      </label>
-      <label>
-        ملاءمة الوسائط
-        <select
-          value={content.mediaFit || 'cover'}
-          onChange={(e) => edit('mediaFit', e.target.value)}
-        >
-          <option value="contain">احتواء · عرض الملف كاملًا</option>
-          <option value="cover">تغطية · ملء الشاشة مع القص</option>
-          <option value="fill">تمدد</option>
-        </select>
-      </label>
-    </section>
-  );
-}
-
 /** One entry point for single media and fullscreen photo playlists. Existing playlists are retained. */
 export function MediaOnlyEditor() {
   const { template, setTemplate, busy } = useAdmin();
@@ -227,7 +140,7 @@ export function MediaOnlyEditor() {
           </button>
         </div>
       )}
-      {multiple ? <SlideshowEditor fullscreen /> : <FullMediaEditor />}
+      {multiple ? <SlideshowEditor fullscreen /> : <MediaEditor />}
     </section>
   );
 }

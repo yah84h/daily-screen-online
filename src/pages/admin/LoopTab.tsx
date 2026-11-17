@@ -128,6 +128,104 @@ export function LoopTab() {
               بدون صورة في الوسط
             </label>
           </SettingsSection>
+          <SettingsSection title="الألوان" description="لوحات جاهزة وكل لون قابل للتغيير">
+            <div className="loop-palette">
+              <div className="layout-grid loop-palette-presets">
+                {loopPalettePresets.map((p) => (
+                  <button
+                    type="button"
+                    className="layout-option color-option"
+                    key={p.id}
+                    aria-label={'لوحة ' + p.name}
+                    onClick={() =>
+                      setTemplate((t) => ({
+                        ...t,
+                        background: p.colors.background,
+                        color: p.colors.text,
+                        accent: p.colors.accent,
+                        loopAppearance: { ...p.colors },
+                      }))
+                    }
+                  >
+                    <div className="color-swatches" style={{ background: p.colors.background }}>
+                      <i style={{ background: p.colors.widget }} />
+                      <i style={{ background: p.colors.accent }} />
+                      <i style={{ background: p.colors.text }} />
+                      <i style={{ background: p.colors.meterFill }} />
+                    </div>
+                    <b>{p.name}</b>
+                  </button>
+                ))}
+              </div>
+              {template.loopBackdrop === 'zigzag' && (
+                <p className="field-hint">
+                  خلفية المدرسة المتحركة: الأرضية = «النص الرئيسي»، الشريط = «خلفية الشاشة»، الشرطات
+                  = «الخط الأزرق»، حافة الشريط = «الخط السماوي».
+                </p>
+              )}
+              <p className="field-hint">
+                ألوان شاشة الحصص فقط؛ لا تغيّر ألوان لوحة الإدارة. الخطوط والمكعبات رسومات حية وليست
+                فيديو.
+              </p>
+              {(
+                [
+                  ['background', 'خلفية الشاشة'],
+                  ['widget', 'خلفية البطاقات'],
+                  ['text', 'النص الرئيسي'],
+                  ['muted', 'النص الثانوي'],
+                  ['accent', 'الساعة والرموز'],
+                  ['meterFill', 'لون تعبئة مؤشر الحصة'],
+                  ['meterTrack', 'لون مسار مؤشر الحصة'],
+                  ['border', 'حدود البطاقات'],
+                  ['line1', 'الخط الأزرق'],
+                  ['line2', 'الخط السماوي'],
+                  ['line3', 'الخط البنفسجي'],
+                  ['cube1', 'المكعب الأزرق'],
+                  ['cube2', 'المكعب السماوي'],
+                  ['cube3', 'المكعب البنفسجي'],
+                ] as const
+              ).map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <input
+                    type="color"
+                    aria-label={label}
+                    value={loopAppearance(template.loopAppearance)[key]}
+                    onChange={(e) =>
+                      setTemplate((t) => ({
+                        ...t,
+                        loopAppearance: {
+                          ...loopAppearance(t.loopAppearance),
+                          [key]: e.target.value,
+                        },
+                        ...(key === 'background'
+                          ? { background: e.target.value }
+                          : key === 'text'
+                            ? { color: e.target.value }
+                            : key === 'accent'
+                              ? { accent: e.target.value }
+                              : {}),
+                      }))
+                    }
+                  />
+                </label>
+              ))}
+              <button
+                className="button white"
+                onClick={() =>
+                  setTemplate((t) => ({
+                    ...t,
+                    background: defaultLoopAppearance.background,
+                    color: defaultLoopAppearance.text,
+                    accent: defaultLoopAppearance.accent,
+                    loopAppearance: { ...defaultLoopAppearance },
+                  }))
+                }
+              >
+                استعادة ألوان المدرسة
+              </button>
+            </div>
+          </SettingsSection>
           <SettingsSection title="تنويعات خلفية الحصص">
             <label>
               نمط الخلفية
@@ -421,97 +519,6 @@ export function LoopTab() {
                 <option value="oval">بيضاوي</option>
               </select>
             </label>
-            <details className="loop-palette">
-              <summary>ألوان الخلفية والعناصر المتحركة</summary>
-              <div className="layout-grid loop-palette-presets">
-                {loopPalettePresets.map((p) => (
-                  <button
-                    type="button"
-                    className="layout-option color-option"
-                    key={p.id}
-                    aria-label={'لوحة ' + p.name}
-                    onClick={() =>
-                      setTemplate((t) => ({
-                        ...t,
-                        background: p.colors.background,
-                        color: p.colors.text,
-                        accent: p.colors.accent,
-                        loopAppearance: { ...p.colors },
-                      }))
-                    }
-                  >
-                    <div className="color-swatches" style={{ background: p.colors.background }}>
-                      <i style={{ background: p.colors.widget }} />
-                      <i style={{ background: p.colors.accent }} />
-                      <i style={{ background: p.colors.text }} />
-                      <i style={{ background: p.colors.meterFill }} />
-                    </div>
-                    <b>{p.name}</b>
-                  </button>
-                ))}
-              </div>
-              <p className="field-hint">
-                ألوان شاشة الحصص فقط؛ لا تغيّر ألوان لوحة الإدارة. الخطوط والمكعبات رسومات حية وليست
-                فيديو.
-              </p>
-              {(
-                [
-                  ['background', 'خلفية الشاشة'],
-                  ['widget', 'خلفية البطاقات'],
-                  ['text', 'النص الرئيسي'],
-                  ['muted', 'النص الثانوي'],
-                  ['accent', 'الساعة والرموز'],
-                  ['meterFill', 'لون تعبئة مؤشر الحصة'],
-                  ['meterTrack', 'لون مسار مؤشر الحصة'],
-                  ['border', 'حدود البطاقات'],
-                  ['line1', 'الخط الأزرق'],
-                  ['line2', 'الخط السماوي'],
-                  ['line3', 'الخط البنفسجي'],
-                  ['cube1', 'المكعب الأزرق'],
-                  ['cube2', 'المكعب السماوي'],
-                  ['cube3', 'المكعب البنفسجي'],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key}>
-                  {label}
-                  <input
-                    type="color"
-                    aria-label={label}
-                    value={loopAppearance(template.loopAppearance)[key]}
-                    onChange={(e) =>
-                      setTemplate((t) => ({
-                        ...t,
-                        loopAppearance: {
-                          ...loopAppearance(t.loopAppearance),
-                          [key]: e.target.value,
-                        },
-                        ...(key === 'background'
-                          ? { background: e.target.value }
-                          : key === 'text'
-                            ? { color: e.target.value }
-                            : key === 'accent'
-                              ? { accent: e.target.value }
-                              : {}),
-                      }))
-                    }
-                  />
-                </label>
-              ))}
-              <button
-                className="button white"
-                onClick={() =>
-                  setTemplate((t) => ({
-                    ...t,
-                    background: defaultLoopAppearance.background,
-                    color: defaultLoopAppearance.text,
-                    accent: defaultLoopAppearance.accent,
-                    loopAppearance: { ...defaultLoopAppearance },
-                  }))
-                }
-              >
-                استعادة ألوان المدرسة
-              </button>
-            </details>
           </SettingsSection>
           <SettingsSection title="وضع الشاشة">
             <label>
