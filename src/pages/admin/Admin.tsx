@@ -157,9 +157,7 @@ function Studio() {
                   </span>
                   <span>{item.label}</span>
                   {item.label === 'المزيد' && !!data?.schedule.length && (
-                    <small aria-hidden="true">
-                      {data.schedule.length}
-                    </small>
+                    <small aria-hidden="true">{data.schedule.length}</small>
                   )}
                 </button>
               );
