@@ -1,4 +1,3 @@
-import nabd from '@/assets/custom-days/nabd.html?raw';
 import { useEffect, useRef, useState } from 'react';
 import { CustomDayScreen } from '@/components/CustomDayScreen';
 import { customDayDate, type CustomDay } from '@/lib/customDays';
@@ -98,7 +97,11 @@ export function CustomDaysEditor() {
         <button
           className="button white"
           disabled={busy}
-          onClick={() => add(nabd, 'نبض — اليوم العالمي للسكري')}
+          onClick={() =>
+            void import('@/assets/custom-days/nabd.html?raw').then(({ default: nabd }) =>
+              add(nabd, 'نبض — اليوم العالمي للسكري'),
+            )
+          }
         >
           إضافة نبض
         </button>
