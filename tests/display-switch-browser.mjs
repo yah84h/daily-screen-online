@@ -98,10 +98,7 @@ try {
   await tv.waitForFunction(() =>
     document.querySelector('.screen-image video')?.src.startsWith('blob:'),
   );
-  await admin
-    .getByRole('navigation')
-    .getByRole('button', { name: 'الشاشة', exact: true })
-    .click();
+  await admin.getByRole('navigation').getByRole('button', { name: 'الشاشة', exact: true }).click();
 
   await admin.getByRole('navigation').getByRole('button', { name: 'اليوم', exact: true }).click();
   await admin.getByRole('button', { name: 'الصور والفيديو', exact: true }).click();
