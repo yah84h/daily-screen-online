@@ -144,6 +144,7 @@ export function Screen({
             deck={c.presentation}
             context={presentationContext}
             large={large}
+            logo={c.logo || t.schoolLogo || school.logo_url || ''}
           />
         ) : (
           <div className="media-empty">ارفع ملف PowerPoint وانشره على الشاشة</div>

@@ -22,13 +22,27 @@ import {
 
 export type { Show, ShowItem, ShowCommand };
 export type ShowProgress = Record<string, { loaded: number; total: number; error?: string }>;
+/** What the TV is playing right now (sent to the phone for the live remote). */
+export type ShowPlayback = {
+  time: number;
+  duration: number;
+  paused: boolean;
+  muted: boolean;
+  volume: number;
+};
 export type ShowStatus = {
   show: Show;
   stored: Record<string, boolean>;
   progress: ShowProgress;
+  playback?: ShowPlayback | null;
+  storage?: { usage: number; quota: number } | null;
   at: number;
 };
-export type VideoCommand = { op: 'video'; action: 'toggle' | 'restart' };
+export type VideoCommand = {
+  op: 'video';
+  action: 'toggle' | 'play' | 'pause' | 'restart' | 'seek' | 'skip' | 'volume' | 'mute';
+  value?: number | boolean;
+};
 type Message =
   | { t: 'hello'; key: string }
   | { t: 'cmd'; key: string; id: string; cmd: ShowCommand | VideoCommand }
@@ -175,7 +189,11 @@ export type ShowHost = {
   urls: Record<string, string>;
   stored: Record<string, boolean>;
   progress: ShowProgress;
-  videoCommand: { action: VideoCommand['action']; at: number } | null;
+  videoCommand: { action: VideoCommand['action']; value?: number | boolean; at: number } | null;
+  /** The TV's video reports its position/volume here. */
+  reportPlayback: (playback: ShowPlayback | null) => void;
+  /** Automatic next step (video ended, image time is up). */
+  advance: () => void;
 };
 
 /** Runs on the TV: receives files and commands, keeps the show on the device. */
@@ -186,6 +204,10 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
   const [videoCommand, setVideoCommand] = useState<ShowHost['videoCommand']>(null);
   const live = useRef({ show, urls, progress });
   live.current = { show, urls, progress };
+  const handles = useRef({
+    report: (_playback: ShowPlayback | null) => {},
+    advance: () => {},
+  });
   const stored = Object.fromEntries(Object.keys(urls).map((k) => [k, true]));
 
   useEffect(() => {
@@ -196,12 +218,22 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
     const downloads = new Map<string, AbortController>();
     const peers = new Map<string, RTCPeerConnection>();
     const pendingIce = new Map<string, RTCIceCandidateInit[]>();
+    let playback: ShowPlayback | null = null,
+      storage: ShowStatus['storage'] = null;
     const status = (): ShowStatus => ({
       show: live.current.show,
       stored: Object.fromEntries([...objectUrls.keys()].map((k) => [k, true])),
       progress: live.current.progress,
+      playback,
+      storage,
       at: Date.now(),
     });
+    const measure = async () => {
+      try {
+        const estimate = await navigator.storage?.estimate?.();
+        if (estimate) storage = { usage: estimate.usage || 0, quota: estimate.quota || 0 };
+      } catch {}
+    };
     let lastStatus = 0,
       statusTimer: ReturnType<typeof setTimeout> | null = null;
     const broadcast = (soon = false) => {
@@ -230,6 +262,7 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
       if (objectUrls.has(k)) URL.revokeObjectURL(objectUrls.get(k)!);
       objectUrls.set(k, URL.createObjectURL(blob));
       publishUrls();
+      void measure();
     };
     const commit = (next: Show) => {
       live.current.show = next;
@@ -296,7 +329,7 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
     };
     const apply = async (cmd: ShowCommand | VideoCommand) => {
       if (cmd.op === 'video') {
-        setVideoCommand({ action: cmd.action, at: Date.now() });
+        setVideoCommand({ action: cmd.action, value: cmd.value, at: Date.now() });
         return;
       }
       const before = live.current.show;
@@ -417,13 +450,23 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
       }
     };
     const channel = openChannel(screen, (m) => void onMessage(m));
+    handles.current.report = (next) => {
+      playback = next;
+      // Live position only matters while someone holds the remote.
+      if (Date.now() - watchers < 60000) broadcast(true);
+    };
+    handles.current.advance = () =>
+      void apply({ op: 'advance' }).catch(() => {
+        /* nothing to advance */
+      });
     const heartbeat = setInterval(() => {
-      if (Date.now() - watchers < 60000) broadcast();
+      if (Date.now() - watchers < 60000) void measure().then(() => broadcast());
     }, 10000);
     (async () => {
       try {
         void navigator.storage?.persist?.();
-        const saved = (await loadShow()) || emptyShow();
+        const saved = { ...emptyShow(), ...((await loadShow()) || {}) };
+        await measure();
         const keys = new Set(await fileKeys());
         for (const item of saved.items)
           for (let part = 0; part < (item.kind === 'deck' ? item.parts : 1); part++) {
@@ -452,7 +495,9 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
       channel.close();
     };
   }, [screen, key, token]);
-  return { show, urls, stored, progress, videoCommand };
+  const reportPlayback = useCallback((p: ShowPlayback | null) => handles.current.report(p), []);
+  const advance = useCallback(() => handles.current.advance(), []);
+  return { show, urls, stored, progress, videoCommand, reportPlayback, advance };
 }
 
 /* ---------------------------- phone remote ---------------------------- */

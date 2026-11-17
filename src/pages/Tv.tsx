@@ -158,7 +158,10 @@ export default function Tv() {
           token={urlToken || localStorage.getItem(TOKEN_KEY) || ''}
         />
       )}
-      <CacheStatusLine />
+      {/* Presentations keep progress off the audience's screen; the phone shows it. */}
+      {!['presentation', 'show'].includes(paired?.screen.template?.displayMode || '') && (
+        <CacheStatusLine />
+      )}
       <DisplayControls />
       {settings && (
         <div className="tv-settings">

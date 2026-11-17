@@ -3,14 +3,17 @@ import { useCacheTask } from '@/lib/cacheStatus';
 import { preparePresentation } from '@/lib/presentationCache';
 import { useEffect, useRef, useState } from 'react';
 import { usePresentation, type Presentation, type PresentationContext } from '@/lib/presentation';
+import { Standby } from './ShowPlayer';
 export function PresentationPlayer({
   deck,
   context,
   large,
+  logo = '',
 }: {
   deck: Presentation;
   context?: PresentationContext;
   large: boolean;
+  logo?: string;
 }) {
   const { downloadsPaused } = useDevicePlayback();
   const activeRelease = useRef(() => {});
@@ -118,6 +121,24 @@ export function PresentationPlayer({
     return () => window.removeEventListener('keydown', handle);
   }, [large, ready]);
 
+  // The audience never sees preparation: the TV shows the calm standby, the phone shows progress.
+  useEffect(() => {
+    if (!large || !prepared.error) return;
+    const timer = setTimeout(() => setRetry((n) => n + 1), 15000);
+    return () => clearTimeout(timer);
+  }, [large, prepared.error]);
+  if (!ready && large)
+    return (
+      <Standby
+        logo={logo}
+        title=""
+        note={
+          prepared.error
+            ? '!'
+            : '○ ' + (prepared.key === deckKey ? prepared.loaded : 0) + '/' + deck.slides.length
+        }
+      />
+    );
   if (!ready)
     return (
       <div className="presentation-player" data-prepared="false" aria-label={deck.name}>

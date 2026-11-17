@@ -81,3 +81,27 @@ test('readiness counts every slide of a deck', () => {
   );
   assert.equal(showReadiness(s.items, all).complete, true);
 });
+
+test('auto-advance, loop, blackout and settings', () => {
+  let s = showReduce(showReduce(emptyShow(), video), deck);
+  assert.deepEqual(s.settings, { autoNext: false, imageSeconds: 10, loop: false });
+  s = showReduce(s, { op: 'settings', settings: { imageSeconds: 1, loop: true, autoNext: true } });
+  assert.deepEqual(s.settings, { autoNext: true, imageSeconds: 3, loop: true });
+  s = showReduce(s, { op: 'advance' });
+  assert.equal(s.step, 0, 'advance does nothing before start');
+  s = showReduce(s, { op: 'start' });
+  for (let i = 0; i < 3; i++) s = showReduce(s, { op: 'advance' });
+  assert.equal(s.step, 3);
+  s = showReduce(s, { op: 'advance' });
+  assert.equal(s.step, 0, 'loop wraps to the start');
+  s = showReduce(s, { op: 'settings', settings: { loop: false } });
+  s = showReduce(s, { op: 'goto', index: 3 });
+  assert.equal(showReduce(s, { op: 'advance' }).step, 3, 'no loop: stays on the last step');
+  s = showReduce(s, { op: 'blackout' });
+  assert.equal(s.blackout, true);
+  s = showReduce(s, { op: 'next' });
+  assert.equal(s.blackout, true, 'moving while black stays black');
+  assert.equal(showReduce(s, { op: 'end' }).blackout, false);
+  const old = { title: '', items: [], phase: 'standby', step: 0, revision: 0 };
+  assert.deepEqual(showReduce(old, { op: 'title', title: 'x' }).settings.imageSeconds, 10);
+});

@@ -59,10 +59,20 @@ try {
   await phone.getByRole('button', { name: 'الشريحة التالية', exact: true }).isEnabled();
   const tv = await context.newPage();
   await tv.setViewportSize({ width: 1440, height: 900 });
+  // The audience must never see preparation: no progress screen, no progress pill.
+  await tv.addInitScript(() => {
+    window.__leaked = [];
+    new MutationObserver(() => {
+      for (const selector of ['.presentation-preparation', '.cache-status-line'])
+        if (document.querySelector(selector)) window.__leaked.push(selector);
+    }).observe(document, { childList: true, subtree: true });
+  });
   await tv.goto(base + '/display');
   const player = tv.locator('.presentation-player');
   await player.waitFor();
   await tv.getByAltText('الشريحة 1', { exact: true }).waitFor();
+  assert.deepEqual(await tv.evaluate(() => [...new Set(window.__leaked)]), []);
+  await phone.getByText('كل الشرائح جاهزة على التلفزيون.').waitFor();
   assert(
     await tv
       .locator('.presentation-player>img')
