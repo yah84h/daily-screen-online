@@ -34,7 +34,12 @@ try {
     } catch {}
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  // SHOW_BROWSER=msedge runs it in the TV's real browser, which also plays the H.264 transitions.
+  const edge = process.env.SHOW_BROWSER === 'msedge';
+  browser = await chromium.launch({
+    ...(edge ? { channel: 'msedge' } : {}),
+    args: ['--autoplay-policy=no-user-gesture-required'],
+  });
   const errors = [];
   const tvContext = await browser.newContext({ serviceWorkers: 'block' });
   const phoneContext = await browser.newContext({
@@ -91,10 +96,27 @@ try {
   await phone.getByText('كل شيء محفوظ على التلفزيون. جاهز للعرض').waitFor();
   await phone.getByText('على التلفزيون ✓').nth(2).waitFor();
   await tv.getByText('● 3/3').waitFor();
+  // Standby background: the school loop by default, or a photo sent from the phone.
+  if (edge) {
+    await tv.locator('.show-standby.with-loop video').waitFor();
+    await tv.waitForTimeout(1500);
+    await tv.screenshot({ path: 'work/show-tv-standby-loop.png' });
+  }
+  await phone.getByLabel('صورة الخلفية').setInputFiles({
+    name: 'hall.png',
+    mimeType: 'image/png',
+    buffer: png,
+  });
+  await phone.getByText('hall.png · على التلفزيون ✓').waitFor();
+  await tv.locator('.show-standby.with-photo img.show-standby-bg').waitFor();
+  await tv.screenshot({ path: 'work/show-tv-standby-photo.png' });
   await phone.screenshot({ path: 'work/show-phone-ready.png', fullPage: true });
-  await tv.screenshot({ path: 'work/show-tv-standby.png' });
 
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
+  if (edge)
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'outro',
+    );
   await tv.waitForFunction(() => {
     const video = document.querySelector('.show-layer video');
     return video?.src.startsWith('blob:') && video.currentTime > 0;
@@ -159,7 +181,7 @@ try {
     .setInputFiles('tests/fixtures/presentation-test.pptx');
   await phone.getByText(/PowerPoint · \d+ شريحة/).waitFor({ timeout: 90000 });
   await phone.getByText('كل شيء محفوظ على التلفزيون. جاهز للعرض').waitFor({ timeout: 90000 });
-  assert.equal(await phone.getByText('على التلفزيون ✓').count(), 4);
+  assert.equal(await phone.locator('.show-items').getByText('على التلفزيون ✓').count(), 4);
   const total = await tv.locator('.show-standby-note').innerText();
   const slides = Number(total.match(/\/(\d+)/)[1]);
   assert(slides > 3, 'deck adds one step per slide');
@@ -167,7 +189,26 @@ try {
   await phone.getByRole('button', { name: new RegExp('^' + slides + '\\s') }).click();
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText(slides + ' / ' + slides).waitFor();
+  // Slide thumbnails on the phone remote.
+  // Every PowerPoint slide has a thumbnail (the 1×1 test PNG is too small to thumbnail).
+  assert((await phone.locator('.show-jump-thumb').count()) >= slides - 3);
+  await phone.locator('.show-now-thumb').waitFor();
+  // A presenter clicker / keyboard on the TV drives the show too.
+  await tv.keyboard.press('Home');
+  await phone.getByText('1 / ' + slides).waitFor();
+  await tv.keyboard.press('PageDown');
+  await phone.getByText('2 / ' + slides).waitFor();
+  await tv.keyboard.press('PageUp');
+  await phone.getByText('1 / ' + slides).waitFor();
+  await tv.keyboard.press('b');
+  await tv.locator('.show-blackout.on').waitFor();
+  await tv.keyboard.press('b');
+  await tv.locator('.show-blackout.on').waitFor({ state: 'detached' });
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
+  if (edge)
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'intro',
+    );
 
   // Files live on the TV: after a reload everything is still there, ready.
   await tv.reload();
@@ -177,7 +218,7 @@ try {
   assert.deepEqual(uploads, [], 'nothing is uploaded to the server');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS presenting mode: phone→TV transfer, TV link download, readiness gate, start/next/standby/resume/jump/end, video seek/pause/volume/mute, black screen, auto-advance, TV persistence, no server upload, no JS errors.',
+    'PASS presenting mode: phone→TV transfer, TV link download, readiness gate, start/next/standby/resume/jump/end, video seek/pause/volume/mute, black screen, auto-advance, standby photo, clicker keys, slide thumbnails, TV persistence, no server upload, no JS errors.',
   );
 } finally {
   await browser?.close();

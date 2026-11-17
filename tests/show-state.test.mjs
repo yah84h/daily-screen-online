@@ -105,3 +105,17 @@ test('auto-advance, loop, blackout and settings', () => {
   const old = { title: '', items: [], phase: 'standby', step: 0, revision: 0 };
   assert.deepEqual(showReduce(old, { op: 'title', title: 'x' }).settings.imageSeconds, 10);
 });
+
+test('standby background photo is set, sanitised and cleared', async () => {
+  const { findPartOwner } = await import('../local-test/show-state.mjs');
+  let s = showReduce(emptyShow(), {
+    op: 'background',
+    item: { id: 'background-1', name: 'hall.jpg', kind: 'video' },
+  });
+  assert.deepEqual(s.background, { id: 'background-1', name: 'hall.jpg' });
+  assert.equal(findPartOwner(s, 'background-1').kind, 'image');
+  assert.equal(findPartOwner(s, 'nope'), null);
+  assert.throws(() => showReduce(s, { op: 'background', item: { id: '../x', name: 'x' } }));
+  s = showReduce(s, { op: 'background', item: null });
+  assert.equal(s.background, null);
+});

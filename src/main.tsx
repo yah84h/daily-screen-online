@@ -15,6 +15,21 @@ const Users = lazy(() => import('@/pages/Users'));
 const News = lazy(() => import('@/pages/News'));
 const Tv = lazy(() => import('@/pages/Tv'));
 
+// After a new deploy, a page opened earlier asks for code files that no longer exist
+// ("Failed to fetch dynamically imported module"). Reload once to pick up the new version.
+const CHUNK_RELOAD_KEY = 'daily-screen-chunk-reload';
+window.addEventListener('vite:preloadError', () => {
+  let last = 0;
+  try {
+    last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY)) || 0;
+  } catch {}
+  if (Date.now() - last < 30000) return; // already reloaded: let the real error show
+  try {
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {}
+  location.reload();
+});
+
 // Service Worker لصفحة التلفزيون فقط (إعادة تحميل دون اتصال)
 if (
   import.meta.env.PROD &&

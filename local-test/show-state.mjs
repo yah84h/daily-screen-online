@@ -31,6 +31,7 @@ export function emptyShow() {
     revision: 0,
     blackout: false,
     settings: defaultSettings(),
+    background: null,
   };
 }
 
@@ -124,6 +125,12 @@ export function showReduce(show, command) {
       return bump({
         blackout: typeof command.value === 'boolean' ? command.value : !s.blackout,
       });
+    case 'background': {
+      // Standby background photo (sent from the phone like any file); null = school loop clip.
+      if (!command.item) return bump({ background: null });
+      const item = cleanItem({ ...command.item, kind: 'image', source: 'phone' });
+      return bump({ background: { id: item.id, name: item.name } });
+    }
     case 'settings':
       return bump({ settings: cleanSettings({ ...s.settings, ...command.settings }) });
     case 'standby':
@@ -139,6 +146,23 @@ export function showReduce(show, command) {
 }
 
 /** Ready = every part of every item is stored and checked on the TV. */
+/** The file a part belongs to: a show item, or the standby background photo. */
+export function findPartOwner(show, id) {
+  const item = (show?.items || []).find((entry) => entry.id === id);
+  if (item) return item;
+  if (show?.background?.id === id)
+    return {
+      id,
+      kind: 'image',
+      source: 'phone',
+      url: '',
+      name: show.background.name,
+      parts: 1,
+      size: 0,
+    };
+  return null;
+}
+
 export function showReadiness(items, stored) {
   let total = 0,
     ready = 0;

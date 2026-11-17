@@ -15,6 +15,7 @@ import {
   partKey,
   showReduce,
   showReadiness,
+  findPartOwner,
   type Show,
   type ShowCommand,
   type ShowItem,
@@ -194,6 +195,8 @@ export type ShowHost = {
   reportPlayback: (playback: ShowPlayback | null) => void;
   /** Automatic next step (video ended, image time is up). */
   advance: () => void;
+  /** Commands from the TV's own keyboard / presenter clicker. */
+  command: (cmd: ShowCommand | VideoCommand) => void;
 };
 
 /** Runs on the TV: receives files and commands, keeps the show on the device. */
@@ -207,6 +210,7 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
   const handles = useRef({
     report: (_playback: ShowPlayback | null) => {},
     advance: () => {},
+    command: (_cmd: ShowCommand | VideoCommand) => {},
   });
   const stored = Object.fromEntries(Object.keys(urls).map((k) => [k, true]));
 
@@ -338,6 +342,8 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
       if (cmd.op === 'remove' || cmd.op === 'clear')
         for (const item of before.items)
           if (!next.items.some((kept) => kept.id === item.id)) await forget(item);
+      if (before.background && before.background.id !== next.background?.id)
+        await forget(findPartOwner(before, before.background.id)!);
       commit(next);
       if (cmd.op === 'add') {
         const item = next.items[next.items.length - 1];
@@ -356,7 +362,7 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
           if (typeof data === 'string') {
             const message = JSON.parse(data);
             if (message.t === 'part') {
-              const item = live.current.show.items.find((entry) => entry.id === message.item);
+              const item = findPartOwner(live.current.show, message.item);
               if (!item || message.size > SHOW_FILE_LIMIT) {
                 dc.send(JSON.stringify({ t: 'error', message: 'ملف غير متوقع' }));
                 return;
@@ -370,7 +376,7 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
           if (!header) return;
           chunks.push(data);
           received += data.byteLength;
-          const item = live.current.show.items.find((entry) => entry.id === header!.item);
+          const item = findPartOwner(live.current.show, header!.item);
           const parts = item?.kind === 'deck' ? item.parts : 1;
           if (item && Date.now() - tick > 500) {
             tick = Date.now();
@@ -455,6 +461,8 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
       // Live position only matters while someone holds the remote.
       if (Date.now() - watchers < 60000) broadcast(true);
     };
+    // Presenter clicker / keyboard on the TV itself.
+    handles.current.command = (cmd) => void apply(cmd).catch(() => {});
     handles.current.advance = () =>
       void apply({ op: 'advance' }).catch(() => {
         /* nothing to advance */
@@ -468,7 +476,10 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
         const saved = { ...emptyShow(), ...((await loadShow()) || {}) };
         await measure();
         const keys = new Set(await fileKeys());
-        for (const item of saved.items)
+        const owners = saved.background
+          ? [...saved.items, findPartOwner(saved, saved.background.id)!]
+          : saved.items;
+        for (const item of owners)
           for (let part = 0; part < (item.kind === 'deck' ? item.parts : 1); part++) {
             const k = partKey(item.id, part);
             if (!keys.has(k)) continue;
@@ -497,7 +508,11 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
   }, [screen, key, token]);
   const reportPlayback = useCallback((p: ShowPlayback | null) => handles.current.report(p), []);
   const advance = useCallback(() => handles.current.advance(), []);
-  return { show, urls, stored, progress, videoCommand, reportPlayback, advance };
+  const command = useCallback(
+    (cmd: ShowCommand | VideoCommand) => handles.current.command(cmd),
+    [],
+  );
+  return { show, urls, stored, progress, videoCommand, reportPlayback, advance, command };
 }
 
 /* ---------------------------- phone remote ---------------------------- */

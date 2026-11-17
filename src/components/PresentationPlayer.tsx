@@ -4,6 +4,7 @@ import { preparePresentation } from '@/lib/presentationCache';
 import { useEffect, useRef, useState } from 'react';
 import { usePresentation, type Presentation, type PresentationContext } from '@/lib/presentation';
 import { Standby } from './ShowPlayer';
+import { useTransitionClips } from '@/lib/transitions';
 export function PresentationPlayer({
   deck,
   context,
@@ -121,6 +122,7 @@ export function PresentationPlayer({
     return () => window.removeEventListener('keydown', handle);
   }, [large, ready]);
 
+  const clips = useTransitionClips(large);
   // The audience never sees preparation: the TV shows the calm standby, the phone shows progress.
   useEffect(() => {
     if (!large || !prepared.error) return;
@@ -131,6 +133,7 @@ export function PresentationPlayer({
     return (
       <Standby
         logo={logo}
+        loop={clips?.loop || ''}
         title=""
         note={
           prepared.error
