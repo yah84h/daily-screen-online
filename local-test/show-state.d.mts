@@ -9,12 +9,15 @@ export type ShowItem = {
   size: number;
 };
 export type ShowPhase = 'standby' | 'live' | 'paused';
+export type ShowSettings = { autoNext: boolean; imageSeconds: number; loop: boolean };
 export type Show = {
   title: string;
   items: ShowItem[];
   phase: ShowPhase;
   step: number;
   revision: number;
+  blackout: boolean;
+  settings: ShowSettings;
 };
 export type ShowStep = { item: string; part: number; kind: 'image' | 'video' };
 export type ShowCommand =
@@ -22,13 +25,16 @@ export type ShowCommand =
   | { op: 'add'; item: Partial<ShowItem> }
   | { op: 'remove'; id: string }
   | { op: 'move'; id: string; by: 1 | -1 }
-  | { op: 'clear' | 'start' | 'next' | 'previous' | 'standby' | 'resume' | 'end' }
+  | { op: 'clear' | 'start' | 'next' | 'previous' | 'standby' | 'resume' | 'end' | 'advance' }
+  | { op: 'blackout'; value?: boolean }
+  | { op: 'settings'; settings: Partial<ShowSettings> }
   | { op: 'goto'; index: number };
 export const SHOW_KINDS: ShowKind[];
 export const MAX_ITEMS: number;
 export const MAX_SLIDES: number;
 export function showSteps(items: ShowItem[]): ShowStep[];
 export function partKey(item: string, part?: number): string;
+export function defaultSettings(): ShowSettings;
 export function emptyShow(): Show;
 export function cleanItem(raw: unknown): ShowItem;
 export function showReduce(show: Show, command: ShowCommand): Show;

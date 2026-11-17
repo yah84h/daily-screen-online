@@ -89,7 +89,7 @@ try {
   await phone.getByLabel('نوع الرابط').selectOption('image');
   await phone.getByRole('button', { name: 'إضافة', exact: true }).click();
   await phone.getByText('كل شيء محفوظ على التلفزيون. جاهز للعرض').waitFor();
-  assert.equal(await phone.getByText('على التلفزيون ✓').count(), 3);
+  await phone.getByText('على التلفزيون ✓').nth(2).waitFor();
   await tv.getByText('● 3/3').waitFor();
   await phone.screenshot({ path: 'work/show-phone-ready.png', fullPage: true });
   await tv.screenshot({ path: 'work/show-tv-standby.png' });
@@ -99,9 +99,36 @@ try {
     const video = document.querySelector('.show-layer video');
     return video?.src.startsWith('blob:') && video.currentTime > 0;
   });
+  // Full video remote: live position from the TV, pause/play, volume, mute.
+  await phone.waitForFunction(() => {
+    const spans = document.querySelectorAll('.show-time span');
+    return spans.length === 2 && spans[1].textContent !== '0:00';
+  });
+  await phone.getByRole('button', { name: 'إيقاف الفيديو مؤقتًا' }).click();
+  await tv.waitForFunction(() => document.querySelector('.show-layer video').paused);
+  await phone.getByRole('button', { name: 'تشغيل الفيديو' }).waitFor();
+  await phone.getByRole('button', { name: 'تشغيل الفيديو' }).click();
+  await tv.waitForFunction(() => !document.querySelector('.show-layer video').paused);
+  await phone.getByLabel('مستوى الصوت').fill('40');
+  await tv.waitForFunction(() => document.querySelector('.show-layer video').volume === 0.4);
+  await phone.getByRole('button', { name: 'كتم الصوت' }).click();
+  await tv.waitForFunction(() => document.querySelector('.show-layer video').muted);
+  await phone.getByRole('button', { name: 'تشغيل الصوت' }).click();
+  await tv.waitForFunction(() => !document.querySelector('.show-layer video').muted);
+  await phone.screenshot({ path: 'work/show-phone-video.png', fullPage: true });
+  // Black screen keeps the position; the audience sees black.
+  await phone.getByRole('button', { name: 'شاشة سوداء' }).click();
+  await tv.locator('.show-blackout.on').waitFor();
+  await phone.getByText('الشاشة سوداء الآن').waitFor();
+  await phone.getByRole('button', { name: 'إظهار الشاشة' }).click();
+  await tv.locator('.show-blackout.on').waitFor({ state: 'detached' });
   await phone.getByRole('button', { name: 'التالي' }).click();
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText('2 / 3').waitFor();
+  await phone
+    .locator('.show-next-up')
+    .getByText(/\.png$/)
+    .waitFor();
   await phone.screenshot({ path: 'work/show-phone-remote.png', fullPage: true });
   await phone.getByRole('button', { name: 'التالي' }).click();
   await phone.getByText('3 / 3').waitFor();
@@ -114,6 +141,17 @@ try {
   await tv.locator('.show-layer video').waitFor();
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
   await tv.locator('.show-standby').waitFor();
+
+  // Auto-advance: an image moves on by itself after its time.
+  await phone.getByLabel(/انتقال تلقائي/).check();
+  await phone.getByLabel('مدة كل صورة / شريحة').selectOption('5');
+  await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
+  await phone.getByRole('button', { name: /^2\s/ }).click();
+  await phone.getByText('2 / 3').waitFor();
+  await phone.getByText('3 / 3').waitFor({ timeout: 12000 });
+  await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
+  await tv.locator('.show-standby').waitFor();
+  await phone.getByLabel(/انتقال تلقائي/).uncheck();
 
   // PowerPoint is turned into slides on the phone and sent straight to the TV.
   await phone
@@ -139,7 +177,7 @@ try {
   assert.deepEqual(uploads, [], 'nothing is uploaded to the server');
   assert.deepEqual(errors, []);
   console.log(
-    'PASS presenting mode: phone→TV transfer, TV link download, readiness gate, start/next/standby/resume/jump/end, TV persistence, no server upload, no JS errors.',
+    'PASS presenting mode: phone→TV transfer, TV link download, readiness gate, start/next/standby/resume/jump/end, video seek/pause/volume/mute, black screen, auto-advance, TV persistence, no server upload, no JS errors.',
   );
 } finally {
   await browser?.close();

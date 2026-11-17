@@ -3,6 +3,32 @@ import { useRef, useState } from 'react';
 import { isLocalBackend } from '@/lib/supabase';
 import { usePresentation, type Presentation } from '@/lib/presentation';
 import { useAdmin } from './store';
+import { useRemoteMedia } from '@/lib/remoteMedia';
+
+/** The TV hides slide preparation from the audience; the phone shows it instead. */
+function TvPreparation({ screenId, slides }: { screenId: string; slides: number }) {
+  const remote = useRemoteMedia(screenId);
+  const now = Date.now();
+  const reports = Object.values(remote.state?.reports || {}).filter((r) => now - r.at < 20000);
+  if (!reports.length)
+    return (
+      <p className="tv-prep wait" role="status">
+        بانتظار تقرير التلفزيون… افتح صفحة /tv على التلفزيون.
+      </p>
+    );
+  const tasks = reports.flatMap((r) => r.tasks.filter((t) => /PowerPoint|الشرائح/.test(t.label)));
+  const failed = tasks.find((t) => t.error);
+  const busy = tasks[0];
+  return (
+    <p className={'tv-prep ' + (failed ? 'error' : busy ? 'busy' : 'ready')} role="status">
+      {failed
+        ? 'تعذر تجهيز الشرائح على التلفزيون: ' + failed.error + ' (يعيد المحاولة تلقائيًا)'
+        : busy
+          ? `التلفزيون يجهّز الشرائح ${Math.floor(busy.loaded)} من ${busy.total || slides}… الجمهور يرى شاشة الانتظار.`
+          : 'كل الشرائح جاهزة على التلفزيون.'}
+    </p>
+  );
+}
 function Remote({ deck, screenId }: { deck: Presentation; screenId: string }) {
   const state = usePresentation(deck, { screenId });
   return (
@@ -175,6 +201,12 @@ export function PresentationEditor() {
               <p>
                 <b>{content.presentation.name}</b> · {content.presentation.slides.length} شريحة
               </p>
+              {data.screen.template?.displayMode === 'presentation' && (
+                <TvPreparation
+                  screenId={data.screen.id}
+                  slides={content.presentation.slides.length}
+                />
+              )}
               <Remote
                 key={content.presentation.id + data.screen.id}
                 deck={content.presentation}

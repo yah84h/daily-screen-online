@@ -20,8 +20,30 @@ export function showSteps(items) {
 /** Storage key of one stored file (a deck slide is a part of its item). */
 export const partKey = (item, part = 0) => item + '#' + part;
 
+export const defaultSettings = () => ({ autoNext: false, imageSeconds: 10, loop: false });
+
 export function emptyShow() {
-  return { title: '', items: [], phase: 'standby', step: 0, revision: 0 };
+  return {
+    title: '',
+    items: [],
+    phase: 'standby',
+    step: 0,
+    revision: 0,
+    blackout: false,
+    settings: defaultSettings(),
+  };
+}
+
+function cleanSettings(raw) {
+  const base = defaultSettings();
+  return {
+    autoNext: typeof raw?.autoNext === 'boolean' ? raw.autoNext : base.autoNext,
+    imageSeconds: Math.max(
+      3,
+      Math.min(600, Math.round(Number(raw?.imageSeconds) || base.imageSeconds)),
+    ),
+    loop: typeof raw?.loop === 'boolean' ? raw.loop : base.loop,
+  };
 }
 
 const clean = (text, max) =>
@@ -51,7 +73,7 @@ export function cleanItem(raw) {
 
 /** Apply one remote command. Returns the new show (never mutates). */
 export function showReduce(show, command) {
-  const s = { ...emptyShow(), ...show };
+  const s = { ...emptyShow(), ...show, settings: cleanSettings(show?.settings) };
   const steps = showSteps(s.items);
   const last = Math.max(0, steps.length - 1);
   const bump = (next) => ({ ...s, ...next, revision: (s.revision || 0) + 1 });
@@ -81,7 +103,7 @@ export function showReduce(show, command) {
       return { ...emptyShow(), title: s.title, revision: (s.revision || 0) + 1 };
     case 'start':
       if (!steps.length) throw Error('أضف ملفًا واحدًا على الأقل');
-      return bump({ phase: 'live', step: 0 });
+      return bump({ phase: 'live', step: 0, blackout: false });
     case 'next':
       if (s.phase !== 'live') return s;
       return bump({ step: Math.min(last, s.step + 1) });
@@ -93,13 +115,24 @@ export function showReduce(show, command) {
       if (!Number.isInteger(index) || index < 0 || index > last) throw Error('رقم غير صالح');
       return bump({ phase: 'live', step: index });
     }
+    case 'advance':
+      // Automatic step after a video ends or an image's time is up.
+      if (s.phase !== 'live') return s;
+      if (s.step < last) return bump({ step: s.step + 1 });
+      return s.settings.loop ? bump({ step: 0 }) : s;
+    case 'blackout':
+      return bump({
+        blackout: typeof command.value === 'boolean' ? command.value : !s.blackout,
+      });
+    case 'settings':
+      return bump({ settings: cleanSettings({ ...s.settings, ...command.settings }) });
     case 'standby':
       return bump({ phase: s.phase === 'live' ? 'paused' : 'standby' });
     case 'resume':
       if (s.phase !== 'paused') return s;
       return bump({ phase: 'live' });
     case 'end':
-      return bump({ phase: 'standby', step: 0 });
+      return bump({ phase: 'standby', step: 0, blackout: false });
     default:
       throw Error('أمر غير معروف');
   }
