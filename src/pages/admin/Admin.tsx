@@ -1,5 +1,4 @@
-import { CustomDaysEditor } from './CustomDaysEditor';
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import {
   ArrowUpLeft,
@@ -17,17 +16,22 @@ import {
 import { useAuth } from '@/lib/auth';
 import { AdminProvider, fmtTime, useAdmin, type Tab } from './store';
 import { moreItems, navigation, sectionLabels } from './navigation';
-import { AssistantTab } from './AssistantTab';
 import { HomeTab } from './HomeTab';
-import { ScheduleTab } from './ScheduleTab';
-import { TemplateTab } from './TemplateTab';
-import { HistoryTab } from './HistoryTab';
 import { Modals, SettingsModal } from './Modals';
-import { LoopTab } from './LoopTab';
-import { DisplayModes } from './DisplayModes';
-import { RemoteMediaPanel } from './RemoteMediaPanel';
 import '@/admin-studio.css';
 import '@/admin-mobile.css';
+
+// Each workspace loads only when opened: the first screen (اليوم) stays light on phones.
+const named = <K extends string>(load: () => Promise<Record<K, React.ComponentType>>, key: K) =>
+  lazy(() => load().then((m) => ({ default: m[key] })));
+const AssistantTab = named(() => import('./AssistantTab'), 'AssistantTab');
+const ScheduleTab = named(() => import('./ScheduleTab'), 'ScheduleTab');
+const TemplateTab = named(() => import('./TemplateTab'), 'TemplateTab');
+const HistoryTab = named(() => import('./HistoryTab'), 'HistoryTab');
+const LoopTab = named(() => import('./LoopTab'), 'LoopTab');
+const DisplayModes = named(() => import('./DisplayModes'), 'DisplayModes');
+const RemoteMediaPanel = named(() => import('./RemoteMediaPanel'), 'RemoteMediaPanel');
+const CustomDaysEditor = named(() => import('./CustomDaysEditor'), 'CustomDaysEditor');
 
 const descriptions: Record<Tab, [string, string]> = {
   المساعد: ['مساعد يعرف شاشتك.', 'اسأل، أرفق ملفًا، وراجع التعديلات قبل تطبيقها.'],
@@ -283,108 +287,110 @@ function Studio() {
         {!data ? (
           <LoadingStudio />
         ) : (
-          <div className="studio-page" key={tab}>
-            {tab === 'المزيد' && (
-              <div className="studio-more">
-                <ul className="studio-more-list">
-                  {moreItems
-                    .filter((item) => !('admin' in item && item.admin) || permissions.admin)
-                    .map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <li key={item.tab}>
-                          <button onClick={() => navigate(item.tab)}>
-                            <span className="studio-more-icon">
-                              <Icon size={22} />
-                            </span>
-                            <span>
-                              <b>{item.title}</b>
-                              <small>{item.hint}</small>
-                            </span>
-                            {item.tab === 'الجدولة' && !!data.schedule.length && (
-                              <em>{data.schedule.length}</em>
-                            )}
-                            <ChevronLeft size={20} aria-hidden="true" />
-                          </button>
-                        </li>
-                      );
-                    })}
-                </ul>
-                <ul className="studio-more-list">
-                  <li>
-                    <button onClick={() => setModal('pair')}>
-                      <span className="studio-more-icon">
-                        <Plus size={22} />
-                      </span>
-                      <span>
-                        <b>ربط جهاز جديد</b>
-                        <small>أدخل الكود الظاهر على التلفزيون</small>
-                      </span>
-                      <ChevronLeft size={20} aria-hidden="true" />
-                    </button>
-                  </li>
-                  <li>
-                    <a href="/news">
-                      <span className="studio-more-icon">
-                        <Newspaper size={22} />
-                      </span>
-                      <span>
-                        <b>الأخبار والمعرفة</b>
-                        <small>شريط الأخبار والأسئلة التقنية</small>
-                      </span>
-                      <ChevronLeft size={20} aria-hidden="true" />
-                    </a>
-                  </li>
-                  {permissions.admin && (
+          <Suspense fallback={<LoadingStudio />}>
+            <div className="studio-page" key={tab}>
+              {tab === 'المزيد' && (
+                <div className="studio-more">
+                  <ul className="studio-more-list">
+                    {moreItems
+                      .filter((item) => !('admin' in item && item.admin) || permissions.admin)
+                      .map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <li key={item.tab}>
+                            <button onClick={() => navigate(item.tab)}>
+                              <span className="studio-more-icon">
+                                <Icon size={22} />
+                              </span>
+                              <span>
+                                <b>{item.title}</b>
+                                <small>{item.hint}</small>
+                              </span>
+                              {item.tab === 'الجدولة' && !!data.schedule.length && (
+                                <em>{data.schedule.length}</em>
+                              )}
+                              <ChevronLeft size={20} aria-hidden="true" />
+                            </button>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                  <ul className="studio-more-list">
                     <li>
-                      <a href="/users">
+                      <button onClick={() => setModal('pair')}>
                         <span className="studio-more-icon">
-                          <Users size={22} />
+                          <Plus size={22} />
                         </span>
                         <span>
-                          <b>الحسابات والصلاحيات</b>
-                          <small>أضف معلمًا أو غيّر صلاحياته</small>
+                          <b>ربط جهاز جديد</b>
+                          <small>أدخل الكود الظاهر على التلفزيون</small>
+                        </span>
+                        <ChevronLeft size={20} aria-hidden="true" />
+                      </button>
+                    </li>
+                    <li>
+                      <a href="/news">
+                        <span className="studio-more-icon">
+                          <Newspaper size={22} />
+                        </span>
+                        <span>
+                          <b>الأخبار والمعرفة</b>
+                          <small>شريط الأخبار والأسئلة التقنية</small>
                         </span>
                         <ChevronLeft size={20} aria-hidden="true" />
                       </a>
                     </li>
-                  )}
-                  <li>
-                    <a href="/password">
-                      <span className="studio-more-icon">
-                        <KeyRound size={22} />
-                      </span>
-                      <span>
-                        <b>تغيير كلمة المرور</b>
-                        <small>{staff?.username || 'حسابك'}</small>
-                      </span>
-                      <ChevronLeft size={20} aria-hidden="true" />
-                    </a>
-                  </li>
-                </ul>
-                <button className="studio-signout" onClick={() => void signOut()}>
-                  <LogOut size={18} />
-                  تسجيل الخروج
-                </button>
-              </div>
-            )}
-            {tab === 'المساعد' && <AssistantTab key={data.screen.id} />}
-            {tab === 'الرئيسية' && <HomeTab />}
-            {tab === 'التحكم' && <RemoteMediaPanel />}
-            {permissions.admin && tab === 'طريقة العرض' && <DisplayModes />}
-            {permissions.admin && tab === 'القوالب' && <TemplateTab />}
-            {permissions.admin && tab === 'خلفية الحصص' && <LoopTab />}
-            {permissions.admin && tab === 'خلفية الحصص' && (
-              <CustomDaysEditor key={data.screen.id} />
-            )}
-            {tab === 'الجدولة' && <ScheduleTab />}
-            {tab === 'السجل' && <HistoryTab />}
-            {permissions.admin && tab === 'الشاشات' && (
-              <section className="studio-settings">
-                <SettingsModal />
-              </section>
-            )}
-          </div>
+                    {permissions.admin && (
+                      <li>
+                        <a href="/users">
+                          <span className="studio-more-icon">
+                            <Users size={22} />
+                          </span>
+                          <span>
+                            <b>الحسابات والصلاحيات</b>
+                            <small>أضف معلمًا أو غيّر صلاحياته</small>
+                          </span>
+                          <ChevronLeft size={20} aria-hidden="true" />
+                        </a>
+                      </li>
+                    )}
+                    <li>
+                      <a href="/password">
+                        <span className="studio-more-icon">
+                          <KeyRound size={22} />
+                        </span>
+                        <span>
+                          <b>تغيير كلمة المرور</b>
+                          <small>{staff?.username || 'حسابك'}</small>
+                        </span>
+                        <ChevronLeft size={20} aria-hidden="true" />
+                      </a>
+                    </li>
+                  </ul>
+                  <button className="studio-signout" onClick={() => void signOut()}>
+                    <LogOut size={18} />
+                    تسجيل الخروج
+                  </button>
+                </div>
+              )}
+              {tab === 'المساعد' && <AssistantTab key={data.screen.id} />}
+              {tab === 'الرئيسية' && <HomeTab />}
+              {tab === 'التحكم' && <RemoteMediaPanel />}
+              {permissions.admin && tab === 'طريقة العرض' && <DisplayModes />}
+              {permissions.admin && tab === 'القوالب' && <TemplateTab />}
+              {permissions.admin && tab === 'خلفية الحصص' && <LoopTab />}
+              {permissions.admin && tab === 'خلفية الحصص' && (
+                <CustomDaysEditor key={data.screen.id} />
+              )}
+              {tab === 'الجدولة' && <ScheduleTab />}
+              {tab === 'السجل' && <HistoryTab />}
+              {permissions.admin && tab === 'الشاشات' && (
+                <section className="studio-settings">
+                  <SettingsModal />
+                </section>
+              )}
+            </div>
+          </Suspense>
         )}
       </main>
       {toast && (

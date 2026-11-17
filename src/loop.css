@@ -1,7 +1,7 @@
 /* Native school loop: SVG remains sharp at 4K; all overlay sizes follow the preview. */
 @font-face {
   font-family: SchoolArabic;
-  src: url('/school_font.ttf') format('truetype');
+  src: url('/school_font.woff2') format('woff2');
   font-display: swap;
 }
 .screen.screen-loop {

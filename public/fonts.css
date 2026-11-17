@@ -3,63 +3,63 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(./font-0.woff2) format('truetype');
+  src: url(./font-0.woff2) format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(./font-1.woff2) format('truetype');
+  src: url(./font-1.woff2) format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(./font-2.woff2) format('truetype');
+  src: url(./font-2.woff2) format('woff2');
 }
 @font-face {
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(./font-3.woff2) format('truetype');
+  src: url(./font-3.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(./font-4.woff2) format('truetype');
+  src: url(./font-4.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url(./font-5.woff2) format('truetype');
+  src: url(./font-5.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url(./font-6.woff2) format('truetype');
+  src: url(./font-6.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(./font-7.woff2) format('truetype');
+  src: url(./font-7.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 800;
   font-display: swap;
-  src: url(./font-8.woff2) format('truetype');
+  src: url(./font-8.woff2) format('woff2');
 }
 
 @font-face {
@@ -68,7 +68,7 @@
   font-weight: 400;
   font-stretch: normal;
   font-display: swap;
-  src: url(./arabic-0.ttf) format('truetype');
+  src: url(./arabic-0.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans Arabic';
@@ -76,7 +76,7 @@
   font-weight: 500;
   font-stretch: normal;
   font-display: swap;
-  src: url(./arabic-1.ttf) format('truetype');
+  src: url(./arabic-1.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans Arabic';
@@ -84,7 +84,7 @@
   font-weight: 600;
   font-stretch: normal;
   font-display: swap;
-  src: url(./arabic-2.ttf) format('truetype');
+  src: url(./arabic-2.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans Arabic';
@@ -92,7 +92,7 @@
   font-weight: 700;
   font-stretch: normal;
   font-display: swap;
-  src: url(./arabic-3.ttf) format('truetype');
+  src: url(./arabic-3.woff2) format('woff2');
 }
 @font-face {
   font-family: 'Noto Sans Arabic';
@@ -100,10 +100,10 @@
   font-weight: 800;
   font-stretch: normal;
   font-display: swap;
-  src: url(./arabic-4.ttf) format('truetype');
+  src: url(./arabic-4.woff2) format('woff2');
 }
 
-@font-face{font-family:'SchoolArabic';src:url('/school_font.ttf') format('truetype');font-weight:100 900;font-display:swap}
+@font-face{font-family:'SchoolArabic';src:url('/school_font.woff2') format('woff2');font-weight:100 900;font-display:swap}
 
 /* Cairo supplied in the reference HTML; self-hosted for offline use. */
 @font-face{font-family:'Cairo';font-weight:400;font-display:block;src:url(/cairo-673b09d876a8.woff2) format('woff2');unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200E,U+2010-2011,U+204F,U+2E41}
