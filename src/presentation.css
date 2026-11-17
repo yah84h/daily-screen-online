@@ -387,81 +387,6 @@ html[data-pointer-ui='false'] .device-audio-controls {
 .cache-status-line {
   pointer-events: auto;
 }
-.playback-toggle {
-  border: 0;
-  background: #ffffff18;
-  color: white;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  cursor: pointer;
-  font-size: 19px;
-}
-.playback-toolbar {
-  position: fixed;
-  z-index: 49;
-  top: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #172333b8;
-  backdrop-filter: blur(18px);
-  border: 1px solid #ffffff30;
-  border-radius: 24px;
-  padding: 5px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-html[data-pointer-ui='true'] .playback-toolbar,
-.playback-toolbar:focus-within {
-  opacity: 1;
-  pointer-events: auto;
-}
-.playback-panel {
-  position: fixed;
-  z-index: 55;
-  top: 65px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 340px;
-  max-width: calc(100vw - 30px);
-  max-height: calc(100vh - 85px);
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 20px;
-  background: #152436e8;
-  backdrop-filter: blur(20px);
-  color: white;
-  border: 1px solid #ffffff30;
-  border-radius: 18px;
-  box-shadow: 0 15px 50px #0005;
-  font:
-    13px Cairo,
-    sans-serif;
-}
-.playback-panel button {
-  border: 1px solid #ffffff30;
-  background: #ffffff12;
-  color: white;
-  padding: 10px;
-  border-radius: 9px;
-  cursor: pointer;
-}
-.playback-panel label input,
-.download-task progress {
-  width: 100%;
-}
-.playback-panel small {
-  color: #bccddd;
-  line-height: 1.8;
-}
-.download-task {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
 .playback-panel > div:not(.download-task) {
   display: flex;
   gap: 8px;
@@ -483,12 +408,6 @@ html[data-pointer-ui='true'] .playback-toolbar,
 }
 .daily-media-content video {
   object-fit: var(--media-fit, cover);
-}
-.daily-media-preview {
-  width: 110px;
-  height: 80px;
-  overflow: hidden;
-  border-radius: 10px;
 }
 .screen-media {
   overflow: hidden;
@@ -628,10 +547,6 @@ html[data-pointer-ui='true'] .playback-toolbar,
   .cache-status-line span {
     max-width: 43vw;
   }
-}
-
-.playback-panel label {
-  color: #e1edf7;
 }
 
 .playlist-card .crop-editor input[type='range'] {
