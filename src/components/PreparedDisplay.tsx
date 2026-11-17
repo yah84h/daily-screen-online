@@ -8,6 +8,13 @@ import { waitForMediaReady } from '@/lib/mediaReadiness';
 import { prepareAsset, removeShowAsset, SHOW_LIMIT } from '@/lib/assetCache';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { useAutoHide } from '@/lib/autoHide';
+import { useTransitionClips } from '@/lib/transitions';
+import { TransitionOverlay, type TransitionPhase } from './TransitionOverlay';
+
+/** Transitions play only between the big everyday modes, never for PowerPoint/photos/shows. */
+const BIG_MODES = ['daily', 'media', 'loop'];
+const modeOf = (p: { template: Partial<Template> }) => p.template.displayMode || 'daily';
+const LOOP_LIMIT_MS = 90000;
 import type { Content, School, Template } from '@/lib/types';
 import type { PresentationContext } from '@/lib/presentation';
 type Props = {
@@ -218,9 +225,57 @@ export function PreparedDisplay(props: Props) {
     template: { ...props.template, displayMode: 'daily' as const, rotation: undefined },
   };
   const retryHidden = useAutoHide(status?.error && !status.loaded ? status.error : null);
+  const candidate = (view || fallback) as Props;
+  // Mode switches between big modes: intro covers the old screen, the loop plays while the new
+  // mode prepares, and the outro reveals it only once it is ready.
+  const clips = useTransitionClips(props.large && props.template.modeTransitions !== false);
+  const [gate, setGate] = useState<{ phase: TransitionPhase; held: Props; target: string } | null>(
+    null,
+  );
+  const shown = useRef<Props>(candidate);
+  const target = modeOf(props);
+  useEffect(() => {
+    if (!clips) return;
+    setGate((current) => {
+      if (current) return current.target === target ? current : { ...current, target };
+      const from = modeOf(shown.current);
+      return target !== from && BIG_MODES.includes(target) && BIG_MODES.includes(from)
+        ? { phase: 'intro', held: shown.current, target }
+        : null;
+    });
+  }, [target, clips]);
+  const ready = !!gate && modeOf(candidate) === gate.target;
+  useEffect(() => {
+    if (gate?.phase === 'loop' && ready) setGate({ ...gate, phase: 'outro' });
+  }, [gate, ready]);
+  useEffect(() => {
+    if (gate?.phase !== 'loop') return;
+    const timer = setTimeout(
+      () => setGate((current) => current && { ...current, phase: 'outro' }),
+      LOOP_LIMIT_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [gate?.phase]);
+  const rendered = gate && gate.phase !== 'outro' ? gate.held : candidate;
+  if (!gate || gate.phase === 'outro') shown.current = candidate;
   return (
     <>
-      <Screen {...(view || fallback)} />
+      <Screen {...rendered} />
+      {clips && (
+        <TransitionOverlay
+          clips={clips}
+          phase={gate?.phase || null}
+          onDone={(phase) =>
+            setGate((current) =>
+              !current || current.phase !== phase
+                ? current
+                : phase === 'intro'
+                  ? { ...current, phase: ready ? 'outro' : 'loop' }
+                  : null,
+            )
+          }
+        />
+      )}
       {status?.error && !retryHidden && (
         <button className="cache-retry" onClick={() => setRetry((n) => n + 1)}>
           إعادة تجهيز الوسائط

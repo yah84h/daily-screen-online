@@ -71,6 +71,8 @@ export type Template = {
   displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation' | 'show';
   /** Presenting mode: shared secret the phone uses to command this screen's TV. */
   showKey?: string;
+  /** Play the school intro/loop/outro when switching between the big modes (default on). */
+  modeTransitions?: boolean;
   schoolName?: string;
   schoolTagline?: string;
   schoolLogo?: string;

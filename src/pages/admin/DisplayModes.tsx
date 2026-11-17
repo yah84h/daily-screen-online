@@ -76,6 +76,22 @@ export function DisplayModes() {
       <div className="display-mode-side">
         <span className="display-step">02 / أثناء التشغيل</span>
         <RotationEditor />
+        <label className="mode-transition-toggle">
+          <input
+            type="checkbox"
+            aria-label="انتقال بشعار المدرسة"
+            checked={template.modeTransitions !== false}
+            disabled={busy || !data}
+            onChange={(e) => setTemplate((t) => ({ ...t, modeTransitions: e.target.checked }))}
+          />
+          <span>
+            <b>انتقال بشعار المدرسة</b>
+            <small>
+              عند التبديل بين المحتوى اليومي والصورة/الفيديو وخلفية الحصص: مقدمة، ثم حركة انتظار
+              أثناء التجهيز، ثم خاتمة تكشف الوضع الجديد.
+            </small>
+          </span>
+        </label>
         <div className="display-mode-note">
           <Monitor size={20} />
           <p>لكل شاشة وضعها وإعداداتها. لا يتغير محتوى الشاشات الأخرى.</p>

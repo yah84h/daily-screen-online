@@ -92,3 +92,39 @@
 .show-blackout.on {
   opacity: 1;
 }
+.show-standby-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.show-standby.with-photo::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, #0b1a3399, #0b1a33cc);
+}
+.show-standby.with-photo .show-standby-card,
+.show-standby.with-loop .show-standby-card {
+  position: relative;
+  z-index: 2;
+}
+.show-standby .show-standby-note {
+  z-index: 2;
+}
+/* The loop clip already carries the logo in the middle: the title sits below it. */
+.show-standby.with-loop {
+  place-items: end center;
+}
+.show-standby.with-loop .show-standby-card {
+  margin-bottom: 7cqw;
+  animation: none;
+}
+.show-standby.with-loop h1 {
+  padding: 0.6cqw 2cqw;
+  border-radius: 999px;
+  background: #0b1a33d9;
+  font-size: 2.2cqw;
+}

@@ -18,6 +18,7 @@ export type Show = {
   revision: number;
   blackout: boolean;
   settings: ShowSettings;
+  background: { id: string; name: string } | null;
 };
 export type ShowStep = { item: string; part: number; kind: 'image' | 'video' };
 export type ShowCommand =
@@ -27,6 +28,7 @@ export type ShowCommand =
   | { op: 'move'; id: string; by: 1 | -1 }
   | { op: 'clear' | 'start' | 'next' | 'previous' | 'standby' | 'resume' | 'end' | 'advance' }
   | { op: 'blackout'; value?: boolean }
+  | { op: 'background'; item: { id: string; name: string } | null }
   | { op: 'settings'; settings: Partial<ShowSettings> }
   | { op: 'goto'; index: number };
 export const SHOW_KINDS: ShowKind[];
@@ -38,6 +40,7 @@ export function defaultSettings(): ShowSettings;
 export function emptyShow(): Show;
 export function cleanItem(raw: unknown): ShowItem;
 export function showReduce(show: Show, command: ShowCommand): Show;
+export function findPartOwner(show: Show, id: string): ShowItem | null;
 export function showReadiness(
   items: ShowItem[],
   stored: Record<string, boolean>,

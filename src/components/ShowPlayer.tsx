@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
+import { useTransitionClips } from '@/lib/transitions';
+import { TransitionOverlay, type TransitionPhase } from './TransitionOverlay';
 import { partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
 import type { School, Template } from '@/lib/types';
 
@@ -21,11 +23,37 @@ export function ShowPlayer({ screenId, token = '', showKey, template, school }: 
 }
 
 /** Calm audience-facing standby: no bars, no file names. Shared with PowerPoint mode. */
-export function Standby({ logo, title, note }: { logo: string; title: string; note: string }) {
+export function Standby({
+  logo,
+  title,
+  note,
+  photo = '',
+  loop = '',
+}: {
+  logo: string;
+  title: string;
+  note: string;
+  /** The presenter's own background photo. */
+  photo?: string;
+  /** The school loop clip (it already shows the logo). */
+  loop?: string;
+}) {
+  const kind = photo ? ' with-photo' : loop ? ' with-loop' : '';
   return (
-    <div className="screen show-screen show-standby" dir="rtl">
+    <div className={'screen show-screen show-standby' + kind} dir="rtl">
+      {photo ? (
+        <img className="show-standby-bg" src={photo} alt="" />
+      ) : loop ? (
+        <video className="show-standby-bg" src={loop} autoPlay muted loop playsInline />
+      ) : null}
       <div className="show-standby-card">
-        {logo ? <img src={logo} alt="" /> : <GraduationCap size={96} strokeWidth={1.4} />}
+        {!loop || photo ? (
+          logo ? (
+            <img src={logo} alt="" />
+          ) : (
+            <GraduationCap size={96} strokeWidth={1.4} />
+          )
+        ) : null}
         {title && <h1>{title}</h1>}
       </div>
       {note && <small className="show-standby-note">{note}</small>}
@@ -44,7 +72,7 @@ function LiveShow({
   showKey: string;
   logo: string;
 }) {
-  const { show, urls, stored, videoCommand, reportPlayback, advance } = useShowHost(
+  const { show, urls, stored, videoCommand, reportPlayback, advance, command } = useShowHost(
     screenId,
     showKey,
     token,
@@ -55,6 +83,51 @@ function LiveShow({
   const ready = showReadiness(show.items, stored);
   const live = show.phase === 'live' && !!step && !!url;
   const settings = show.settings;
+  const clips = useTransitionClips(true);
+  const photo = show.background ? urls[partKey(show.background.id)] || '' : '';
+  // Start plays the outro (from the resting logo frame) into the first file;
+  // standby/end plays the intro back to the resting loop.
+  const [transition, setTransition] = useState<TransitionPhase | null>(null);
+  const previous = useRef(show.phase);
+  useEffect(() => {
+    const was = previous.current;
+    previous.current = show.phase;
+    if (!clips || was === show.phase) return;
+    if (show.phase === 'live') setTransition('outro');
+    else if (was === 'live') setTransition('intro');
+  }, [show.phase, clips]);
+  // Presenter clicker / keyboard plugged into the TV.
+  const keys = useRef({ show, ready, last: steps.length - 1 });
+  keys.current = { show, ready, last: steps.length - 1 };
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+      const { show: s, ready: r, last } = keys.current;
+      const next = ['ArrowRight', 'ArrowDown', 'PageDown', 'Enter', ' '].includes(e.key);
+      const back = ['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key);
+      let cmd: Parameters<typeof command>[0] | null = null;
+      if (s.phase === 'live') {
+        if (next) cmd = { op: 'next' };
+        else if (back) cmd = { op: 'previous' };
+        else if (e.key === 'Home') cmd = { op: 'goto', index: 0 };
+        else if (e.key === 'End') cmd = { op: 'goto', index: Math.max(0, last) };
+        else if (['b', 'B', '.'].includes(e.key)) cmd = { op: 'blackout' };
+      } else if (s.phase === 'paused' && next) cmd = { op: 'resume' };
+      else if (s.phase === 'standby' && next && r.complete) cmd = { op: 'start' };
+      if (!cmd) return;
+      e.preventDefault();
+      command(cmd);
+    };
+    window.addEventListener('keydown', handle);
+    return () => window.removeEventListener('keydown', handle);
+  }, [command]);
+  const overlay = clips && (
+    <TransitionOverlay
+      clips={clips}
+      phase={transition}
+      onDone={(phase) => setTransition((current) => (current === phase ? null : current))}
+    />
+  );
   // Images move on by themselves only when auto-advance is on (and the screen isn't blacked out).
   useEffect(() => {
     if (!live || step.kind !== 'image' || !settings?.autoNext || show.blackout) return;
@@ -76,17 +149,22 @@ function LiveShow({
   }, [live, step?.kind, step?.item, reportPlayback]);
   if (!live)
     return (
-      <Standby
-        logo={logo}
-        title={show.title}
-        note={
-          show.phase === 'live' && step && !url
-            ? '…'
-            : ready.total
-              ? (ready.complete ? '● ' : '○ ') + ready.ready + '/' + ready.total
-              : ''
-        }
-      />
+      <>
+        <Standby
+          logo={logo}
+          title={show.title}
+          photo={photo}
+          loop={clips?.loop || ''}
+          note={
+            show.phase === 'live' && step && !url
+              ? '…'
+              : ready.total
+                ? (ready.complete ? '● ' : '○ ') + ready.ready + '/' + ready.total
+                : ''
+          }
+        />
+        {overlay}
+      </>
     );
   return (
     <div className="screen show-screen" dir="rtl">
@@ -103,6 +181,7 @@ function LiveShow({
         )}
       </div>
       <div className={'show-blackout' + (show.blackout ? ' on' : '')} aria-hidden="true" />
+      {overlay}
     </div>
   );
 }

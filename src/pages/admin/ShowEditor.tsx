@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -86,6 +86,43 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
   const nextStep = show && steps[show.step + 1];
   const nextItem = nextStep && show?.items.find((item) => item.id === nextStep.item);
   const rate = useRates();
+  const [thumbs, setThumbs] = useState<Record<string, string[]>>({});
+  useEffect(() => {
+    // Saved thumbnails never overwrite ones made in this session.
+    void loadThumbs().then((saved) => setThumbs((current) => ({ ...saved, ...current })));
+  }, []);
+  const remember = async (id: string, blobs: Blob[]) => {
+    const list = await Promise.all(blobs.map(thumbnail));
+    setThumbs((current) => ({ ...current, [id]: list }));
+    void saveThumbs(id, list);
+  };
+  const thumbOf = (step?: { item: string; part: number }) =>
+    step ? thumbs[step.item]?.[step.part] || '' : '';
+  const bgPicker = useRef<HTMLInputElement>(null);
+  const background = show?.background;
+  const backgroundReady = !!background && !!status?.stored[partKey(background.id)];
+  const chooseBackground = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return notify('اختر صورة.');
+    const id = crypto.randomUUID();
+    const item: ShowItem = {
+      id,
+      kind: 'image',
+      source: 'phone',
+      url: '',
+      name: file.name,
+      parts: 1,
+      size: file.size,
+    };
+    try {
+      await send({ op: 'background', item: { id, name: file.name } });
+      files.current.set(id, [file]);
+      await sendFiles(item, [file]);
+      files.current.delete(id);
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  };
   const [localSettings, setLocalSettings] = useState<Partial<ShowSettings>>({});
 
   const act = async (fn: () => Promise<void>) => {
@@ -143,6 +180,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
         }
         setPreparing('');
         files.current.set(id, parts);
+        if (item.kind !== 'video') void remember(id, parts);
         await send({ op: 'add', item });
         await transmit(item);
       } catch (error) {
@@ -323,6 +361,9 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
                   ? 'الشاشة سوداء الآن'
                   : 'يُعرض الآن'}
             </small>
+            {thumbOf(current) && !show.blackout && (
+              <img className="show-now-thumb" src={thumbOf(current)} alt="" />
+            )}
             <b>
               <bdi>{currentItem?.name || '—'}</bdi>
               {currentItem?.kind === 'deck' && current ? ' · شريحة ' + (current.part + 1) : ''}
@@ -331,6 +372,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
             <progress value={show.step + 1} max={steps.length} />
             {nextItem && (
               <small className="show-next-up">
+                {thumbOf(nextStep) && <img src={thumbOf(nextStep)} alt="" />}
                 التالي: <bdi>{nextItem.name}</bdi>
                 {nextItem.kind === 'deck' && nextStep ? ' · شريحة ' + (nextStep.part + 1) : ''}
               </small>
@@ -485,7 +527,11 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
                     onClick={() => act(() => send({ op: 'goto', index }))}
                   >
                     <em>{index + 1}</em>
-                    <Icon size={16} />
+                    {thumbOf(step) ? (
+                      <img className="show-jump-thumb" src={thumbOf(step)} alt="" />
+                    ) : (
+                      <Icon size={16} />
+                    )}
                     <bdi>{item?.name}</bdi>
                     {item?.kind === 'deck' ? ' · ' + (step.part + 1) : ''}
                   </button>
@@ -496,6 +542,59 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
         </div>
       ) : (
         <>
+          <div className="show-background">
+            <b>خلفية شاشة الانتظار</b>
+            <div className="show-background-options" role="radiogroup" aria-label="خلفية الانتظار">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!background}
+                disabled={!online || pending}
+                onClick={() => act(() => send({ op: 'background', item: null }))}
+              >
+                <span className="show-bg-swatch school" />
+                حركة شعار المدرسة
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!!background}
+                disabled={!online || pending}
+                onClick={() => bgPicker.current?.click()}
+              >
+                <span className="show-bg-swatch photo">
+                  <ImageIcon size={18} />
+                </span>
+                {background ? 'تغيير صورتي' : 'صورة من جوالي'}
+              </button>
+            </div>
+            {background && (
+              <small className={'show-item-state ' + (backgroundReady ? 'ok' : 'busy')}>
+                <bdi>{background.name}</bdi> ·{' '}
+                {backgroundReady
+                  ? 'على التلفزيون ✓'
+                  : sending[background.id]
+                    ? 'إرسال ' +
+                      Math.floor(
+                        (sending[background.id].sent / Math.max(1, sending[background.id].total)) *
+                          100,
+                      ) +
+                      '٪'
+                    : 'بانتظار الإرسال'}
+              </small>
+            )}
+            <input
+              ref={bgPicker}
+              type="file"
+              hidden
+              accept="image/*"
+              aria-label="صورة الخلفية"
+              onChange={(e) => {
+                void chooseBackground(e.target.files?.[0]);
+                e.target.value = '';
+              }}
+            />
+          </div>
           <label className="show-title">
             عنوان العرض (يظهر على شاشة الانتظار)
             <input
@@ -565,7 +664,11 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               return (
                 <li key={item.id} className={'tone-' + state.tone}>
                   <span className="show-item-icon">
-                    <Icon size={20} />
+                    {thumbs[item.id]?.[0] ? (
+                      <img src={thumbs[item.id][0]} alt="" />
+                    ) : (
+                      <Icon size={20} />
+                    )}
                   </span>
                   <span className="show-item-text">
                     <b>
@@ -673,4 +776,51 @@ function speedText(speed: number, remaining: number, done: number, total: number
     }
   }
   return parts.join(' · ');
+}
+
+/* Phone-side slide thumbnails (kept on this phone only, for the live remote). */
+function thumbsDb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('daily-screen-show-thumbs', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('thumbs');
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+async function saveThumbs(id: string, thumbs: string[]) {
+  try {
+    const db = await thumbsDb();
+    db.transaction('thumbs', 'readwrite').objectStore('thumbs').put(thumbs, id);
+  } catch {}
+}
+async function loadThumbs(): Promise<Record<string, string[]>> {
+  try {
+    const db = await thumbsDb();
+    return await new Promise((resolve) => {
+      const out: Record<string, string[]> = {};
+      const cursor = db.transaction('thumbs').objectStore('thumbs').openCursor();
+      cursor.onsuccess = () => {
+        const c = cursor.result;
+        if (!c) return resolve(out);
+        out[String(c.key)] = c.value;
+        c.continue();
+      };
+      cursor.onerror = () => resolve(out);
+    });
+  } catch {
+    return {};
+  }
+}
+async function thumbnail(blob: Blob): Promise<string> {
+  try {
+    const bitmap = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = Math.max(1, Math.round((240 * bitmap.height) / bitmap.width));
+    canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return canvas.toDataURL('image/jpeg', 0.7);
+  } catch {
+    return '';
+  }
 }
