@@ -724,3 +724,56 @@
   padding: 0.3cqw 0.6cqw;
   font-size: 0.6cqw;
 }
+/* School wallpaper (zigzag): colors come from the palette, so presets recolor it. */
+.screen-loop[data-backdrop='zigzag'] {
+  background: var(--loop-text);
+}
+.screen-loop .zigzag-wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.zigzag-wallpaper .zz-field {
+  fill: var(--loop-text);
+}
+.zigzag-wallpaper #zigzag-dashes rect {
+  fill: var(--loop-line1);
+  opacity: 0.45;
+}
+.zigzag-wallpaper .zz-fill {
+  fill: var(--loop-background);
+}
+.zigzag-wallpaper .zz-edge {
+  fill: none;
+  stroke: var(--loop-line2);
+  stroke-width: 12;
+  opacity: 0.8;
+}
+.zigzag-wallpaper .zz-band {
+  animation: zz-drift 9s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.zigzag-wallpaper .zz-dashes {
+  animation: zz-dashes 18s linear infinite alternate;
+  will-change: transform;
+}
+@keyframes zz-drift {
+  from {
+    transform: translateX(-60px);
+  }
+  to {
+    transform: translateX(60px);
+  }
+}
+@keyframes zz-dashes {
+  to {
+    transform: translateX(-88px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zigzag-wallpaper .zz-band,
+  .zigzag-wallpaper .zz-dashes {
+    animation: none;
+  }
+}

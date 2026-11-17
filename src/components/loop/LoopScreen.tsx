@@ -1,3 +1,9 @@
+import { ZigzagWallpaper } from './ZigzagWallpaper';
+
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
 import { DailyMedia } from '../DailyMedia';
 import { fitLoopPosition } from '@/lib/loopPositions';
 import { loopLayout } from '@/lib/loopLayouts';
@@ -100,7 +106,10 @@ export function LoopScreen({
           '--clock-scale': sizing.clockScale,
           '--board-scale': sizing.boardScale,
           '--brand-filter':
-            parseInt(palette.background.slice(1, 3), 16) < 80 ? 'brightness(0) invert(1)' : 'none',
+            // Logos sit on the wallpaper's field color (palette text) in the school wallpaper.
+            luminance(template.loopBackdrop === 'zigzag' ? palette.text : palette.background) < 0.35
+              ? 'brightness(0) invert(1)'
+              : 'none',
         } as import('react').CSSProperties
       }
       className={
@@ -129,7 +138,9 @@ export function LoopScreen({
       }
     >
       <BackgroundSlideshow template={template} />
-      <div className="loop-decoration" aria-hidden="true" />
+      <div className="loop-decoration" aria-hidden="true">
+        {template.loopBackdrop === 'zigzag' && <ZigzagWallpaper />}
+      </div>
       <NativeBackground
         name={
           template.loopSchoolName?.trim() ||

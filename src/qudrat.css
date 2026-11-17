@@ -260,9 +260,6 @@
   width: 0.55cqw;
   height: 0.55cqw;
 }
-.qudrat-stale {
-  color: var(--loop-accent);
-}
 .qudrat-pagination {
   display: flex;
   align-items: center;

@@ -95,36 +95,6 @@
   color: var(--studio-muted);
   margin-top: 4px;
 }
-.studio-school {
-  margin-inline-start: 24px;
-  padding-inline-start: 24px;
-  border-inline-start: 1px solid var(--studio-line);
-  max-width: 400px;
-  font-size: 12px;
-  color: var(--studio-muted);
-  line-height: 1.7;
-}
-.studio-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-inline-start: auto;
-}
-.studio-utility {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  color: #6d7a88;
-  font-size: 14px;
-}
-.studio-utility:hover,
-.studio-utility.selected {
-  background: #f0f2f6;
-  color: #344b74;
-}
 .studio-account {
   position: relative;
 }
@@ -181,16 +151,6 @@
 .studio-account a:hover,
 .studio-account button:hover {
   background: #f3f5f9;
-}
-.studio-nav-wrap {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  padding: 8px 24px;
-  background: #ffffffeb;
-  border-block: 1px solid #ecedf1;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
 }
 .admin-studio .studio-navigation {
   display: flex;
@@ -261,20 +221,6 @@
   font: var(--body-6);
   color: var(--studio-muted);
   max-width: 680px;
-}
-.studio-date {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 12px;
-  color: #758192;
-  text-align: left;
-  flex-shrink: 0;
-}
-.studio-date b {
-  color: #586779;
-  font-size: 14px;
-  font-weight: 500;
 }
 .studio-screenbar {
   display: flex;
@@ -936,51 +882,6 @@
   font-size: 14px;
   margin-bottom: 24px;
 }
-.admin-studio .preset-grid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-.admin-studio .preset-card {
-  border: 1px solid var(--studio-line);
-  border-radius: 12px;
-  background: #fff;
-  overflow: hidden;
-  box-shadow: none;
-}
-.admin-studio .preset-body {
-  padding: 24px;
-}
-.admin-studio .preset-body h3 {
-  font-size: 18px;
-  color: #556a85;
-}
-.admin-studio .preset-body > p {
-  font-size: 12px;
-  color: #758192;
-}
-.admin-studio .preset-actions {
-  font-size: 12px;
-  color: #758192;
-}
-.admin-studio .tech-library {
-  padding: 24px;
-  border: 1px solid var(--studio-line);
-  border-radius: 12px;
-  background: #fff;
-}
-.admin-studio .tech-library-grid {
-  gap: 16px;
-  margin-top: 24px;
-}
-.admin-studio .tech-library-grid .editor-card {
-  background: #fafbfd;
-  border-color: #e9eef5;
-}
-.admin-studio .tech-library-grid article p {
-  font-size: 16px;
-  color: #64758c;
-  line-height: 1.8;
-}
 .admin-studio .screen-entry {
   background: #fafbfd;
   border: 1px solid #e3e9f2;
@@ -1425,16 +1326,6 @@
   text-decoration: underline;
   min-height: 44px;
 }
-.studio-footer {
-  max-width: 1440px;
-  margin: 32px auto 0;
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px 32px;
-  color: #758192;
-  font-size: 12px;
-}
 .studio-loading {
   min-height: 320px;
   padding: 32px;
@@ -1494,9 +1385,6 @@
   }
 }
 @media (max-width: 1180px) {
-  .studio-school {
-    display: none;
-  }
   .studio-compose-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
   }
@@ -1543,15 +1431,8 @@
   .studio-brand small {
     font-size: 12px;
   }
-  .studio-top-actions {
-    gap: 8px;
-  }
-  .studio-utility > span,
   .studio-account > summary > svg {
     display: none;
-  }
-  .studio-nav-wrap {
-    padding: 4px 8px;
   }
   .admin-studio .studio-navigation {
     gap: 0;
@@ -1587,9 +1468,6 @@
   .studio-page-heading > div > p:last-child {
     font-size: 12px;
     line-height: 20px;
-  }
-  .studio-date {
-    display: none;
   }
   .studio-screenbar {
     padding: 12px;
@@ -1784,15 +1662,6 @@
   .admin-studio .modal {
     padding: 24px;
   }
-  .studio-footer {
-    padding: 24px 16px;
-    font-size: 12px;
-    gap: 16px;
-  }
-  .studio-footer > span:last-child {
-    max-width: 180px;
-    text-align: left;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-studio *,
@@ -1803,7 +1672,6 @@
   }
 }
 @supports not (backdrop-filter: blur(1px)) {
-  .studio-nav-wrap,
   .studio-publish-bar {
     background: #fff;
   }
