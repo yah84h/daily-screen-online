@@ -130,10 +130,14 @@ try {
       body: webm.subarray(start, end + 1),
     });
   });
+  // Replace the current file with a Drive link (one file = full screen).
+  while (await admin.getByRole('button', { name: 'حذف الملف 1' }).count())
+    await admin.getByRole('button', { name: 'حذف الملف 1' }).click();
   await admin
-    .getByLabel('رابط الوسائط', { exact: true })
+    .getByLabel('رابط ملف', { exact: true })
     .fill('https://drive.google.com/file/d/drive_video_test_123456789/view');
-  await admin.getByRole('button', { name: 'استخدام رابط الوسائط', exact: true }).click();
+  await admin.getByRole('button', { name: 'إضافة', exact: true }).click();
+  await admin.getByText('خيارات التشغيل').click();
   await admin.getByLabel('تجهيز فيديو Drive', { exact: true }).selectOption('stream');
   await admin.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
   await tv.waitForFunction(() => {

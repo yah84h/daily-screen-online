@@ -1584,3 +1584,363 @@
   background: #000;
   flex-shrink: 0;
 }
+
+/* =================== Unified image / video editor =================== */
+.media-editor {
+  display: grid;
+  gap: 14px;
+}
+.media-add {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--studio-radius);
+  background: #faf9fd;
+  border: 2px dashed var(--studio-line);
+}
+.admin-studio .media-add-phone {
+  min-height: 56px;
+  font-size: 16px;
+}
+.media-add > small {
+  color: var(--studio-muted);
+  text-align: center;
+  font-size: 12px;
+}
+.media-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--studio-muted);
+}
+.media-link input {
+  flex: 1;
+  min-width: 0;
+}
+.admin-studio .media-link .button {
+  flex: 0 0 auto;
+}
+.media-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--studio-accent-soft);
+  color: var(--studio-accent-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.media-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.media-list-head span {
+  color: var(--studio-muted);
+  font-size: 12px;
+}
+.media-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.media-list > li {
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--studio-line);
+}
+.media-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.media-thumb {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 72px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 10px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+.media-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.media-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.admin-studio .media-text input {
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 15px;
+}
+.media-text small {
+  color: var(--studio-muted);
+  font-size: 12px;
+  padding-inline: 4px;
+}
+.media-actions {
+  display: flex;
+}
+.media-actions button {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  color: var(--studio-muted);
+}
+.media-actions button.danger {
+  color: #c2413a;
+}
+.media-more,
+.media-options {
+  margin-top: 8px;
+}
+.media-more > summary,
+.media-options > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  color: var(--studio-accent-ink);
+  cursor: pointer;
+}
+.media-options {
+  padding: 4px 16px 12px;
+  border-radius: var(--studio-radius);
+  background: #fff;
+  border: 1px solid var(--studio-line);
+}
+.media-options label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  flex-wrap: wrap;
+}
+.admin-studio .media-options select {
+  flex: 1 1 200px;
+}
+
+/* =================== PowerPoint: three steps + slide remote =================== */
+.ppt-editor {
+  display: grid;
+  gap: 12px;
+}
+.ppt-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.ppt-step-no {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--studio-accent);
+  font-weight: 800;
+}
+.ppt-step-body {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.ppt-step-body > b {
+  font-size: 16px;
+  line-height: 32px;
+}
+.ppt-step-body > small {
+  color: var(--studio-muted);
+}
+.admin-studio .ppt-pick {
+  min-height: 60px;
+  font-size: 16px;
+}
+.ppt-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid var(--studio-line);
+}
+.ppt-file img {
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #000;
+}
+.ppt-file span {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+.ppt-file small {
+  color: var(--studio-muted);
+  font-weight: 400;
+}
+.ppt-progress {
+  display: grid;
+  gap: 6px;
+}
+.ppt-progress progress {
+  width: 100%;
+  height: 10px;
+  accent-color: var(--studio-accent);
+}
+.ppt-ok {
+  color: var(--studio-mint-ink) !important;
+  font-weight: 700;
+}
+.ppt-hint {
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: var(--studio-peach-ink) !important;
+  background: var(--studio-peach);
+  font-weight: 700;
+}
+.ppt-remote {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.ppt-now {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--studio-radius);
+  color: #e8eefc;
+  background: linear-gradient(160deg, #0b1a33, #1d3b73);
+  text-align: center;
+}
+.ppt-now > img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #000;
+}
+.ppt-now.black > img {
+  filter: brightness(0.15);
+}
+.ppt-now > span {
+  font:
+    800 26px/1.2 'Cairo',
+    sans-serif;
+}
+.ppt-now progress {
+  width: min(260px, 80%);
+  height: 6px;
+  accent-color: #9fb7ff;
+}
+.ppt-next {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.85;
+}
+.ppt-next img {
+  width: 56px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.ppt-main {
+  display: grid !important;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+}
+.admin-studio .ppt-big {
+  min-height: 92px;
+  font-size: 20px;
+  border-radius: 28px;
+}
+.ppt-row {
+  display: flex;
+  gap: 8px;
+}
+.ppt-row > .button {
+  flex: 1;
+}
+.ppt-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.ppt-grid button {
+  position: relative;
+  padding: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: #000;
+}
+.ppt-grid button[aria-pressed='true'] {
+  border-color: var(--studio-accent);
+}
+.ppt-grid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.ppt-grid span {
+  position: absolute;
+  bottom: 4px;
+  inset-inline-start: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #fff;
+  background: #0b1a33cc;
+  font-size: 11px;
+  font-weight: 700;
+}
+.ppt-keys > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--studio-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-studio .media-text input {
+  text-overflow: ellipsis;
+  text-align: start;
+}
+.ppt-file span bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-studio .ppt-file .button {
+  flex-shrink: 0;
+}
+.admin-studio .ppt-row .button {
+  min-width: 0;
+  padding-inline: 8px;
+  font-size: 13px;
+  white-space: nowrap;
+}

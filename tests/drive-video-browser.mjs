@@ -75,7 +75,7 @@ try {
     { timeout: 60000 },
   );
   const result = await tv
-    .locator('video')
+    .locator('.screen video')
     .evaluate((v) => ({ duration: v.duration, muted: v.muted, ready: v.readyState }));
   assert(result.duration > 0);
   assert(result.muted);
@@ -106,11 +106,16 @@ try {
   await admin.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await admin.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
   await admin.waitForURL('**/admin');
-  await admin.getByLabel('رابط الوسائط', { exact: true }).fill('javascript:alert(1)');
-  await admin.getByRole('button', { name: 'استخدام رابط الوسائط', exact: true }).click();
-  await admin.getByText('أدخل رابط HTTPS مباشرًا أو رابط Drive صالحًا.', { exact: true }).waitFor();
-  await admin.getByLabel('رابط الوسائط', { exact: true }).fill(link);
-  await admin.getByRole('button', { name: 'استخدام رابط الوسائط', exact: true }).click();
+  await admin.getByLabel('رابط ملف', { exact: true }).fill('javascript:alert(1)');
+  await admin.getByRole('button', { name: 'إضافة', exact: true }).click();
+  await admin
+    .getByText('الصق رابط https مباشرًا أو رابط Google Drive عامًا.', { exact: true })
+    .waitFor();
+  // Replace the published file with the same Drive link (one file = full screen).
+  await admin.getByRole('button', { name: 'حذف الملف 1' }).click();
+  await admin.getByLabel('رابط ملف', { exact: true }).fill(link);
+  await admin.getByRole('button', { name: 'إضافة', exact: true }).click();
+  await admin.getByText('خيارات التشغيل').click();
   await admin.getByLabel('تجهيز فيديو Drive', { exact: true }).selectOption('buffer');
   await admin.getByRole('button', { name: 'نشر على الشاشة', exact: true }).click();
   await tv.waitForFunction(
@@ -142,7 +147,7 @@ try {
         'Page debug',
         page.url(),
         await page.locator('body').innerText(),
-        await page.locator('video').evaluateAll((vs) =>
+        await page.locator('.screen video').evaluateAll((vs) =>
           vs.map((v) => ({
             src: v.src,
             currentTime: v.currentTime,
