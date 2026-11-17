@@ -1,9 +1,12 @@
 import { supabase } from './supabase';
 import type { Presentation } from './presentation';
-export async function uploadBrowserPresentation(
+/** Renders a PPTX into JPEG slides in the browser; `onSlide` receives each one in order. */
+export async function renderPptxSlides(
   file: File,
   progress: (percent: number, stage: string) => void,
-): Promise<Presentation> {
+  onSlide: (blob: Blob, index: number, count: number) => Promise<void>,
+  stage = (i: number, n: number) => `تجهيز الشريحة ${i + 1} من ${n}…`,
+): Promise<number> {
   if (!/\.pptx$/i.test(file.name) || file.size > 100 * 1024 * 1024)
     throw Error('اختر ملف PPTX حتى ١٠٠ ميجابايت.');
   const engine = await import('@web-ppt/core');
@@ -41,9 +44,6 @@ export async function uploadBrowserPresentation(
     }
   const presentation = await engine.parse(bytes, { zip: limits });
   presentation.slides = presentation.slides.filter((slide) => !slide.hidden);
-  const id = crypto.randomUUID();
-  const slides: string[] = [];
-  const uploaded: string[] = [];
   try {
     if (!presentation.slides.length || presentation.slides.length > 200)
       throw Error('عدد الشرائح غير صالح.');
@@ -51,7 +51,7 @@ export async function uploadBrowserPresentation(
     for (let i = 0; i < presentation.slides.length; i++) {
       progress(
         Math.round(5 + (i / presentation.slides.length) * 90),
-        `تجهيز ورفع الشريحة ${i + 1} من ${presentation.slides.length}…`,
+        stage(i, presentation.slides.length),
       );
       const svg = await engine.slideToSvgFile(presentation, presentation.slides[i]);
       const xml = new DOMParser().parseFromString(svg, 'image/svg+xml');
@@ -106,15 +106,37 @@ export async function uploadBrowserPresentation(
       } finally {
         URL.revokeObjectURL(url);
       }
-      const path = `content/presentations/${id}/slide-${i + 1}.jpg`;
-      const result = await supabase.storage
-        .from('media')
-        .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
-      if (result.error) throw Error('تعذر رفع الشريحة: ' + result.error.message);
-      uploaded.push(path);
-      slides.push(supabase.storage.from('media').getPublicUrl(path).data.publicUrl);
+      await onSlide(blob, i, presentation.slides.length);
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
+    return presentation.slides.length;
+  } finally {
+    presentation.dispose?.();
+  }
+}
+
+export async function uploadBrowserPresentation(
+  file: File,
+  progress: (percent: number, stage: string) => void,
+): Promise<Presentation> {
+  const id = crypto.randomUUID();
+  const slides: string[] = [];
+  const uploaded: string[] = [];
+  try {
+    await renderPptxSlides(
+      file,
+      progress,
+      async (blob, i) => {
+        const path = `content/presentations/${id}/slide-${i + 1}.jpg`;
+        const result = await supabase.storage
+          .from('media')
+          .upload(path, blob, { contentType: 'image/jpeg', cacheControl: '31536000' });
+        if (result.error) throw Error('تعذر رفع الشريحة: ' + result.error.message);
+        uploaded.push(path);
+        slides.push(supabase.storage.from('media').getPublicUrl(path).data.publicUrl);
+      },
+      (i, n) => `تجهيز ورفع الشريحة ${i + 1} من ${n}…`,
+    );
     progress(100, 'العرض جاهز. راجع المعاينة ثم انشره على الشاشة.');
     return { id, name: file.name, slides };
   } catch (error) {
@@ -123,7 +145,5 @@ export async function uploadBrowserPresentation(
         await supabase.storage.from('media').remove(uploaded);
       } catch {}
     throw error;
-  } finally {
-    presentation.dispose?.();
   }
 }

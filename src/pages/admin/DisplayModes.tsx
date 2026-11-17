@@ -4,7 +4,16 @@ import { RotationEditor } from './RotationEditor';
 import { DriveVideoEditor } from './DriveVideoEditor';
 import { useAuth } from '@/lib/auth';
 import { withDisplayMode } from '@/lib/slideshow';
-import { Clock, Images, Image as ImageIcon, PanelsTopLeft, Monitor, Upload, X } from 'lucide-react';
+import {
+  Clock,
+  Images,
+  Image as ImageIcon,
+  PanelsTopLeft,
+  Presentation,
+  Monitor,
+  Upload,
+  X,
+} from 'lucide-react';
 import { SlideshowEditor } from './SlideshowEditor';
 import { useAdmin } from './store';
 const modes = [
@@ -12,6 +21,7 @@ const modes = [
   ['media', 'صورة / فيديو فقط', 'ملء الشاشة دون أي عناصر', ImageIcon],
   ['slideshow', 'عرض شرائح الصور', 'صور متتابعة بملء الشاشة', Images],
   ['presentation', 'ملف PowerPoint', 'شرائح مع تحكم من الجوال والمؤشر', PanelsTopLeft],
+  ['show', 'وضع التقديم', 'يحفظ الملفات على التلفزيون ثم تقدّم من جوالك', Presentation],
   ['loop', 'خلفية الحصص', 'خلفية متحركة، ساعة وحصة', Clock],
 ] as const;
 export function DisplayModes() {

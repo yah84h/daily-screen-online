@@ -89,6 +89,13 @@ export function withDisplayMode<T extends Partial<Template>>(
         }
       : {}),
     displayMode: mode,
+    ...(mode === 'show' && !t.showKey
+      ? {
+          showKey: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) =>
+            b.toString(16).padStart(2, '0'),
+          ).join(''),
+        }
+      : {}),
     rotation: t.rotation ? { ...t.rotation, enabled: false } : t.rotation,
   };
 }

@@ -39,9 +39,10 @@ try {
   await phone.getByLabel('كلمة المرور', { exact: true }).fill('Arc@2027');
   await phone.getByRole('button', { name: 'تسجيل الدخول', exact: true }).click();
   await phone.waitForURL('**/admin');
-  await phone
-    .getByRole('button', { name: 'ملف PowerPoint شرائح مع تحكم من الجوال والمؤشر', exact: true })
-    .click();
+  const nav = phone.getByRole('navigation', { name: 'التنقل الرئيسي' });
+  await nav.getByRole('button', { name: 'التصميم', exact: true }).click();
+  await phone.getByRole('radio', { name: /ملف PowerPoint/ }).click();
+  await nav.getByRole('button', { name: 'اليوم', exact: true }).click();
   const chooser = phone.waitForEvent('filechooser');
   await phone.getByRole('button', { name: 'رفع ملف PowerPoint', exact: true }).click();
   await (await chooser).setFiles(resolve('tests/fixtures/presentation-test.pptx'));
@@ -142,6 +143,10 @@ try {
   wav.writeUInt32LE(400000, 40);
   const audioFile = join(folder, 'tone.wav');
   await writeFile(audioFile, wav);
+  await phone
+    .getByRole('navigation', { name: 'تحرير المحتوى' })
+    .getByRole('button', { name: 'صوت الخلفية' })
+    .click();
   const audioChooser = phone.waitForEvent('filechooser');
   await phone.getByRole('button', { name: 'رفع ملف صوت', exact: true }).click();
   await (await audioChooser).setFiles(audioFile);
@@ -165,10 +170,12 @@ try {
   const device = await separate.newPage();
   await device.goto(base + '/display');
   await device.locator('audio').waitFor({ state: 'attached' });
-  assert(
-    await device.locator('audio').evaluate((a) => a.paused),
-    'Another device starts with audio disabled',
-  );
+  // Since admin remote control, every display of a screen follows the screen's shared
+  // play/pause state (see remote-media-browser), so another device plays along.
+  await device.waitForFunction(() => {
+    const audio = document.querySelector('audio');
+    return audio && !audio.paused;
+  });
   await separate.close();
   await tv.getByRole('button', { name: 'إيقاف مؤقت', exact: true }).click();
   assert(await tv.locator('audio').evaluate((a) => a.paused));
@@ -203,7 +210,7 @@ try {
   await tv.screenshot({ path: 'work/pptx-test-display.png' });
   assert.deepEqual(errors, []);
   console.log(
-    'PASS mouse-only display controls, looping uploaded device audio and independent devices; real PPTX conversion: 3 rendered slides, authenticated upload, phone next/goto/blackout, presenter PageDown/Home/B, synchronized status, bounds, mobile fit.',
+    'PASS mouse-only display controls, looping uploaded device audio, other devices following the shared screen playback; real PPTX conversion: 3 rendered slides, authenticated upload, phone next/goto/blackout, presenter PageDown/Home/B, synchronized status, bounds, mobile fit.',
   );
 } finally {
   await browser?.close();

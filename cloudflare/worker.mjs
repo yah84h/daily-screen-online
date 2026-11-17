@@ -8,6 +8,7 @@ import { handler as staffLogin } from '../netlify/functions/staff-login.mjs';
 import { handler as staffPassword } from '../netlify/functions/staff-password.mjs';
 import { handler as staff } from '../netlify/functions/staff.mjs';
 import { handler as techNews } from '../netlify/functions/tech-news.mjs';
+import { handler as turn } from '../netlify/functions/turn.mjs';
 
 /** The Netlify functions, served unchanged on Cloudflare Workers through a small event adapter. */
 const handlers = {
@@ -19,6 +20,7 @@ const handlers = {
   'staff-password': staffPassword,
   staff,
   'tech-news': techNews,
+  turn,
 };
 // Same public aliases as netlify.toml.
 const aliases = {

@@ -68,7 +68,9 @@ export type Template = {
   customDays?: import('./customDays').CustomDay[];
   savedLayouts?: SavedLayout[];
   rotation?: import('../../local-test/rotation.mjs').DisplayRotation;
-  displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation';
+  displayMode?: 'daily' | 'loop' | 'media' | 'slideshow' | 'presentation' | 'show';
+  /** Presenting mode: shared secret the phone uses to command this screen's TV. */
+  showKey?: string;
   schoolName?: string;
   schoolTagline?: string;
   schoolLogo?: string;

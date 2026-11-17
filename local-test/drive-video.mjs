@@ -87,7 +87,8 @@ export async function driveVideoResponse(request, { fetcher = fetch } = {}) {
     return new Response(null, { status: 416, headers: cr ? { 'Content-Range': cr } : {} });
   }
   const mime = (upstream.headers.get('content-type') || '').split(';')[0].toLowerCase(),
-    audio = url.searchParams.get('audio') === '1';
+    audio = url.searchParams.get('audio') === '1',
+    image = url.searchParams.get('image') === '1';
   if (
     !upstream.ok ||
     !(
@@ -105,7 +106,9 @@ export async function driveVideoResponse(request, { fetcher = fetch } = {}) {
             'application/ogg',
             'application/octet-stream',
           ]
-        : ['video/mp4', 'video/webm', 'video/quicktime', 'application/octet-stream']
+        : image
+          ? ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/octet-stream']
+          : ['video/mp4', 'video/webm', 'video/quicktime', 'application/octet-stream']
     ).includes(mime)
   ) {
     await upstream.body?.cancel();

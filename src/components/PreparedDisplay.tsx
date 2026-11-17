@@ -236,11 +236,11 @@ function getPreparationSources(content: Content, template: Partial<Template>): s
   if (activeCustomDay(template)) return [];
   const rotation = rotationOptions(template.rotation);
   const mode =
-    rotation.enabled && template.displayMode !== 'presentation'
+    rotation.enabled && !['presentation', 'show'].includes(template.displayMode || '')
       ? rotation.normal
       : template.displayMode || 'daily';
   // Never gate a layout switch on media that the selected layout cannot display.
-  if (['presentation', 'slideshow', 'photos'].includes(mode)) return [];
+  if (['presentation', 'show', 'slideshow', 'photos'].includes(mode)) return [];
   if (
     mode === 'loop' &&
     (template.loopHidePhoto ||

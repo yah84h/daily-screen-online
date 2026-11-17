@@ -13,13 +13,13 @@ export function RotationEditor() {
           type="checkbox"
           aria-label="تفعيل التناوب"
           checked={r.enabled}
-          disabled={!data || busy || template.displayMode === 'presentation'}
+          disabled={!data || busy || ['presentation', 'show'].includes(template.displayMode || '')}
           onChange={(e) => change({ enabled: e.target.checked })}
         />
         تبديل العرض العادي ولوحة المتصدرين تلقائيًا
       </label>
-      {template.displayMode === 'presentation' && (
-        <p className="field-hint">يتوقف التناوب أثناء عرض PowerPoint حتى تبقى الشرائح تحت تحكمك.</p>
+      {['presentation', 'show'].includes(template.displayMode || '') && (
+        <p className="field-hint">يتوقف التناوب أثناء العروض حتى تبقى تحت تحكمك.</p>
       )}
       {r.enabled && (
         <>
