@@ -144,6 +144,7 @@ export function LoopScreen({
           {template.loopTexts.map((t) => (
             <div
               key={t.id}
+              data-text-id={t.id}
               dir="auto"
               style={{
                 left: t.x + '%',

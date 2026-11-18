@@ -12,6 +12,7 @@ import { initialContent, type Content } from '@/lib/types';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
+import { soundBlocked } from '@/lib/sound';
 import { useTransitionClips } from '@/lib/transitions';
 import { TransitionOverlay, type TransitionPhase } from './TransitionOverlay';
 import { endRule, partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
@@ -387,7 +388,7 @@ function ShowVideo({
   // Kiosk launches allow sound; if a browser blocks it, play silently rather than not at all.
   const start = (element: HTMLVideoElement) =>
     element.play().catch(() => {
-      element.muted = true;
+      soundBlocked(element);
       void element.play().catch(() => {});
     });
   const report = useRef(onReport);

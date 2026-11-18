@@ -1,3 +1,4 @@
+import { soundBlocked } from '@/lib/sound';
 import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { useEffect, useRef, useState } from 'react';
@@ -42,7 +43,8 @@ export function MediaVideo({
       setWaiting(false);
       v.play().catch(async () => {
         if (!active) return;
-        v.muted = true;
+        if (sound) soundBlocked(v);
+        else v.muted = true;
         setAction(true);
         try {
           await v.play();

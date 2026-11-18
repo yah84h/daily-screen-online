@@ -1378,3 +1378,18 @@ label {
 .tv-blackout ~ .tv-settings {
   z-index: 9001;
 }
+.tv-sound-hint {
+  position: fixed;
+  bottom: 3vh;
+  left: 50%;
+  z-index: 60;
+  transform: translateX(-50%);
+  padding: 1.2vh 2.4vh;
+  border-radius: 999px;
+  color: #fff;
+  background: #0b1a33d9;
+  font:
+    700 2vh/1.4 'Cairo',
+    sans-serif;
+  pointer-events: none;
+}
