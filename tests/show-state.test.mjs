@@ -117,8 +117,13 @@ test('standby background photo is set, sanitised and cleared', async () => {
     op: 'background',
     item: { id: 'background-1', name: 'hall.jpg', kind: 'video' },
   });
-  assert.deepEqual(s.background, { id: 'background-1', name: 'hall.jpg' });
-  assert.equal(findPartOwner(s, 'background-1').kind, 'image');
+  assert.deepEqual(s.background, { id: 'background-1', name: 'hall.jpg', kind: 'video' });
+  assert.equal(findPartOwner(s, 'background-1').kind, 'video', 'looping video background');
+  const photo = showReduce(emptyShow(), {
+    op: 'background',
+    item: { id: 'background-2', name: 'hall.gif', kind: 'deck' },
+  });
+  assert.equal(findPartOwner(photo, 'background-2').kind, 'image', 'anything else is a photo/GIF');
   assert.equal(findPartOwner(s, 'nope'), null);
   assert.throws(() => showReduce(s, { op: 'background', item: { id: '../x', name: 'x' } }));
   s = showReduce(s, { op: 'background', item: null });

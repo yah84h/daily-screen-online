@@ -103,11 +103,18 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
   const backgroundReady = !!background && !!status?.stored[partKey(background.id)];
   const chooseBackground = async (file?: File) => {
     if (!file) return;
-    if (!file.type.startsWith('image/')) return notify('اختر صورة.');
+    const video = file.type.startsWith('video/') || /\.(mp4|m4v|webm|mov)$/i.test(file.name);
+    if (!video && !file.type.startsWith('image/')) return notify('اختر صورة أو GIF أو فيديو.');
+    if (file.size > SHOW_FILE_LIMIT) return notify('الملف أكبر من ٢ جيجابايت.');
+    // .m4v is MP4: send it labelled as MP4 so the TV's player accepts it.
+    const blob =
+      /\.m4v$/i.test(file.name) || file.type === 'video/x-m4v'
+        ? new Blob([file], { type: 'video/mp4' })
+        : file;
     const id = crypto.randomUUID();
     const item: ShowItem = {
       id,
-      kind: 'image',
+      kind: video ? 'video' : 'image',
       source: 'phone',
       url: '',
       after: 'auto',
@@ -117,9 +124,12 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
       size: file.size,
     };
     try {
-      await send({ op: 'background', item: { id, name: file.name } });
-      files.current.set(id, [file]);
-      await sendFiles(item, [file]);
+      await send({
+        op: 'background',
+        item: { id, name: file.name, kind: video ? 'video' : 'image' },
+      });
+      files.current.set(id, [blob]);
+      await sendFiles(item, [blob]);
       files.current.delete(id);
     } catch (error) {
       notify((error as Error).message);
@@ -630,7 +640,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
                 <span className="show-bg-swatch photo">
                   <ImageIcon size={18} />
                 </span>
-                {background ? 'تغيير صورتي' : 'صورة من جوالي'}
+                {background ? 'تغيير الخلفية' : 'صورة أو GIF أو فيديو'}
               </button>
             </div>
             {background && (
@@ -652,8 +662,8 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               ref={bgPicker}
               type="file"
               hidden
-              accept="image/*"
-              aria-label="صورة الخلفية"
+              accept="image/*,video/mp4,video/x-m4v,video/webm,.mp4,.m4v,.webm"
+              aria-label="ملف الخلفية"
               onChange={(e) => {
                 void chooseBackground(e.target.files?.[0]);
                 e.target.value = '';

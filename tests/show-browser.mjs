@@ -106,7 +106,7 @@ try {
     await tv.waitForTimeout(1500);
     await tv.screenshot({ path: 'work/show-tv-standby-loop.png' });
   }
-  await phone.getByLabel('صورة الخلفية').setInputFiles({
+  await phone.getByLabel('ملف الخلفية').setInputFiles({
     name: 'hall.png',
     mimeType: 'image/png',
     buffer: png,
