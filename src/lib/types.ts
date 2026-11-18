@@ -87,7 +87,8 @@ export type Template = {
     Record<import('./loopPositions').LoopElement, import('./loopPositions').LoopPosition>
   >;
   loopLayout?: string;
-  loopBackdrop?: 'waves' | 'zigzag' | 'school-video' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
+  loopBackdrop?:
+    'waves' | 'zigzag' | 'school-video' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
   loopCardStyle?: 'soft' | 'glass' | 'outlined';
   loopExtras?: {
     topic?: boolean;
