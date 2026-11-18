@@ -323,6 +323,7 @@ function LiveShow({
             lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
             onFinish={() => live && !switching.current && finish()}
             frozen={!live || switching.current}
+            hold={transition !== null}
           />
         ) : (
           <img src={shown.url} alt="" draggable={false} />
@@ -354,6 +355,7 @@ function ShowVideo({
   lead,
   onFinish,
   frozen = false,
+  hold = false,
 }: {
   src: string;
   command: ReturnType<typeof useShowHost>['videoCommand'];
@@ -363,6 +365,8 @@ function ShowVideo({
   onFinish: () => void;
   /** Leaving (under the curtain): stop at once, silently, instead of playing on. */
   frozen?: boolean;
+  /** A curtain is moving: wait on the current frame, start once it has gone. */
+  hold?: boolean;
 }) {
   const finished = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
@@ -373,6 +377,12 @@ function ShowVideo({
     el.muted = true;
     el.pause();
   }, [frozen]);
+  // Kiosk launches allow sound; if a browser blocks it, play silently rather than not at all.
+  const start = (element: HTMLVideoElement) =>
+    element.play().catch(() => {
+      element.muted = true;
+      void element.play().catch(() => {});
+    });
   const report = useRef(onReport);
   report.current = onReport;
   const send = () => {
@@ -392,14 +402,20 @@ function ShowVideo({
     const saved = savedVolume();
     element.volume = saved.volume;
     element.muted = saved.muted;
-    // Kiosk launches allow sound; if a browser blocks it, play silently rather than freeze.
-    element.play().catch(() => {
-      element.muted = true;
-      void element.play().catch(() => {});
-    });
+    // Wait on the first frame while a curtain is still moving; the hold effect starts it.
+    if (!held.current) start(element);
     const timer = setInterval(send, 1000);
     return () => clearInterval(timer);
   }, [src]);
+  // Freeze on the current frame during a transition; play as soon as the curtain has gone.
+  const held = useRef(hold);
+  held.current = hold;
+  useEffect(() => {
+    const el = video.current;
+    if (!el || frozen) return;
+    if (hold) el.pause();
+    else if (el.paused && !el.ended && !finished.current) start(el);
+  }, [hold, frozen]);
   useEffect(() => {
     const el = video.current;
     if (!el || !command || command.at < mountedAt) return;
