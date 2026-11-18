@@ -31,9 +31,9 @@ jobs:
           cd release
           ls -la
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" *.exe *.yml --clobber
+            gh release upload "$TAG" *.exe --clobber
           else
-            gh release create "$TAG" *.exe *.yml \
+            gh release create "$TAG" *.exe \
               --title "Ezaati Player $VERSION (Windows)" \
               --notes-file ../RELEASE_NOTES.md
           fi
