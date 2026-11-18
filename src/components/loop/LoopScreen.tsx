@@ -130,6 +130,7 @@ export function LoopScreen({
         )
       }
       data-cards={template.loopCardStyle || 'soft'}
+      data-hidden={(template.loopHidden || []).join(' ')}
       data-slideshow={
         !!(
           template.backgroundImage ||

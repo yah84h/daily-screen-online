@@ -90,6 +90,8 @@ export type Template = {
   loopBackdrop?:
     'waves' | 'zigzag' | 'school-video' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
   loopCardStyle?: 'soft' | 'glass' | 'outlined';
+  /** Classes background: elements switched off (see LOOP_ELEMENTS). */
+  loopHidden?: string[];
   loopExtras?: {
     topic?: boolean;
     announcement?: boolean;

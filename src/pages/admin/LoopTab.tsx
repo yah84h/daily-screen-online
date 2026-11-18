@@ -54,6 +54,23 @@ function TimeField({
     </div>
   );
 }
+/** Classes-background elements that can be switched off (id → label). */
+const LOOP_ELEMENTS = [
+  ['cards', 'خلفيات الصناديق (يبقى المحتوى)'],
+  ['clock', 'صندوق الساعة كاملًا'],
+  ['date', 'التاريخ'],
+  ['period', 'الحصة والعد التنازلي'],
+  ['board', 'لوحة التميز'],
+  ['photo', 'صور الوسط'],
+  ['school', 'اسم المدرسة'],
+  ['tuwaiq', 'شعار طويق'],
+  ['ministry', 'شعار الوزارة'],
+  ['logo', 'شعار المدرسة المخصص'],
+  ['news', 'شريط الأخبار والأسئلة'],
+  ['extras', 'الإضافات (الموضوع، الإعلان، QR، الجدول)'],
+  ['wallpaper', 'الخلفية المتحركة (تبقى بلون الخلفية)'],
+] as const;
+
 export function LoopTab() {
   const { data, template, setTemplate, saveDesign, busy, templateDirty, chooseImage } = useAdmin();
   const board = recognitionOf(template);
@@ -225,6 +242,35 @@ export function LoopTab() {
                 استعادة ألوان المدرسة
               </button>
             </div>
+          </SettingsSection>
+          <SettingsSection title="إظهار وإخفاء العناصر" description="اختر ما يظهر على شاشة الحصص">
+            <div className="loop-hide-grid">
+              {LOOP_ELEMENTS.map(([id, label]) => (
+                <label key={id}>
+                  <input
+                    type="checkbox"
+                    aria-label={'إظهار ' + label}
+                    checked={!(template.loopHidden || []).includes(id)}
+                    onChange={(e) =>
+                      setTemplate((t) => {
+                        const hidden = new Set(t.loopHidden || []);
+                        if (e.target.checked) hidden.delete(id);
+                        else hidden.add(id);
+                        return { ...t, loopHidden: [...hidden] };
+                      })
+                    }
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="button white"
+              onClick={() => setTemplate((t) => ({ ...t, loopHidden: [] }))}
+            >
+              إظهار كل العناصر
+            </button>
           </SettingsSection>
           <SettingsSection title="تنويعات خلفية الحصص">
             <label>

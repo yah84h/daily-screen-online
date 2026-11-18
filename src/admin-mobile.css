@@ -2063,3 +2063,14 @@
 .admin-studio .show-add-break {
   min-height: 48px;
 }
+.loop-hide-grid {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.loop-hide-grid label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
