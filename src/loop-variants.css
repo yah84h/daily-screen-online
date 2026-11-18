@@ -788,3 +788,26 @@
   height: 100%;
   object-fit: cover;
 }
+/* Classes background: elements switched off from «إظهار وإخفاء العناصر». */
+.screen-loop[data-hidden~='clock'] .loop-clock-panel,
+.screen-loop[data-hidden~='date'] :is(.loop-date, .loop-hijri),
+.screen-loop[data-hidden~='period'] :is(.loop-period, .lesson-countdown),
+.screen-loop[data-hidden~='board'] .recognition-board,
+.screen-loop[data-hidden~='photo'] :is(.loop-center-media, .loop-center-slideshow),
+.screen-loop[data-hidden~='school'] .native-school-name,
+.screen-loop[data-hidden~='tuwaiq'] .tuwaiq-brand,
+.screen-loop[data-hidden~='ministry'] .ministry-brand,
+.screen-loop[data-hidden~='logo'] .native-custom-logo,
+.screen-loop[data-hidden~='news'] .news-ribbon,
+.screen-loop[data-hidden~='extras'] .loop-extras,
+.screen-loop[data-hidden~='wallpaper']
+  :is(.loop-decoration, .native-artwork, .zigzag-wallpaper, .school-video-wallpaper) {
+  display: none !important;
+}
+/* Keep the content, drop the box behind it. */
+.screen-loop[data-hidden~='cards'] :is(.loop-clock-panel, .recognition-board, .loop-extras > *) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
