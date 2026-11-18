@@ -64,6 +64,7 @@ export function Screen({
         showKey={t.showKey || ''}
         template={t}
         school={school}
+        content={c}
       />
     );
   const customDay = activeCustomDay(t, now);
