@@ -265,3 +265,8 @@
 .show-standby.with-wallpaper h1 {
   color: var(--loop-text);
 }
+
+/* The curtain reveals it; a fade from black would show as a dim flash. */
+.show-layer.no-fade {
+  animation: none;
+}

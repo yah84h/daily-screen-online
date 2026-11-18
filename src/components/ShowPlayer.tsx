@@ -201,7 +201,10 @@ function LiveShow({
         if (phase === 'intro' && switching.current) {
           switching.current = false;
           setTransition('outro');
-        } else setTransition((current) => (current === phase ? null : current));
+        } else if (phase === 'intro')
+          // Let the standby's own video draw its first frame before the curtain lifts.
+          setTimeout(() => setTransition((current) => (current === 'intro' ? null : current)), 450);
+        else setTransition((current) => (current === phase ? null : current));
       }}
     />
   );
@@ -314,7 +317,11 @@ function LiveShow({
     );
   return (
     <div className="screen show-screen" dir="rtl">
-      <div className="show-layer" key={shown.step.item + ':' + shown.step.part}>
+      <div
+        // Under a curtain the curtain does the reveal: no extra fade from black.
+        className={'show-layer' + (transition ? ' no-fade' : '')}
+        key={shown.step.item + ':' + shown.step.part}
+      >
         {shown.step.kind === 'video' ? (
           <ShowVideo
             src={shown.url}
