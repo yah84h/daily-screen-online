@@ -39,9 +39,9 @@ export function DriveVideo({
     cacheDriveVideo(url, abort.signal, (loaded, total) => {
       if (!abort.signal.aborted) setState((s) => ({ ...s, loaded, total }));
     })
-      .then(({ blob, persistent }) => {
+      .then(({ blob, persistent, localUrl }) => {
         if (abort.signal.aborted) return;
-        objectURL = URL.createObjectURL(blob);
+        objectURL = localUrl || URL.createObjectURL(blob);
         setState((s) => ({ ...s, source: objectURL, temporary: !persistent }));
       })
       .catch((error) => {

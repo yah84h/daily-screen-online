@@ -1,0 +1,31 @@
+{
+  "name": "ezaati-player",
+  "productName": "Ezaati Player",
+  "version": "1.0.0",
+  "description": "Windows kiosk player for the Ezaati school TV screen",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/downloader.test.cjs",
+    "dist": "electron-builder --win nsis portable --x64"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8"
+  },
+  "build": {
+    "appId": "com.ezaati.player",
+    "productName": "Ezaati Player",
+    "files": ["main.cjs", "preload.cjs", "downloader.cjs", "offline.html", "package.json"],
+    "directories": { "output": "release" },
+    "win": { "target": ["nsis", "portable"], "signAndEditExecutable": false },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true
+    },
+    "portable": { "artifactName": "EzaatiPlayer-portable-${version}.exe" }
+  }
+}

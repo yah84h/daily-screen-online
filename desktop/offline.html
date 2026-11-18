@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+    <title>Ezaati Player</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0b1220; color: #e6edf7; font-family: 'Segoe UI', Tahoma, sans-serif; }
+      main { height: 100%; display: grid; place-content: center; gap: 18px; text-align: center; padding: 24px; }
+      h1 { font-size: 2.4rem; margin: 0; }
+      p { margin: 0; color: #9fb0c8; font-size: 1.2rem; }
+      small { color: #6b7d97; }
+      form { display: grid; gap: 12px; min-width: min(560px, 90vw); text-align: start; }
+      input[type='url'] { font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid #33415c; background: #121b2e; color: inherit; direction: ltr; }
+      button { font: inherit; padding: 10px 18px; border-radius: 8px; border: 0; background: #2f6fed; color: white; cursor: pointer; }
+      .row { display: flex; gap: 10px; align-items: center; }
+      code { direction: ltr; unicode-bidi: embed; }
+    </style>
+  </head>
+  <body>
+    <main id="offline" hidden>
+      <h1>الشاشة غير متصلة</h1>
+      <p>تتم إعادة المحاولة تلقائيًا خلال <span id="count">15</span> ثانية…</p>
+      <small id="reason"></small>
+      <div><button id="retry">إعادة المحاولة الآن</button></div>
+      <small>Ctrl+Shift+S الإعدادات · Ctrl+Shift+Q خروج</small>
+    </main>
+    <main id="settings" hidden>
+      <h1>إعدادات مشغل إذاعتي</h1>
+      <form id="form">
+        <label>رابط الشاشة<input type="url" name="url" required /></label>
+        <label class="row"><input type="checkbox" name="kiosk" /> ملء الشاشة دائمًا (وضع الكشك)</label>
+        <small>مجلد الوسائط المحفوظة: <code id="dir"></code></small>
+        <div class="row"><button type="submit">حفظ وإعادة التشغيل</button><button type="button" id="back">رجوع للشاشة</button></div>
+      </form>
+    </main>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const api = window.playerSettings;
+      if (q.get('settings')) {
+        document.getElementById('settings').hidden = false;
+        api.get().then((c) => {
+          const f = document.getElementById('form');
+          f.url.value = c.url;
+          f.kiosk.checked = c.kiosk;
+          document.getElementById('dir').textContent = c.mediaDir;
+        });
+        document.getElementById('form').onsubmit = (e) => {
+          e.preventDefault();
+          const f = e.target;
+          api.save({ url: f.url.value, kiosk: f.kiosk.checked });
+        };
+        document.getElementById('back').onclick = () => api.retry();
+      } else {
+        document.getElementById('offline').hidden = false;
+        document.getElementById('reason').textContent = q.get('reason') || '';
+        let n = 15;
+        setInterval(() => (document.getElementById('count').textContent = String(Math.max(0, --n))), 1000);
+        document.getElementById('retry').onclick = () => api.retry();
+      }
+    </script>
+  </body>
+</html>
