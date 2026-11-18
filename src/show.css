@@ -247,3 +247,21 @@
   font-size: 1.15cqw;
   color: #9fb7ff;
 }
+/* Standby with the classes-background animated wallpaper (palette colors). */
+.show-standby.with-wallpaper .zigzag-wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.show-standby.with-wallpaper .show-standby-card {
+  position: relative;
+  z-index: 2;
+  padding: 2.5cqw 4cqw;
+  border-radius: 3cqw;
+  background: color-mix(in srgb, var(--loop-widget) 88%, transparent);
+  color: var(--loop-text);
+}
+.show-standby.with-wallpaper h1 {
+  color: var(--loop-text);
+}

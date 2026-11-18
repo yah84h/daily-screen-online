@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { loopAppearance } from '@/lib/loopAppearance';
+import { ZigzagWallpaper } from './loop/ZigzagWallpaper';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
@@ -19,7 +21,13 @@ type Props = {
 export function ShowPlayer({ screenId, token = '', showKey, template, school }: Props) {
   const logo = template.schoolLogo || school.logo_url || '';
   if (!screenId || !showKey) return <Standby logo={logo} title="وضع التقديم" note="" />;
-  return <LiveShow screenId={screenId} token={token} showKey={showKey} logo={logo} />;
+  // Palette colors for the classes-background wallpaper option.
+  const palette = Object.fromEntries(
+    Object.entries(loopAppearance(template.loopAppearance)).map(([k, v]) => ['--loop-' + k, v]),
+  ) as CSSProperties;
+  return (
+    <LiveShow screenId={screenId} token={token} showKey={showKey} logo={logo} palette={palette} />
+  );
 }
 
 /** Calm audience-facing standby: no bars, no file names. Shared with PowerPoint mode. */
@@ -30,6 +38,7 @@ export function Standby({
   photo = '',
   photoKind = 'image',
   loop = '',
+  wallpaper,
 }: {
   logo: string;
   title: string;
@@ -39,7 +48,20 @@ export function Standby({
   photoKind?: 'image' | 'video';
   /** The school loop clip (it already shows the logo). */
   loop?: string;
+  /** The classes-background animated wallpaper, colored by these palette variables. */
+  wallpaper?: CSSProperties;
 }) {
+  if (wallpaper)
+    return (
+      <div className="screen show-screen show-standby with-wallpaper" style={wallpaper} dir="rtl">
+        <ZigzagWallpaper />
+        <div className="show-standby-card">
+          {logo ? <img src={logo} alt="" /> : <GraduationCap size={96} strokeWidth={1.4} />}
+          {title && <h1>{title}</h1>}
+        </div>
+        {note && <small className="show-standby-note">{note}</small>}
+      </div>
+    );
   const kind = photo ? ' with-photo' : loop ? ' with-loop' : '';
   return (
     <div
@@ -75,11 +97,13 @@ function LiveShow({
   token,
   showKey,
   logo,
+  palette,
 }: {
   screenId: string;
   token: string;
   showKey: string;
   logo: string;
+  palette: CSSProperties;
 }) {
   const { show, urls, stored, progress, videoCommand, reportPlayback, command } = useShowHost(
     screenId,
@@ -90,7 +114,9 @@ function LiveShow({
   const step = steps[Math.min(show.step, Math.max(0, steps.length - 1))];
   const url = step ? urls[partKey(step.item, step.part)] : '';
   const ready = showReadiness(show.items, stored);
-  const live = show.phase === 'live' && !!step && !!url;
+  // A break item shows the standby (starter) screen in the middle of the show.
+  const onBreak = show.phase === 'live' && step?.kind === 'break';
+  const live = show.phase === 'live' && !!step && !!url && !onBreak;
   const settings = show.settings;
   const clips = useTransitionClips(true);
   const photo = show.background ? urls[partKey(show.background.id)] || '' : '';
@@ -105,6 +131,14 @@ function LiveShow({
     if (show.phase === 'live') setTransition('outro');
     else if (was === 'live') setTransition('intro');
   }, [show.phase, clips]);
+  // Reaching a break: curtain over the last file, then the starter screen; leaving it: reveal.
+  const wasBreak = useRef(onBreak);
+  useEffect(() => {
+    const was = wasBreak.current;
+    wasBreak.current = onBreak;
+    if (!clips || was === onBreak || show.phase !== 'live') return;
+    setTransition(onBreak ? 'intro' : 'outro');
+  }, [onBreak, clips, show.phase]);
   // Presenter clicker / keyboard plugged into the TV.
   const keys = useRef({ show, ready, last: steps.length - 1 });
   keys.current = { show, ready, last: steps.length - 1 };
@@ -150,6 +184,10 @@ function LiveShow({
   const finish = useCallback(() => command({ op: 'finish' }), [command]);
   // Images (and PowerPoint slides) move on by themselves after their time when a rule says so.
   useEffect(() => {
+    if (onBreak && rule !== 'stay') {
+      const timer = setTimeout(finish, (settings?.imageSeconds || 10) * 1000);
+      return () => clearTimeout(timer);
+    }
     if (!live || step.kind !== 'image' || rule === 'stay' || show.blackout) return;
     const timer = setTimeout(finish, (settings?.imageSeconds || 10) * 1000);
     return () => clearTimeout(timer);
@@ -163,6 +201,7 @@ function LiveShow({
     show.blackout,
     show.revision,
     finish,
+    onBreak,
   ]);
   // Keep the last file on screen while the curtain sweeps over it (end / back to standby).
   // What is on screen. The last file stays under the curtain while it sweeps in
@@ -232,6 +271,7 @@ function LiveShow({
           title={show.title}
           photo={photo}
           photoKind={show.background?.kind === 'video' ? 'video' : 'image'}
+          wallpaper={show.background?.kind === 'wallpaper' ? palette : undefined}
           loop={clips?.loop || ''}
           note={
             show.phase === 'live' && step && !url
@@ -409,21 +449,26 @@ function LoadingPage({
   progress: ReturnType<typeof useShowHost>['progress'];
   done: boolean;
 }) {
-  const rows = items.map((item) => {
-    const parts = item.kind === 'deck' ? item.parts : 1;
-    let have = 0;
-    for (let part = 0; part < parts; part++) if (stored[partKey(item.id, part)]) have++;
-    const live = progress[item.id];
-    const fraction =
-      have === parts
-        ? 1
-        : live?.total
-          ? Math.min(0.99, item.source === 'link' ? live.loaded / live.total : live.loaded / parts)
-          : have / parts;
-    return { item, fraction, error: live?.error, done: have === parts };
-  });
+  const rows = items
+    .filter((item) => item.kind !== 'break')
+    .map((item) => {
+      const parts = item.kind === 'deck' ? item.parts : 1;
+      let have = 0;
+      for (let part = 0; part < parts; part++) if (stored[partKey(item.id, part)]) have++;
+      const live = progress[item.id];
+      const fraction =
+        have === parts
+          ? 1
+          : live?.total
+            ? Math.min(
+                0.99,
+                item.source === 'link' ? live.loaded / live.total : live.loaded / parts,
+              )
+            : have / parts;
+      return { item, fraction, error: live?.error, done: have === parts };
+    });
   const overall = rows.reduce((sum, row) => sum + row.fraction, 0) / Math.max(1, rows.length);
-  const kind = { video: 'فيديو', image: 'صورة', deck: 'PowerPoint' } as const;
+  const kind = { video: 'فيديو', image: 'صورة', deck: 'PowerPoint', break: 'استراحة' } as const;
   return (
     <div className={'screen show-screen show-loading' + (done ? ' done' : '')} dir="rtl">
       <div className="show-loading-head">

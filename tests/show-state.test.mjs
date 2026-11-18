@@ -163,3 +163,18 @@ test('per-file end rules, early hand-over value, play out of order', () => {
     ['standby', 0],
   );
 });
+
+test('break items stop at the standby screen; wallpaper background has no file', async () => {
+  const { findPartOwner } = await import('../local-test/show-state.mjs');
+  let s = showReduce(emptyShow(), video);
+  s = showReduce(s, { op: 'add', item: { id: 'break-01', kind: 'break', name: 'شاشة الانتظار' } });
+  s = showReduce(s, deck);
+  assert.deepEqual(
+    showSteps(s.items).map((step) => step.kind),
+    ['video', 'break', 'image', 'image', 'image'],
+  );
+  assert.equal(showReadiness(s.items, {}).total, 4, 'a break needs no file');
+  s = showReduce(s, { op: 'background', item: { id: 'x', name: 'x', kind: 'wallpaper' } });
+  assert.deepEqual(s.background, { id: 'wallpaper', name: 'wallpaper', kind: 'wallpaper' });
+  assert.equal(findPartOwner(s, 'wallpaper'), null);
+});
