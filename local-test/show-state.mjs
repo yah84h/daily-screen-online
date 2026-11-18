@@ -20,7 +20,12 @@ export function showSteps(items) {
 /** Storage key of one stored file (a deck slide is a part of its item). */
 export const partKey = (item, part = 0) => item + '#' + part;
 
-export const defaultSettings = () => ({ autoNext: false, imageSeconds: 10, loop: false });
+export const defaultSettings = () => ({
+  autoNext: false,
+  imageSeconds: 10,
+  loop: false,
+  loadingPage: true,
+});
 
 export function emptyShow() {
   return {
@@ -44,6 +49,7 @@ function cleanSettings(raw) {
       Math.min(600, Math.round(Number(raw?.imageSeconds) || base.imageSeconds)),
     ),
     loop: typeof raw?.loop === 'boolean' ? raw.loop : base.loop,
+    loadingPage: typeof raw?.loadingPage === 'boolean' ? raw.loadingPage : base.loadingPage,
   };
 }
 

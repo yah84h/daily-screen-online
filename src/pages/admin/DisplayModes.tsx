@@ -16,8 +16,13 @@ const modes = [
   ['daily', 'المحتوى اليومي', 'رسالة وصورة بهوية المدرسة', PanelsTopLeft],
   ['media', 'صورة / فيديو فقط', 'ملء الشاشة دون أي عناصر', ImageIcon],
   ['slideshow', 'عرض شرائح الصور', 'صور متتابعة بملء الشاشة', Images],
+  [
+    'show',
+    'وضع التقديم',
+    'الأفضل للفعاليات: PowerPoint وفيديو وصور، يُجهَّز كله قبل البدء',
+    Presentation,
+  ],
   ['presentation', 'ملف PowerPoint', 'شرائح مع تحكم من الجوال والمؤشر', PanelsTopLeft],
-  ['show', 'وضع التقديم', 'يحفظ الملفات على التلفزيون ثم تقدّم من جوالك', Presentation],
   ['loop', 'خلفية الحصص', 'خلفية متحركة، ساعة وحصة', Clock],
 ] as const;
 export function DisplayModes() {

@@ -72,11 +72,8 @@ function LiveShow({
   showKey: string;
   logo: string;
 }) {
-  const { show, urls, stored, videoCommand, reportPlayback, advance, command } = useShowHost(
-    screenId,
-    showKey,
-    token,
-  );
+  const { show, urls, stored, progress, videoCommand, reportPlayback, advance, command } =
+    useShowHost(screenId, showKey, token);
   const steps = showSteps(show.items);
   const step = steps[Math.min(show.step, Math.max(0, steps.length - 1))];
   const url = step ? urls[partKey(step.item, step.part)] : '';
@@ -147,6 +144,34 @@ function LiveShow({
   useEffect(() => {
     if (!live || step.kind !== 'video') reportPlayback(null);
   }, [live, step?.kind, step?.item, reportPlayback]);
+  // Before the show: a full preparation page, then a short "ready" moment, then the standby.
+  const [readyAt, setReadyAt] = useState(0);
+  useEffect(() => {
+    if (ready.complete) setReadyAt((at) => at || Date.now());
+    else setReadyAt(0);
+  }, [ready.complete]);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!readyAt) return;
+    const timer = setTimeout(() => tick((n) => n + 1), 4000);
+    return () => clearTimeout(timer);
+  }, [readyAt]);
+  const preparing =
+    show.phase === 'standby' &&
+    show.settings?.loadingPage !== false &&
+    ready.total > 0 &&
+    (!ready.complete || Date.now() - readyAt < 4000);
+  if (preparing)
+    return (
+      <LoadingPage
+        title={show.title}
+        logo={logo}
+        items={show.items}
+        stored={stored}
+        progress={progress}
+        done={ready.complete}
+      />
+    );
   if (!live)
     return (
       <>
@@ -298,5 +323,78 @@ function ShowVideo({
         onEnded();
       }}
     />
+  );
+}
+
+/** Full-screen preparation page: what the TV is saving, before the show starts. */
+function LoadingPage({
+  title,
+  logo,
+  items,
+  stored,
+  progress,
+  done,
+}: {
+  title: string;
+  logo: string;
+  items: ReturnType<typeof useShowHost>['show']['items'];
+  stored: Record<string, boolean>;
+  progress: ReturnType<typeof useShowHost>['progress'];
+  done: boolean;
+}) {
+  const rows = items.map((item) => {
+    const parts = item.kind === 'deck' ? item.parts : 1;
+    let have = 0;
+    for (let part = 0; part < parts; part++) if (stored[partKey(item.id, part)]) have++;
+    const live = progress[item.id];
+    const fraction =
+      have === parts
+        ? 1
+        : live?.total
+          ? Math.min(0.99, item.source === 'link' ? live.loaded / live.total : live.loaded / parts)
+          : have / parts;
+    return { item, fraction, error: live?.error, done: have === parts };
+  });
+  const overall = rows.reduce((sum, row) => sum + row.fraction, 0) / Math.max(1, rows.length);
+  const kind = { video: 'فيديو', image: 'صورة', deck: 'PowerPoint' } as const;
+  return (
+    <div className={'screen show-screen show-loading' + (done ? ' done' : '')} dir="rtl">
+      <div className="show-loading-head">
+        {logo ? <img src={logo} alt="" /> : <GraduationCap size={64} strokeWidth={1.4} />}
+        <div>
+          <small>{done ? 'كل شيء جاهز' : 'تجهيز العرض على هذا الجهاز'}</small>
+          <h1>{title || 'وضع التقديم'}</h1>
+        </div>
+        <b dir="ltr">{Math.floor(overall * 100)}%</b>
+      </div>
+      <div className="show-loading-bar">
+        <i style={{ width: overall * 100 + '%' }} />
+      </div>
+      <ol className="show-loading-list">
+        {rows.map(({ item, fraction, error, done: ok }) => (
+          <li key={item.id} className={ok ? 'ok' : error ? 'error' : ''}>
+            <span className="show-loading-kind">{kind[item.kind]}</span>
+            <bdi>{item.name}</bdi>
+            <span className="show-loading-state">
+              {ok
+                ? '✓'
+                : error
+                  ? 'تعذر'
+                  : Math.floor(fraction * 100) +
+                    '%' +
+                    (item.kind === 'deck' ? ` · ${item.parts} شريحة` : '')}
+            </span>
+            <span className="show-loading-row-bar">
+              <i style={{ width: fraction * 100 + '%' }} />
+            </span>
+          </li>
+        ))}
+      </ol>
+      <small className="show-loading-foot">
+        {done
+          ? 'ينتقل إلى شاشة الانتظار الآن. ابدأ العرض من الجوال.'
+          : 'يُحفظ كل شيء على هذا الجهاز قبل البدء. يمكن إخفاء هذه الصفحة من إعدادات التشغيل في الجوال.'}
+      </small>
+    </div>
   );
 }

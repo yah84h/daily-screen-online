@@ -9,7 +9,13 @@ export type ShowItem = {
   size: number;
 };
 export type ShowPhase = 'standby' | 'live' | 'paused';
-export type ShowSettings = { autoNext: boolean; imageSeconds: number; loop: boolean };
+export type ShowSettings = {
+  autoNext: boolean;
+  imageSeconds: number;
+  loop: boolean;
+  /** Before the show starts, the TV shows what it is preparing (then the standby). */
+  loadingPage: boolean;
+};
 export type Show = {
   title: string;
   items: ShowItem[];
