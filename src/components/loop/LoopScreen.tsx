@@ -140,6 +140,16 @@ export function LoopScreen({
       <BackgroundSlideshow template={template} />
       <div className="loop-decoration" aria-hidden="true">
         {template.loopBackdrop === 'zigzag' && <ZigzagWallpaper />}
+        {template.loopBackdrop === 'school-video' && (
+          <video
+            className="school-video-wallpaper"
+            src="/transitions/loop.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+        )}
       </div>
       <NativeBackground
         name={

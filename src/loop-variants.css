@@ -777,3 +777,14 @@
     animation: none;
   }
 }
+/* The starter screen video (school logo loop) as the classes wallpaper. */
+.screen-loop[data-backdrop='school-video'] {
+  background: #0b1a33;
+}
+.screen-loop .school-video-wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
