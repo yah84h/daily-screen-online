@@ -1,0 +1,39 @@
+name: Ezaati Player release
+# Builds the Windows player on a real Windows machine and publishes a GitHub release.
+# Run it from the Actions tab (Run workflow) or push a tag like player-v1.0.0.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['player-v*']
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
+      - run: npm run dist
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="player-v$VERSION"
+          cd release
+          ls -la
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" *.exe *.yml --clobber
+          else
+            gh release create "$TAG" *.exe *.yml \
+              --title "Ezaati Player $VERSION (Windows)" \
+              --notes-file ../RELEASE_NOTES.md
+          fi
