@@ -2200,3 +2200,28 @@
 .loop-canvas-overlay .loop-text-box > span:first-child {
   background: #f0715a;
 }
+.loop-canvas-overlay .loop-html-box {
+  border-style: dashed;
+  border-color: #7b5cd6;
+  background: #7b5cd614;
+}
+.loop-canvas-overlay .loop-html-box > span:first-child {
+  background: #7b5cd6;
+}
+.html-blocks textarea {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  direction: ltr;
+  width: 100%;
+}
+.html-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.html-fields code {
+  background: #0001;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 12px;
+}

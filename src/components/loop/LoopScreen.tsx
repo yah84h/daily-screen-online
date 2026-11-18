@@ -18,6 +18,7 @@ import {
   periodAt,
   recognitionOf,
 } from '@/lib/loop';
+import { LoopHtmlBlocks } from './LoopHtmlBlocks';
 import { NewsTicker } from './NewsTicker';
 import NativeBackground from './NativeBackground';
 import { RecognitionBoard } from './RecognitionBoard';
@@ -82,6 +83,34 @@ export function LoopScreen({
       ]);
     }),
   );
+  const schoolName =
+    template.loopSchoolName?.trim() ||
+    (template.loopBranding === 'school' ? school.name : defaultLoopSchoolName);
+  const htmlFields: Record<string, string> = template.loopHtml?.length
+    ? {
+        time: now.toLocaleTimeString('ar-SA', {
+          timeZone: 'Asia/Riyadh',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        date: now.toLocaleDateString('ar-SA-u-ca-gregory', {
+          timeZone: 'Asia/Riyadh',
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        }),
+        hijri: now.toLocaleDateString('ar-SA-u-ca-islamic-umalqura', {
+          timeZone: 'Asia/Riyadh',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }),
+        school: schoolName,
+        period: period.label,
+        periodDetail: period.detail,
+        countdown: countdown?.label || '',
+      }
+    : {};
   return (
     <div
       style={
@@ -139,6 +168,7 @@ export function LoopScreen({
       }
     >
       <BackgroundSlideshow template={template} />
+      <LoopHtmlBlocks blocks={template.loopHtml} layer="back" fields={htmlFields} />
       {!!template.loopTexts?.length && (
         <div className="loop-texts">
           {template.loopTexts.map((t) => (
@@ -176,10 +206,7 @@ export function LoopScreen({
         )}
       </div>
       <NativeBackground
-        name={
-          template.loopSchoolName?.trim() ||
-          (template.loopBranding === 'school' ? school.name : defaultLoopSchoolName)
-        }
+        name={schoolName}
         customLogo={logo}
         pairedBranding={template.loopBranding !== 'school'}
         uiScale={Math.max(0.75, Math.min(1.1, (Number(template.loopScale) || 100) / 100))}
@@ -268,6 +295,7 @@ export function LoopScreen({
         {layout.showBoard !== false && <RecognitionBoard board={recognitionOf(template)} />}
         <LoopExtras template={template} content={content} now={now} />
       </NativeBackground>
+      <LoopHtmlBlocks blocks={template.loopHtml} layer="front" fields={htmlFields} />
       <NewsTicker settings={template.news} now={now} />
     </div>
   );
