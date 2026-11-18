@@ -59,11 +59,16 @@ export async function uploadImage(file: File, folder = 'content'): Promise<strin
 /** Native animated GIF / MP4 / WebM: preserve motion, never convert video to a bitmap. */
 export async function uploadMedia(file: File, folder = 'content'): Promise<string> {
   const extension = file.name.split('.').pop()?.toLowerCase();
-  const mime = (
-    { mp4: 'video/mp4', webm: 'video/webm', gif: 'image/gif' } as Record<string, string>
-  )[extension || ''];
+  const mime =
+    // .m4v is MP4 (Apple's name for it): stored and served as .mp4 so every browser plays it.
+    (
+      { mp4: 'video/mp4', m4v: 'video/mp4', webm: 'video/webm', gif: 'image/gif' } as Record<
+        string,
+        string
+      >
+    )[extension || ''];
   if (!mime) return uploadImage(file, folder);
-  const path = `${folder}/${crypto.randomUUID()}.${extension}`;
+  const path = `${folder}/${crypto.randomUUID()}.${extension === 'm4v' ? 'mp4' : extension}`;
   const { error } = await supabase.storage
     .from('media')
     .upload(path, file, { contentType: mime, cacheControl: '31536000', upsert: false });

@@ -48,6 +48,7 @@ function confirmFormURL(html) {
 
 const EXT = {
   'video/mp4': '.mp4',
+  'video/x-m4v': '.mp4',
   'video/webm': '.webm',
   'video/quicktime': '.mov',
   'audio/mpeg': '.mp3',

@@ -172,11 +172,12 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
           };
           parts = slides;
         } else {
-          const kind = file.type.startsWith('video/')
-            ? 'video'
-            : file.type.startsWith('image/')
-              ? 'image'
-              : null;
+          const kind =
+            file.type.startsWith('video/') || /\.(mp4|m4v|webm|mov)$/i.test(file.name)
+              ? 'video'
+              : file.type.startsWith('image/')
+                ? 'image'
+                : null;
           if (!kind) throw Error(file.name + ': اختر فيديو أو صورة أو ملف PPTX.');
           if (file.size > SHOW_FILE_LIMIT) throw Error(file.name + ': أكبر من ٢ جيجابايت.');
           item = {
@@ -190,7 +191,12 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
             parts: 1,
             size: file.size,
           };
-          parts = [file];
+          // .m4v is MP4: send it labelled as MP4 so the TV's player accepts it.
+          parts = [
+            /\.m4v$/i.test(file.name) || file.type === 'video/x-m4v'
+              ? new Blob([file], { type: 'video/mp4' })
+              : file,
+          ];
         }
         setPreparing('');
         files.current.set(id, parts);
@@ -674,7 +680,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               type="file"
               hidden
               multiple
-              accept="video/mp4,video/webm,image/*,.pptx"
+              accept="video/mp4,video/x-m4v,video/webm,.mp4,.m4v,.webm,image/*,.pptx"
               onChange={(e) => {
                 void addFiles(e.target.files);
                 e.target.value = '';

@@ -277,7 +277,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (fileRef.current)
       fileRef.current.accept =
         t === 'fullMedia' || t === 'image'
-          ? 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,.mp4,.webm,.gif'
+          ? 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/x-m4v,video/webm,.mp4,.m4v,.webm,.gif'
           : 'image/*,.jpg,.jpeg,.png,.webp';
     fileRef.current?.click();
   };
@@ -296,7 +296,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             : 'content',
       );
       if (t === 'fullMedia') {
-        const video = /^video\//.test(file.type) || /\.(mp4|webm)$/i.test(file.name);
+        const video = /^video\//.test(file.type) || /\.(mp4|m4v|webm)$/i.test(file.name);
         setContentState((c) => ({ ...c, fullMedia: url, fullType: video ? 'video' : 'image' }));
         contentDirtyRef.current = true;
         setDirty(true);

@@ -255,6 +255,7 @@ const types = {
   '.jpeg': 'image/jpeg',
   '.json': 'application/json',
   '.mp4': 'video/mp4',
+  '.m4v': 'video/mp4',
   '.webm': 'video/webm',
   '.gif': 'image/gif',
 };

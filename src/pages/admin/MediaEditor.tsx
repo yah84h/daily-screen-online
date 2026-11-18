@@ -123,11 +123,12 @@ export function MediaEditor() {
     try {
       for (const [index, file] of files.entries()) {
         setUploading(`رفع ${index + 1} من ${files.length}: ${file.name}`);
-        const type: Kind = file.type.startsWith('image/')
-          ? 'image'
-          : file.type.startsWith('audio/')
-            ? 'audio'
-            : 'video';
+        const type: Kind =
+          file.type.startsWith('image/') || /\.(jpe?g|png|webp|gif)$/i.test(file.name)
+            ? 'image'
+            : file.type.startsWith('audio/') || /\.(mp3|m4a|wav|ogg|flac)$/i.test(file.name)
+              ? 'audio'
+              : 'video';
         const url = await uploadMedia(file);
         add([{ id: crypto.randomUUID(), url, name: file.name, type, seconds: 10 }]);
       }
@@ -158,7 +159,7 @@ export function MediaEditor() {
           type="file"
           multiple
           aria-label="ملفات من الجوال"
-          accept="video/mp4,video/webm,image/jpeg,image/png,image/webp,image/gif,audio/*"
+          accept="video/mp4,video/x-m4v,video/webm,.mp4,.m4v,.webm,image/jpeg,image/png,image/webp,image/gif,audio/*"
           onChange={(e) => {
             const files = Array.from(e.target.files || []);
             e.target.value = '';
