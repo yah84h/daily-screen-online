@@ -2191,3 +2191,12 @@
 .bg-audio audio {
   width: 100%;
 }
+/* Custom text boxes in the move/resize overlay */
+.loop-canvas-overlay .loop-text-box {
+  border-style: dashed;
+  border-color: #f0715a;
+  background: #f0715a14;
+}
+.loop-canvas-overlay .loop-text-box > span:first-child {
+  background: #f0715a;
+}
