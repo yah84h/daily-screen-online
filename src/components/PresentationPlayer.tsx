@@ -4,7 +4,7 @@ import { preparePresentation } from '@/lib/presentationCache';
 import { useEffect, useRef, useState } from 'react';
 import { usePresentation, type Presentation, type PresentationContext } from '@/lib/presentation';
 import { Standby } from './ShowPlayer';
-import { useTransitionClips } from '@/lib/transitions';
+import { loadTransitionClips, useTransitionClips } from '@/lib/transitions';
 export function PresentationPlayer({
   deck,
   context,
@@ -80,6 +80,25 @@ export function PresentationPlayer({
   const state = usePresentation(deck, context);
   const command = useRef(state.command);
   command.current = state.command;
+  // Preload everything before the first slide: transition clips and the current slide from the
+  // controller. Each is bounded so a slow network never keeps the show from starting.
+  const [extrasReady, setExtrasReady] = useState(!large);
+  useEffect(() => {
+    if (!large) return;
+    let active = true;
+    const timeout = new Promise((resolve) => setTimeout(resolve, 20000));
+    void Promise.race([loadTransitionClips(), timeout]).then(() => active && setExtrasReady(true));
+    return () => {
+      active = false;
+    };
+  }, [large]);
+  const [syncWaitOver, setSyncWaitOver] = useState(!context?.token);
+  useEffect(() => {
+    if (!ready || syncWaitOver) return;
+    const timer = setTimeout(() => setSyncWaitOver(true), 10000);
+    return () => clearTimeout(timer);
+  }, [ready, syncWaitOver]);
+  const started = ready && extrasReady && (syncWaitOver || state.ready !== false);
   useEffect(() => {
     if (!large || !ready) return;
     const handle = (e: KeyboardEvent) => {
@@ -129,7 +148,7 @@ export function PresentationPlayer({
     const timer = setTimeout(() => setRetry((n) => n + 1), 15000);
     return () => clearTimeout(timer);
   }, [large, prepared.error]);
-  if (!ready && large)
+  if (!started && large)
     return (
       <Standby
         logo={logo}
@@ -138,7 +157,9 @@ export function PresentationPlayer({
         note={
           prepared.error
             ? '!'
-            : '○ ' + (prepared.key === deckKey ? prepared.loaded : 0) + '/' + deck.slides.length
+            : ready
+              ? '○ ' + deck.slides.length + '/' + deck.slides.length + ' ✓'
+              : '○ ' + (prepared.key === deckKey ? prepared.loaded : 0) + '/' + deck.slides.length
         }
       />
     );
