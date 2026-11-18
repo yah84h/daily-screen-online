@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import type { TransitionClips } from '@/lib/transitions';
 import '@/transitions.css';
 
@@ -53,8 +53,11 @@ export function TransitionOverlay({
   clips,
   phase,
   onDone,
+  content,
 }: {
   clips: TransitionClips;
+  /** What the curtain carries (the chosen standby screen); defaults to the school loop. */
+  content?: ReactNode;
   phase: TransitionPhase | null;
   /** Called when the curtain has fully arrived (intro) or fully left (outro). */
   onDone: (phase: 'intro' | 'outro') => void;
@@ -68,7 +71,7 @@ export function TransitionOverlay({
     const c = curtain.current,
       r = rim.current,
       v = video.current;
-    if (!c || !r || !v) return;
+    if (!c || !r) return;
     const set = (shape: { curtain: string; rim: string }, visible: boolean) => {
       c.style.clipPath = shape.curtain;
       r.style.clipPath = shape.rim;
@@ -76,17 +79,17 @@ export function TransitionOverlay({
     };
     if (!phase) {
       set(covering(120), false);
-      v.pause();
+      v?.pause();
       return;
     }
     if (phase === 'loop') {
       set(covering(-20), true);
-      void v.play().catch(() => {});
+      void v?.play().catch(() => {});
       return;
     }
     if (phase === 'intro') {
-      v.currentTime = 0;
-      void v.play().catch(() => {});
+      if (v) v.currentTime = 0;
+      void v?.play().catch(() => {});
     }
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const start = performance.now();
@@ -97,7 +100,7 @@ export function TransitionOverlay({
       set(phase === 'intro' ? covering(base) : leaving(base), phase === 'intro' || t < 1);
       if (t < 1) frame = requestAnimationFrame(step);
       else {
-        if (phase === 'outro') v.pause();
+        if (phase === 'outro') v?.pause();
         done.current(phase);
       }
     };
@@ -116,7 +119,7 @@ export function TransitionOverlay({
   return (
     <div className={'transition-overlay' + (phase ? ' active' : '')} aria-hidden="true">
       <div ref={curtain} className="transition-curtain" data-phase={phase || ''}>
-        <video ref={video} src={clips.loop} muted loop playsInline preload="auto" />
+        {content ?? <video ref={video} src={clips.loop} muted loop playsInline preload="auto" />}
       </div>
       <div ref={rim} className="transition-rim" />
     </div>
