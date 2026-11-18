@@ -47,3 +47,25 @@ export function LoopHtmlBlocks({
     </div>
   );
 }
+
+/** An uploaded HTML page filling the whole classes background. */
+export function LoopHtmlWallpaper({ html, fields }: { html: string; fields: LoopHtmlFields }) {
+  return (
+    <div className="loop-html-wallpaper">
+      <Frame
+        block={{
+          id: 'wallpaper',
+          name: 'خلفية HTML',
+          html,
+          x: 0,
+          y: 0,
+          w: 100,
+          h: 100,
+          layer: 'back',
+          opacity: 100,
+        }}
+        fields={fields}
+      />
+    </div>
+  );
+}

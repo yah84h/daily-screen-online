@@ -20,8 +20,8 @@ import {
 } from '@/lib/loop';
 import type { RecognitionBoard, RecognitionStudent, Timetable } from '@/lib/types';
 import { useAdmin } from './store';
-import { TEXT_FONTS, type LoopHtml, type LoopText } from '@/lib/types';
-import { bundleLoopHtml, LOOP_HTML_EXAMPLE, LOOP_HTML_FIELDS } from '@/lib/loopHtml';
+import { TEXT_FONTS, type LoopText } from '@/lib/types';
+import { bundleLoopHtml, LOOP_HTML_FIELDS, LOOP_HTML_WALLPAPER_EXAMPLE } from '@/lib/loopHtml';
 
 function TimeField({
   value,
@@ -249,12 +249,6 @@ export function LoopTab() {
           <SettingsSection title="نصوص مخصصة" description="عناوين وعبارات بخطوط عربية وإنجليزية">
             <TextBlocksEditor />
           </SettingsSection>
-          <SettingsSection
-            title="تصاميم HTML مخصصة"
-            description="ارفع قالب HTML بتصميمك الخاص وضعه في أي مكان من الشاشة"
-          >
-            <HtmlBlocksEditor />
-          </SettingsSection>
           <SettingsSection title="إظهار وإخفاء العناصر" description="اختر ما يظهر على شاشة الحصص">
             <div className="loop-hide-grid">
               {LOOP_ELEMENTS.map(([id, label]) => (
@@ -302,6 +296,7 @@ export function LoopTab() {
                     ['waves', 'الخطوط المتحركة الأصلية'],
                     ['zigzag', 'خلفية المدرسة المتحركة (تتلون مع اللوحة)'],
                     ['school-video', 'فيديو شاشة البداية (شعار المدرسة)'],
+                    ['html', 'تصميم HTML مخصص (ارفع قالبك)'],
                     ['aurora', 'شفق ناعم'],
                     ['dots', 'نقاط هادئة'],
                     ['grid', 'شبكة تقنية'],
@@ -315,6 +310,7 @@ export function LoopTab() {
                 ))}
               </select>
             </label>
+            {template.loopBackdrop === 'html' && <HtmlWallpaperEditor />}
             <label>
               مظهر البطاقات
               <select
@@ -1143,140 +1139,39 @@ function TextBlocksEditor() {
   );
 }
 
-/** Custom HTML designs on the classes background, uploaded from outside templates. */
-function HtmlBlocksEditor() {
+/** Classes background: an uploaded HTML page as the whole wallpaper. */
+function HtmlWallpaperEditor() {
   const { template, setTemplate } = useAdmin();
-  const blocks = template.loopHtml || [];
+  const page = template.loopWallpaperHtml;
   const [error, setError] = useState('');
-  const save = (next: LoopHtml[]) => setTemplate((t) => ({ ...t, loopHtml: next }));
-  const change = (id: string, patch: Partial<LoopHtml>) =>
-    save(blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)));
-  const add = (name: string, html: string) =>
-    save([
-      ...blocks,
-      {
-        id: crypto.randomUUID(),
-        name,
-        html,
-        x: 25,
-        y: 25,
-        w: 50,
-        h: 50,
-        layer: 'front',
-        opacity: 100,
-      },
-    ]);
-  const upload = async (list: FileList | null, id?: string) => {
+  const set = (next: { name: string; html: string }) =>
+    setTemplate((t) => ({ ...t, loopWallpaperHtml: next }));
+  const upload = async (list: FileList | null) => {
     setError('');
     if (!list?.length) return;
     try {
-      const { name, html } = await bundleLoopHtml([...list]);
-      if (html.length > 3_000_000)
+      const next = await bundleLoopHtml([...list]);
+      if (next.html.length > 3_000_000)
         return setError('القالب كبير جدًا (أكثر من ٣ ميجا). صغّر الصور أو استخدم روابط https لها.');
-      if (id) change(id, { html, name });
-      else add(name, html);
+      set(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
   };
-  const range = (b: LoopHtml, key: 'x' | 'y' | 'w' | 'h' | 'opacity', label: string, min = 0) => (
-    <label className="text-range">
-      <span>
-        {label} <b dir="ltr">{Math.round(b[key])}</b>
-      </span>
-      <input
-        type="range"
-        aria-label={label + ' · ' + b.name}
-        min={min}
-        max={100}
-        value={b[key]}
-        onChange={(e) => change(b.id, { [key]: Number(e.target.value) })}
-      />
-    </label>
-  );
   return (
     <div className="text-blocks html-blocks">
-      {blocks.map((b, index) => (
-        <details key={b.id} className="text-block" open={index === blocks.length - 1}>
-          <summary>
-            <bdi>{b.name || 'تصميم'}</bdi>
-            {b.hidden && <small> · مخفي</small>}
-          </summary>
-          <label>
-            الاسم
-            <input
-              aria-label="اسم التصميم"
-              value={b.name}
-              onChange={(e) => change(b.id, { name: e.target.value })}
-            />
-          </label>
-          <div className="text-row">
-            <button
-              type="button"
-              className="button white"
-              onClick={() => change(b.id, { x: 0, y: 0, w: 100, h: 100 })}
-            >
-              ملء الشاشة
-            </button>
-            <select
-              aria-label="الطبقة"
-              value={b.layer}
-              onChange={(e) => change(b.id, { layer: e.target.value as LoopHtml['layer'] })}
-            >
-              <option value="front">فوق العناصر</option>
-              <option value="back">خلف العناصر (كخلفية)</option>
-            </select>
-            <label>
-              <input
-                type="checkbox"
-                checked={!b.hidden}
-                onChange={(e) => change(b.id, { hidden: !e.target.checked })}
-              />{' '}
-              ظاهر
-            </label>
-          </div>
-          {range(b, 'w', 'العرض ٪', 5)}
-          {range(b, 'h', 'الارتفاع ٪', 5)}
-          {range(b, 'x', 'من اليسار ٪')}
-          {range(b, 'y', 'من الأعلى ٪')}
-          {range(b, 'opacity', 'الشفافية ٪', 10)}
-          <details>
-            <summary>تعديل الكود</summary>
-            <textarea
-              rows={10}
-              spellCheck={false}
-              aria-label="كود HTML"
-              value={b.html}
-              onChange={(e) => change(b.id, { html: e.target.value })}
-            />
-          </details>
-          <div className="text-row">
-            <label className="button white">
-              استبدال القالب
-              <input
-                hidden
-                type="file"
-                multiple
-                accept=".html,.htm,.css,.js,image/*,font/*,.woff,.woff2,.ttf,.otf,video/*"
-                onChange={(e) => {
-                  upload(e.target.files, b.id);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-            <button
-              type="button"
-              className="button white danger"
-              onClick={() => save(blocks.filter((x) => x.id !== b.id))}
-            >
-              حذف
-            </button>
-          </div>
-        </details>
-      ))}
+      <p className="field-hint">
+        {page?.html.trim() ? (
+          <>
+            القالب الحالي: <b>{page.name || 'بدون اسم'}</b>
+          </>
+        ) : (
+          'لم يُرفع قالب بعد.'
+        )}
+      </p>
       <div className="text-row">
         <label className="button primary">
-          رفع قالب HTML
+          {page?.html.trim() ? 'استبدال القالب' : 'رفع قالب HTML'}
           <input
             hidden
             type="file"
@@ -1291,9 +1186,9 @@ function HtmlBlocksEditor() {
         <button
           type="button"
           className="button white"
-          onClick={() => add('مثال', LOOP_HTML_EXAMPLE)}
+          onClick={() => set({ name: 'مثال', html: LOOP_HTML_WALLPAPER_EXAMPLE })}
         >
-          إضافة مثال
+          استخدام مثال
         </button>
       </div>
       {error && (
@@ -1301,9 +1196,21 @@ function HtmlBlocksEditor() {
           {error}
         </p>
       )}
+      {page && (
+        <details>
+          <summary>تعديل الكود</summary>
+          <textarea
+            rows={12}
+            spellCheck={false}
+            aria-label="كود خلفية HTML"
+            value={page.html}
+            onChange={(e) => set({ ...page, html: e.target.value })}
+          />
+        </details>
+      )}
       <p className="field-hint">
-        اختر ملف HTML مع ملفاته (الصور، الخطوط، CSS، JS) معًا وسيُدمج كل شيء في قالب واحد. يمكن
-        للتصميم عرض بيانات حية بكتابة:
+        اختر ملف HTML مع ملفاته (الصور، الخطوط، CSS، JS) معًا وسيُدمج كل شيء. يملأ التصميم الشاشة
+        كاملة خلف الساعة والبطاقات، ويمكنك إخفاء أي عنصر من «إظهار وإخفاء العناصر». بيانات حية:
       </p>
       <div className="html-fields">
         {LOOP_HTML_FIELDS.map(([name, label]) => (
@@ -1312,10 +1219,6 @@ function HtmlBlocksEditor() {
           </code>
         ))}
       </div>
-      <p className="field-hint">
-        حرّك التصميم وغيّر حجمه من «تحريك وتكبير باللمس». القالب يعمل معزولًا ولا يصل لبيانات
-        الموقع. للخلفية الكاملة: «ملء الشاشة» + «خلف العناصر» واختر نمط خلفية «سادة».
-      </p>
     </div>
   );
 }

@@ -102,6 +102,17 @@ export async function bundleLoopHtml(files: File[]) {
   return { name: page.name.replace(/\.html?$/i, ''), html: inlineData(html) };
 }
 
+export const LOOP_HTML_WALLPAPER_EXAMPLE = `<!doctype html>
+<html dir="rtl"><head><style>
+body{background:linear-gradient(120deg,#0f2747,#2b5389,#3f7cc4);background-size:300% 300%;animation:m 18s ease infinite}
+@keyframes m{50%{background-position:100% 50%}}
+.b{position:absolute;border-radius:50%;background:#ffffff14;animation:f 14s ease-in-out infinite}
+@keyframes f{50%{transform:translateY(-6vh) scale(1.08)}}
+</style></head><body>
+<div class="b" style="width:40vw;height:40vw;left:-10vw;top:-10vw"></div>
+<div class="b" style="width:30vw;height:30vw;right:-8vw;bottom:-8vw;animation-delay:-5s"></div>
+</body></html>`;
+
 export const LOOP_HTML_EXAMPLE = `<!doctype html>
 <html dir="rtl"><head><style>
 body{display:grid;place-items:center;font-family:Cairo,sans-serif;color:#fff}
