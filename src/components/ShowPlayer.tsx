@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { loopAppearance } from '@/lib/loopAppearance';
-import { ZigzagWallpaper } from './loop/ZigzagWallpaper';
+import { Screen } from './Screen';
+import { initialContent, type Content } from '@/lib/types';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
@@ -15,10 +23,11 @@ type Props = {
   showKey: string;
   template: Template;
   school: School;
+  content?: Content;
 };
 
 /** Presenting mode on the TV. Without a paired TV (admin preview) only the standby card shows. */
-export function ShowPlayer({ screenId, token = '', showKey, template, school }: Props) {
+export function ShowPlayer({ screenId, token = '', showKey, template, school, content }: Props) {
   const logo = template.schoolLogo || school.logo_url || '';
   if (!screenId || !showKey) return <Standby logo={logo} title="وضع التقديم" note="" />;
   // Palette colors for the classes-background wallpaper option.
@@ -26,7 +35,22 @@ export function ShowPlayer({ screenId, token = '', showKey, template, school }: 
     Object.entries(loopAppearance(template.loopAppearance)).map(([k, v]) => ['--loop-' + k, v]),
   ) as CSSProperties;
   return (
-    <LiveShow screenId={screenId} token={token} showKey={showKey} logo={logo} palette={palette} />
+    <LiveShow
+      screenId={screenId}
+      token={token}
+      showKey={showKey}
+      logo={logo}
+      palette={palette}
+      classes={
+        // The classes background exactly as set in «الخلفية والساعة».
+        <Screen
+          content={content || initialContent}
+          template={{ ...template, displayMode: 'loop', rotation: { enabled: false } as never }}
+          school={school}
+          large
+        />
+      }
+    />
   );
 }
 
@@ -38,7 +62,7 @@ export function Standby({
   photo = '',
   photoKind = 'image',
   loop = '',
-  wallpaper,
+  classes,
 }: {
   logo: string;
   title: string;
@@ -48,20 +72,10 @@ export function Standby({
   photoKind?: 'image' | 'video';
   /** The school loop clip (it already shows the logo). */
   loop?: string;
-  /** The classes-background animated wallpaper, colored by these palette variables. */
-  wallpaper?: CSSProperties;
+  /** The classes background (clock, classes, boards) as set in «الخلفية والساعة». */
+  classes?: ReactNode;
 }) {
-  if (wallpaper)
-    return (
-      <div className="screen show-screen show-standby with-wallpaper" style={wallpaper} dir="rtl">
-        <ZigzagWallpaper />
-        <div className="show-standby-card">
-          {logo ? <img src={logo} alt="" /> : <GraduationCap size={96} strokeWidth={1.4} />}
-          {title && <h1>{title}</h1>}
-        </div>
-        {note && <small className="show-standby-note">{note}</small>}
-      </div>
-    );
+  if (classes) return <>{classes}</>;
   const kind = photo ? ' with-photo' : loop ? ' with-loop' : '';
   return (
     <div
@@ -97,13 +111,14 @@ function LiveShow({
   token,
   showKey,
   logo,
-  palette,
+  classes,
 }: {
   screenId: string;
   token: string;
   showKey: string;
   logo: string;
-  palette: CSSProperties;
+  palette?: CSSProperties;
+  classes: ReactNode;
 }) {
   const { show, urls, stored, progress, videoCommand, reportPlayback, command } = useShowHost(
     screenId,
@@ -271,7 +286,7 @@ function LiveShow({
           title={show.title}
           photo={photo}
           photoKind={show.background?.kind === 'video' ? 'video' : 'image'}
-          wallpaper={show.background?.kind === 'wallpaper' ? palette : undefined}
+          classes={show.background?.kind === 'wallpaper' ? classes : undefined}
           loop={clips?.loop || ''}
           note={
             show.phase === 'live' && step && !url
