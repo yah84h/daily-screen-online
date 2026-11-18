@@ -69,7 +69,7 @@ export function BackgroundAudio({
     if (!url) return () => controller.abort();
     async function prepare() {
       try {
-        const { blob } = await prepareAsset(
+        const { blob, localUrl } = await prepareAsset(
           source!.url,
           controller.signal,
           (loaded, total) => {
@@ -80,7 +80,7 @@ export function BackgroundAudio({
         controller.signal.throwIfAborted();
         if (!blob.size) throw Error('Empty audio file');
         if (ownedURL.current) URL.revokeObjectURL(ownedURL.current);
-        objectURL = URL.createObjectURL(blob);
+        objectURL = localUrl || URL.createObjectURL(blob);
         ownedURL.current = objectURL;
         setPrepared({ url, src: objectURL, loading: false });
       } catch {

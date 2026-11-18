@@ -1,4 +1,5 @@
 import { parseDriveLink, DRIVE_CHUNK } from '../../local-test/drive-video.mjs';
+import { desktopMedia } from './desktop';
 export { parseDriveLink };
 export function drivePlaybackURL(link: string) {
   const parsed = parseDriveLink(link);
@@ -88,7 +89,9 @@ export async function cacheDriveVideo(
   url: string,
   signal: AbortSignal,
   onProgress: (loaded: number, total: number) => void,
-): Promise<{ blob: Blob; persistent: boolean; cached: boolean }> {
+): Promise<{ blob: Blob; persistent: boolean; cached: boolean; localUrl?: string }> {
+  const local = await desktopMedia(url, signal, onProgress, 'video');
+  if (local) return { blob: new Blob(), persistent: true, cached: true, localUrl: local.url };
   try {
     const blob = await stored(url);
     signal.throwIfAborted();

@@ -21,3 +21,5 @@ DerivedData/
 xcuserdata/
 
 /work/
+desktop/node_modules/
+desktop/release/

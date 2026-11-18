@@ -114,10 +114,10 @@ export function PreparedDisplay(props: Props) {
               setStatus({ loaded: i + (total ? loaded / total : 0), total: sources.length, name });
           });
           persistent = persistent && result.persistent;
-          bytes += result.blob.size;
+          bytes += result.localUrl ? 0 : result.size;
           if (bytes > SHOW_LIMIT)
             throw Error('قائمة التشغيل أكبر من ٢ جيجابايت. قسّم العرض إلى قوائم أصغر.');
-          const url = URL.createObjectURL(result.blob);
+          const url = result.localUrl || URL.createObjectURL(result.blob);
           urls.push(url);
           mapping.set(source, url);
           // Decode images and check video metadata before replacing the on-screen content.

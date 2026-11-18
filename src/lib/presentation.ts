@@ -39,7 +39,15 @@ async function requestControl(
       cache: 'no-store',
     });
   }
-  const payload = await response.json();
+  // A misrouted function returns HTML or an empty body; report that instead of a JSON parse error.
+  const payload = await response.json().catch(() => {
+    throw Object.assign(
+      Error('خادم التحكم بالعرض لا يستجيب. تحقق من نشر الوظائف ثم أعد المحاولة.'),
+      {
+        status: response.status,
+      },
+    );
+  });
   if (!response.ok)
     throw Object.assign(Error(payload.error?.message || 'تعذر مزامنة العرض.'), {
       status: response.status,

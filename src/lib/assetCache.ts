@@ -1,3 +1,4 @@
+import { desktopMedia, desktop } from './desktop';
 import { downloadDriveMedia, drivePlaybackURL, parseDriveLink } from './driveVideo';
 const FILE_LIMIT = 512 * 1024 * 1024;
 const CACHE_LIMIT = 2 * 1024 * 1024 * 1024;
@@ -70,6 +71,7 @@ async function saveStoredAsset(url: string, blob: Blob) {
   }
 }
 export async function removeShowAsset(url: string) {
+  if (desktop) await desktop.forgetMedia(url).catch(() => {});
   const db = await openCacheDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
@@ -100,7 +102,10 @@ export async function prepareAsset(
   signal: AbortSignal,
   onProgress: (loaded: number, total: number) => void,
   kind?: 'audio',
-) {
+): Promise<{ blob: Blob; persistent: boolean; size: number; localUrl?: string }> {
+  // Windows player: saved on disk and streamed from there, without the browser's size limits.
+  const local = await desktopMedia(url, signal, onProgress, kind);
+  if (local) return { blob: new Blob(), persistent: true, size: local.size, localUrl: local.url };
   let saved: Saved | undefined;
   try {
     saved = await readStoredAsset(url);
@@ -110,7 +115,11 @@ export async function prepareAsset(
   signal.throwIfAborted();
   if (saved?.bytes instanceof ArrayBuffer) {
     onProgress(saved.bytes.byteLength, saved.bytes.byteLength);
-    return { blob: new Blob([saved.bytes], { type: saved.type }), persistent: true };
+    return {
+      blob: new Blob([saved.bytes], { type: saved.type }),
+      persistent: true,
+      size: saved.bytes.byteLength,
+    };
   }
   let blob: Blob;
   if (parseDriveLink(url))
@@ -131,7 +140,7 @@ export async function prepareAsset(
     /* Fully prepared for this session even if quota is exhausted. */
   }
   signal.throwIfAborted();
-  return { blob, persistent };
+  return { blob, persistent, size: blob.size };
 }
 export const SHOW_LIMIT = CACHE_LIMIT;
 
