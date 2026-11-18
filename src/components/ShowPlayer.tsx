@@ -179,9 +179,22 @@ function LiveShow({
     window.addEventListener('keydown', handle);
     return () => window.removeEventListener('keydown', handle);
   }, [command]);
+  // The curtain carries the chosen standby screen (not the old logo loop unless it is chosen).
+  const standbyKind = show.background?.kind;
+  const curtainContent =
+    standbyKind === 'wallpaper' ? (
+      classes
+    ) : photo ? (
+      standbyKind === 'video' ? (
+        <video className="curtain-fill" src={photo} autoPlay muted loop playsInline />
+      ) : (
+        <img className="curtain-fill" src={photo} alt="" />
+      )
+    ) : undefined;
   const overlay = clips && (
     <TransitionOverlay
       clips={clips}
+      content={curtainContent}
       phase={transition}
       onDone={(phase) => {
         // Between files: once the curtain covers the old file, sweep it away over the new one.

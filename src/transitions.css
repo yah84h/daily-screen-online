@@ -28,3 +28,11 @@
 body:has(.transition-overlay.active) :is(.cache-status-line, .cache-retry) {
   visibility: hidden;
 }
+.transition-curtain > .screen,
+.transition-curtain .curtain-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
