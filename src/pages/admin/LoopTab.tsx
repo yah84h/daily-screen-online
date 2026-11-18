@@ -19,6 +19,7 @@ import {
 } from '@/lib/loop';
 import type { RecognitionBoard, RecognitionStudent, Timetable } from '@/lib/types';
 import { useAdmin } from './store';
+import { TEXT_FONTS, type LoopText } from '@/lib/types';
 
 function TimeField({
   value,
@@ -242,6 +243,9 @@ export function LoopTab() {
                 استعادة ألوان المدرسة
               </button>
             </div>
+          </SettingsSection>
+          <SettingsSection title="نصوص مخصصة" description="عناوين وعبارات بخطوط عربية وإنجليزية">
+            <TextBlocksEditor />
           </SettingsSection>
           <SettingsSection title="إظهار وإخفاء العناصر" description="اختر ما يظهر على شاشة الحصص">
             <div className="loop-hide-grid">
@@ -994,6 +998,139 @@ export function LoopTab() {
           تُحفظ اللوحة في قالب هذه الشاشة، وتصل إلى أجهزتها المرتبطة دون إعادة نشر موضوع اليوم.
         </p>
       </section>
+    </div>
+  );
+}
+
+/** Free text blocks on the classes background: each with its own font, size, width and place. */
+function TextBlocksEditor() {
+  const { template, setTemplate } = useAdmin();
+  const texts = template.loopTexts || [];
+  const save = (next: LoopText[]) => setTemplate((t) => ({ ...t, loopTexts: next }));
+  const change = (id: string, patch: Partial<LoopText>) =>
+    save(texts.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  const add = (base?: LoopText) =>
+    save([
+      ...texts,
+      {
+        id: crypto.randomUUID(),
+        text: 'نص جديد',
+        font: 'Cairo',
+        size: 3,
+        width: 40,
+        x: 30,
+        y: 10,
+        color: '#2b5389',
+        weight: 700,
+        align: 'center',
+        ...base,
+        ...(base ? { id: crypto.randomUUID(), y: Math.min(95, base.y + base.size * 2) } : {}),
+      },
+    ]);
+  const range = (
+    t: LoopText,
+    key: 'size' | 'width' | 'x' | 'y',
+    label: string,
+    min: number,
+    max: number,
+    step = 1,
+  ) => (
+    <label className="text-range">
+      <span>
+        {label} <b dir="ltr">{t[key]}</b>
+      </span>
+      <input
+        type="range"
+        aria-label={label + ' · ' + t.text.slice(0, 20)}
+        min={min}
+        max={max}
+        step={step}
+        value={t[key]}
+        onChange={(e) => change(t.id, { [key]: Number(e.target.value) })}
+      />
+    </label>
+  );
+  return (
+    <div className="text-blocks">
+      {texts.map((t, index) => (
+        <details key={t.id} className="text-block" open={index === texts.length - 1}>
+          <summary>
+            <bdi style={{ fontFamily: `'${t.font}', 'Cairo'` }}>{t.text || 'نص فارغ'}</bdi>
+          </summary>
+          <textarea
+            dir="auto"
+            rows={2}
+            aria-label="النص"
+            value={t.text}
+            onChange={(e) => change(t.id, { text: e.target.value })}
+          />
+          <label>
+            الخط
+            <select
+              aria-label="الخط"
+              value={t.font}
+              onChange={(e) => change(t.id, { font: e.target.value })}
+            >
+              {TEXT_FONTS.map(([family, label]) => (
+                <option key={family} value={family} style={{ fontFamily: family }}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {range(t, 'size', 'الحجم', 0.8, 14, 0.1)}
+          {range(t, 'width', 'العرض ٪', 5, 100)}
+          {range(t, 'x', 'من اليسار ٪', 0, 100)}
+          {range(t, 'y', 'من الأعلى ٪', 0, 100)}
+          <div className="text-row">
+            <label>
+              اللون
+              <input
+                type="color"
+                aria-label="لون النص"
+                value={t.color}
+                onChange={(e) => change(t.id, { color: e.target.value })}
+              />
+            </label>
+            <select
+              aria-label="سماكة الخط"
+              value={t.weight}
+              onChange={(e) => change(t.id, { weight: Number(e.target.value) })}
+            >
+              <option value={400}>عادي</option>
+              <option value={700}>عريض</option>
+              <option value={900}>عريض جدًا</option>
+            </select>
+            <select
+              aria-label="المحاذاة"
+              value={t.align}
+              onChange={(e) => change(t.id, { align: e.target.value as LoopText['align'] })}
+            >
+              <option value="right">يمين</option>
+              <option value="center">وسط</option>
+              <option value="left">يسار</option>
+            </select>
+          </div>
+          <div className="text-row">
+            <button type="button" className="button white" onClick={() => add(t)}>
+              نسخ أسفله
+            </button>
+            <button
+              type="button"
+              className="button white danger"
+              onClick={() => save(texts.filter((x) => x.id !== t.id))}
+            >
+              حذف
+            </button>
+          </div>
+        </details>
+      ))}
+      <button type="button" className="button primary" onClick={() => add()}>
+        إضافة نص
+      </button>
+      <p className="field-hint">
+        «نسخ أسفله» يضع نسخة تحت النص مباشرة لتكديس العناوين. احفظ الخلفية لتطبيقها على التلفزيون.
+      </p>
     </div>
   );
 }

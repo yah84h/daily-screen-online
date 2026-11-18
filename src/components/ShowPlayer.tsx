@@ -322,6 +322,7 @@ function LiveShow({
             onReport={reportPlayback}
             lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
             onFinish={() => live && !switching.current && finish()}
+            frozen={!live || switching.current}
           />
         ) : (
           <img src={shown.url} alt="" draggable={false} />
@@ -352,6 +353,7 @@ function ShowVideo({
   onReport,
   lead,
   onFinish,
+  frozen = false,
 }: {
   src: string;
   command: ReturnType<typeof useShowHost>['videoCommand'];
@@ -359,10 +361,18 @@ function ShowVideo({
   /** Hand over this many seconds before the end (0 = when it ends). */
   lead: number;
   onFinish: () => void;
+  /** Leaving (under the curtain): stop at once, silently, instead of playing on. */
+  frozen?: boolean;
 }) {
   const finished = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
   const [mountedAt] = useState(Date.now());
+  useEffect(() => {
+    const el = video.current;
+    if (!frozen || !el) return;
+    el.muted = true;
+    el.pause();
+  }, [frozen]);
   const report = useRef(onReport);
   report.current = onReport;
   const send = () => {

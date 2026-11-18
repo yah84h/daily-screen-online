@@ -2074,3 +2074,120 @@
   gap: 12px;
   min-height: 48px;
 }
+/* Custom text blocks editor */
+.text-blocks {
+  display: grid;
+  gap: 10px;
+}
+.text-block {
+  display: grid;
+  gap: 8px;
+  padding: 4px 12px 12px;
+  border-radius: 16px;
+  background: #faf9fd;
+  border: 1px solid var(--studio-line);
+}
+.text-block > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.text-block[open] > summary {
+  margin-bottom: 4px;
+}
+.text-block textarea {
+  min-height: 64px;
+}
+.text-range {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+}
+.text-range span {
+  display: flex;
+  justify-content: space-between;
+}
+.text-range input {
+  accent-color: var(--studio-accent);
+  min-height: 28px !important;
+}
+.text-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.text-row > * {
+  flex: 1 1 100px;
+}
+.admin-studio .text-row input[type='color'] {
+  min-height: 40px;
+  width: 56px;
+}
+/* Background sound editor */
+.bg-audio {
+  display: grid;
+  gap: 10px;
+}
+.bg-audio-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--studio-mint);
+}
+.bg-audio-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--studio-mint-ink);
+  font-size: 20px;
+}
+.bg-audio-name {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+.bg-audio-name bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bg-audio-name small {
+  color: var(--studio-mint-ink);
+  font-weight: 400;
+}
+.bg-audio-link {
+  display: flex;
+  gap: 8px;
+}
+.bg-audio-link input {
+  flex: 1;
+  min-width: 0;
+}
+.bg-audio label:has(> input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+}
+.bg-audio-volume {
+  display: grid;
+  gap: 4px;
+}
+.bg-audio-volume input {
+  accent-color: var(--studio-accent);
+}
+.bg-audio audio {
+  width: 100%;
+}

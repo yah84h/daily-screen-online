@@ -14,7 +14,16 @@ export type Content = {
   imageType?: 'image' | 'video';
   imageCrop?: import('./mediaCrop').MediaCrop;
   fullCrop?: import('./mediaCrop').MediaCrop;
-  backgroundAudio?: { url: string; name: string };
+  backgroundAudio?: {
+    url: string;
+    name: string;
+    /** Starts by itself on the TV (default on). */
+    autoplay?: boolean;
+    /** Repeats forever (default on). */
+    loop?: boolean;
+    /** 0–1 (default 0.5). */
+    volume?: number;
+  };
   presentation?: import('./presentation').Presentation;
   videoPreparation?: 'stream' | 'buffer' | 'cache';
   videoSound?: boolean;
@@ -92,6 +101,8 @@ export type Template = {
   loopCardStyle?: 'soft' | 'glass' | 'outlined';
   /** Classes background: elements switched off (see LOOP_ELEMENTS). */
   loopHidden?: string[];
+  /** Classes background: free text blocks (position / width in %, size in % of screen width). */
+  loopTexts?: LoopText[];
   loopExtras?: {
     topic?: boolean;
     announcement?: boolean;
@@ -236,3 +247,30 @@ export const defaultSchool: School = {
 
 export const riyadhToday = () =>
   new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Riyadh' });
+
+export type LoopText = {
+  id: string;
+  text: string;
+  font: string;
+  size: number;
+  width: number;
+  x: number;
+  y: number;
+  color: string;
+  weight: number;
+  align: 'right' | 'center' | 'left';
+};
+/** Fonts for custom text: Arabic, English, or both. */
+export const TEXT_FONTS: [family: string, label: string][] = [
+  ['Cairo', 'Cairo · عربي + English'],
+  ['Tajawal', 'تجوال · عربي + English'],
+  ['Changa', 'Changa · عربي + English'],
+  ['Noto Sans Arabic', 'نوتو · عربي'],
+  ['SchoolArabic', 'خط المدرسة · عربي'],
+  ['Amiri', 'أميري · عربي كلاسيكي'],
+  ['Reem Kufi', 'ريم كوفي · عربي كوفي'],
+  ['Poppins', 'Poppins · English'],
+  ['Montserrat', 'Montserrat · English'],
+  ['Playfair Display', 'Playfair · English serif'],
+  ['DM Sans', 'DM Sans · English'],
+];

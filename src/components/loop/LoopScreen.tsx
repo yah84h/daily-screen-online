@@ -139,6 +139,28 @@ export function LoopScreen({
       }
     >
       <BackgroundSlideshow template={template} />
+      {!!template.loopTexts?.length && (
+        <div className="loop-texts">
+          {template.loopTexts.map((t) => (
+            <div
+              key={t.id}
+              dir="auto"
+              style={{
+                left: t.x + '%',
+                top: t.y + '%',
+                width: t.width + '%',
+                fontFamily: `'${t.font}', 'Cairo', sans-serif`,
+                fontSize: t.size + 'cqw',
+                fontWeight: t.weight,
+                color: t.color,
+                textAlign: t.align,
+              }}
+            >
+              {t.text}
+            </div>
+          ))}
+        </div>
+      )}
       <div className="loop-decoration" aria-hidden="true">
         {template.loopBackdrop === 'zigzag' && <ZigzagWallpaper />}
         {template.loopBackdrop === 'school-video' && (
