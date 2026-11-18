@@ -30,24 +30,22 @@ export function BackgroundAudioEditor() {
       const { error } = await supabase.storage.from('media').upload(path, f, { contentType: mime });
       if (error) throw Error(error.message);
       edit('backgroundAudio', {
+        ...content.backgroundAudio,
         url: supabase.storage.from('media').getPublicUrl(path).data.publicUrl,
         name: f.name,
       });
-      setMessage('الصوت جاهز. انشره ثم شغّله من إعدادات جهاز العرض.');
+      setMessage('الصوت جاهز. انشر المحتوى ليعمل على التلفزيون تلقائيًا.');
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
+  const audio = content.backgroundAudio;
+  const set = (patch: Partial<NonNullable<typeof audio>>) =>
+    audio && edit('backgroundAudio', { ...audio, ...patch });
   return (
-    <section className="background-audio-editor">
-      <h3>صوت / موسيقى الخلفية</h3>
-      <p className="field-hint">
-        يُنزّل الصوت كاملًا قبل التشغيل ويُحفظ على متصفح جهاز العرض للتحديث القادم. يتكرر الصوت
-        باستمرار. التشغيل والإيقاف ومستوى الصوت محفوظة لكل جهاز عرض على حدة. افتح إعدادات جهاز العرض
-        بالمفتاح S أو بالنقر المزدوج لتشغيله.
-      </p>
+    <section className="background-audio-editor bg-audio">
       <input
         ref={file}
         hidden
@@ -59,66 +57,105 @@ export function BackgroundAudioEditor() {
           e.target.value = '';
         }}
       />
+      {audio ? (
+        <div className="bg-audio-card">
+          <span className="bg-audio-icon">♪</span>
+          <span className="bg-audio-name">
+            <bdi>{audio.name}</bdi>
+            <small>
+              {audio.autoplay !== false ? 'يعمل تلقائيًا على التلفزيون' : 'لا يبدأ تلقائيًا'}
+              {audio.loop !== false ? ' · يتكرر' : ' · مرة واحدة'}
+            </small>
+          </span>
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => edit('backgroundAudio', undefined)}
+          >
+            إزالة
+          </button>
+        </div>
+      ) : (
+        <p className="field-hint">لا يوجد صوت خلفية. ارفع ملفًا أو الصق رابطًا.</p>
+      )}
       <button
         type="button"
-        className="button white"
+        className="button primary"
         disabled={busy}
         onClick={() => file.current?.click()}
       >
-        رفع ملف صوت
+        {busy ? 'جارٍ الرفع…' : audio ? 'تغيير ملف الصوت' : 'رفع ملف صوت من الجوال'}
       </button>
-      <label>
-        رابط صوت مباشر أو Drive
+      <div className="bg-audio-link">
         <input
           aria-label="رابط صوت مباشر أو Drive"
           type="url"
           dir="ltr"
           value={link}
           onChange={(e) => setLink(e.target.value)}
-          placeholder="https://drive.google.com/file/d/…/view"
+          placeholder="رابط Google Drive أو MP3"
         />
-      </label>
-      <button
-        type="button"
-        className="button white"
-        disabled={busy}
-        onClick={() => {
-          const parsed = mediaLink(link, 'audio');
-          if (!parsed || parsed.kind !== 'audio') {
-            setMessage('أدخل رابط ملف صوت HTTPS مباشر مثل MP3، أو رابط Drive عام.');
-            return;
-          }
-          edit('backgroundAudio', {
-            url: parsed.url,
-            name: parsed.drive ? 'صوت Google Drive' : 'صوت من رابط مباشر',
-          });
-          setMessage('تم اختيار الصوت. انشره لتطبيقه.');
-        }}
-      >
-        استخدام رابط الصوت
-      </button>
-      {content.backgroundAudio && (
+        <button
+          type="button"
+          className="button white"
+          disabled={busy || !link.trim()}
+          onClick={() => {
+            const parsed = mediaLink(link, 'audio');
+            if (!parsed || parsed.kind !== 'audio') {
+              setMessage('أدخل رابط ملف صوت HTTPS مباشر مثل MP3، أو رابط Drive عام.');
+              return;
+            }
+            edit('backgroundAudio', {
+              ...audio,
+              url: parsed.url,
+              name: parsed.drive ? 'صوت Google Drive' : 'صوت من رابط مباشر',
+            });
+            setLink('');
+            setMessage('تم اختيار الصوت. انشر المحتوى لتطبيقه.');
+          }}
+        >
+          استخدام الرابط
+        </button>
+      </div>
+      {audio && (
         <>
-          <p>
-            {content.backgroundAudio.name}{' '}
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => edit('backgroundAudio', undefined)}
-            >
-              إزالة صوت الخلفية
-            </button>
-          </p>
           <label>
-            معاينة الصوت على هذا الجهاز
-            <audio
-              controls
-              preload="metadata"
-              src={audioPlaybackURL(content.backgroundAudio.url)}
+            <input
+              type="checkbox"
+              checked={audio.autoplay !== false}
+              onChange={(e) => set({ autoplay: e.target.checked })}
             />
+            تشغيل تلقائي على التلفزيون
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={audio.loop !== false}
+              onChange={(e) => set({ loop: e.target.checked })}
+            />
+            تكرار الصوت باستمرار
+          </label>
+          <label className="bg-audio-volume">
+            مستوى الصوت <b dir="ltr">{Math.round((audio.volume ?? 0.5) * 100)}%</b>
+            <input
+              type="range"
+              aria-label="مستوى صوت الخلفية"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round((audio.volume ?? 0.5) * 100)}
+              onChange={(e) => set({ volume: Number(e.target.value) / 100 })}
+            />
+          </label>
+          <label>
+            معاينة على هذا الجهاز
+            <audio controls preload="metadata" src={audioPlaybackURL(audio.url)} />
           </label>
         </>
       )}
+      <p className="field-hint">
+        يُنزّل التلفزيون الصوت كاملًا قبل التشغيل ويحفظه. انشر المحتوى بعد أي تغيير.
+      </p>
       {message && <p role="status">{message}</p>}
     </section>
   );

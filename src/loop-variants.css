@@ -811,3 +811,16 @@
   box-shadow: none !important;
   backdrop-filter: none !important;
 }
+/* Custom text blocks on the classes background. */
+.screen-loop .loop-texts {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+.screen-loop .loop-texts > div {
+  position: absolute;
+  line-height: 1.25;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

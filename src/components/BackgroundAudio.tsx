@@ -3,6 +3,7 @@ import { useDevicePlayback } from '@/lib/devicePlayback';
 import { useCacheTask } from '@/lib/cacheStatus';
 import { useEffect, useRef, useState } from 'react';
 import { drivePlaybackURL, parseDriveLink } from '@/lib/driveVideo';
+import type { Content } from '@/lib/types';
 const key = 'daily-screen-audio-device:' + location.pathname;
 function saved() {
   try {
@@ -19,7 +20,7 @@ export function BackgroundAudio({
   source,
   controls,
 }: {
-  source?: { url: string; name: string };
+  source?: Content['backgroundAudio'];
   controls: boolean;
 }) {
   const device = useDevicePlayback();
@@ -112,17 +113,37 @@ export function BackgroundAudio({
     try {
       localStorage.setItem(key, JSON.stringify(prefs));
     } catch {}
-    if (audio.current) audio.current.volume = prefs.volume * device.volume;
-  }, [prefs.enabled, prefs.volume, url, device.volume]);
+    if (audio.current) audio.current.volume = (source?.volume ?? prefs.volume) * device.volume;
+  }, [prefs.enabled, prefs.volume, url, device.volume, source?.volume]);
+  // Plays by itself on the TV unless the admin turned automatic playback off.
+  const auto = !!source && source.autoplay !== false;
   useEffect(() => {
     const el = audio.current;
     if (!el || !preparedURL) return;
     setError('');
-    if ((prefs.enabled || device.remoteActive) && !device.paused && !pausedHere)
-      el.play().catch(() => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'));
-    else el.pause();
-    return () => el.pause();
-  }, [preparedURL, prefs.enabled, device.paused, device.remoteActive, pausedHere]);
+    const should = (auto || prefs.enabled || device.remoteActive) && !device.paused && !pausedHere;
+    if (!should) {
+      el.pause();
+      return () => el.pause();
+    }
+    const tryPlay = () =>
+      el.paused &&
+      el.play().then(
+        () => setError(''),
+        () => setError('اضغط تشغيل للسماح بالصوت على هذا الجهاز.'),
+      );
+    void tryPlay();
+    // If the browser blocked autoplay, keep retrying and start on the first touch / key.
+    const retry = setInterval(() => void tryPlay(), 5000);
+    window.addEventListener('pointerdown', tryPlay);
+    window.addEventListener('keydown', tryPlay);
+    return () => {
+      clearInterval(retry);
+      window.removeEventListener('pointerdown', tryPlay);
+      window.removeEventListener('keydown', tryPlay);
+      el.pause();
+    };
+  }, [preparedURL, prefs.enabled, device.paused, device.remoteActive, pausedHere, auto]);
 
   if (!url) return controls ? <p>لا يوجد صوت خلفية منشور. أضفه من لوحة الإدارة.</p> : null;
   return (
@@ -133,7 +154,7 @@ export function BackgroundAudio({
         }}
         ref={audio}
         src={preparedURL || undefined}
-        loop
+        loop={source?.loop !== false}
         preload="auto"
         onLoadedMetadata={() => {
           const d = audio.current?.duration || 0;
