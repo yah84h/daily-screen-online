@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { clients, response, requireAdmin, cleanPermissions, ownerUsername } from '../lib/staff.mjs';
 export async function handler(event) {
   if (event.httpMethod !== 'POST')
@@ -42,7 +41,7 @@ export async function handler(event) {
         .maybeSingle();
       if (existing) throw Error('اسم المستخدم موجود');
       const r = await admin.auth.admin.createUser({
-        email: randomUUID() + '@staff.daily-screen.invalid',
+        email: globalThis.crypto.randomUUID() + '@staff.daily-screen.invalid',
         password,
         email_confirm: true,
       });
