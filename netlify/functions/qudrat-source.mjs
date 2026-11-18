@@ -18,8 +18,12 @@ export async function handler(event) {
       let data;
       try {
         data = await fetchQudratLeaderboard({ url });
-      } catch {
-        throw Error('الرابط صحيح الشكل لكن المصدر لم يُعد نتائج. تحقق من المفتاح ثم أعد المحاولة.');
+      } catch (error) {
+        throw Error(
+          'الرابط صحيح الشكل لكن المصدر لم يُعد نتائج. تحقق من المفتاح ثم أعد المحاولة. (' +
+            String(error?.message || error).slice(0, 120) +
+            ')',
+        );
       }
       await storeSource(admin, url);
       return response(200, {

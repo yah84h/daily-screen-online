@@ -116,7 +116,7 @@ test('only the configured Supabase leaderboard endpoint is fetched, with redirec
     fetcher: async (request, options) => {
       calls++;
       assert.equal(request, url);
-      assert.equal(options.redirect, 'error');
+      assert.equal(options.redirect, 'manual'); // Cloudflare-safe; 3xx is rejected in code
       return Response.json(data);
     },
   });
