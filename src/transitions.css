@@ -13,7 +13,8 @@
   will-change: clip-path;
 }
 .transition-curtain {
-  background: #0b1a33;
+  /* See-through until its picture is ready: never a dark flash. */
+  background: transparent;
 }
 .transition-curtain video {
   width: 100%;
