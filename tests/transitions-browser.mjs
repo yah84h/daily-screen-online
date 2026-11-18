@@ -60,8 +60,7 @@ try {
   await tv.addInitScript(() => {
     window.__phases = [];
     const seen = () => {
-      const on = document.querySelector('.transition-overlay video.on');
-      const phase = on?.getAttribute('data-phase') || null;
+      const phase = document.querySelector('.transition-curtain')?.dataset.phase || null;
       const media = !!document.querySelector('.screen-media, .full-media, .screen video');
       const last = window.__phases.at(-1);
       if (!last || last.phase !== phase || last.media !== media)
@@ -71,14 +70,13 @@ try {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ['class', 'data-phase'],
     });
   });
   await tv.goto(base + '/display?token=tv-token');
   await tv.locator('.screen').first().waitFor();
   await tv.waitForFunction(async () => {
-    const clips = ['intro', 'loop', 'outro'];
-    return clips.every((name) => document.querySelector(`video[data-phase="${name}"]`));
+    return !!document.querySelector('.transition-curtain video');
   });
   const admin = await context.newPage();
   await admin.goto(base + '/admin');
@@ -91,17 +89,30 @@ try {
   await admin.getByRole('button', { name: 'تطبيق على الشاشة', exact: true }).click();
 
   await tv.waitForFunction(
-    () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'intro',
+    () => document.querySelector('.transition-curtain')?.dataset.phase === 'intro',
   );
-  // Real playback, not the safety timeout: the intro clip's time advances.
-  await tv.waitForFunction(
-    () => document.querySelector('video[data-phase="intro"]').currentTime > 1,
+  // The curtain sweeps over the old screen at once: no fade, its loop video plays.
+  await tv.waitForFunction(() => {
+    const clip = getComputedStyle(document.querySelector('.transition-curtain')).clipPath;
+    return (
+      clip.startsWith('polygon') &&
+      document.querySelector('.transition-curtain video').currentTime > 0.35
+    );
+  });
+  await tv.screenshot({ path: 'work/curtain-sweep.png' });
+  assert.equal(
+    await tv.evaluate(() => {
+      const pill = document.querySelector('.cache-status-line');
+      return !pill || getComputedStyle(pill).visibility === 'hidden';
+    }),
+    true,
+    'no progress pill over the curtain',
   );
   await tv.waitForFunction(
-    () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'loop',
+    () => document.querySelector('.transition-curtain')?.dataset.phase === 'loop',
   );
   await tv.waitForFunction(
-    () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'outro',
+    () => document.querySelector('.transition-curtain')?.dataset.phase === 'outro',
     undefined,
     { timeout: 30000 },
   );
@@ -121,7 +132,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS mode transition in Edge: intro plays, loop covers a 7 s preparation, outro reveals the ready mode, no JS errors.',
+    'PASS mode transition in Edge: curtain sweeps in, loop covers a 7 s preparation, outro reveals the ready mode, no JS errors.',
   );
 } finally {
   await browser?.close();

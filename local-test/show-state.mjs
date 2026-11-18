@@ -75,7 +75,23 @@ export function cleanItem(raw) {
     name: clean(raw.name, 120) || 'ملف',
     parts: kind === 'deck' ? Math.max(1, Math.min(MAX_SLIDES, Number(raw.parts) || 1)) : 1,
     size: Math.max(0, Number(raw.size) || 0),
+    ...itemOptions(raw),
   };
+}
+
+export const AFTER = ['auto', 'next', 'standby', 'stay'];
+/** What happens when a file finishes, and how early (seconds) a video hands over. */
+function itemOptions(raw) {
+  return {
+    after: AFTER.includes(raw?.after) ? raw.after : 'auto',
+    lead: Math.max(0, Math.min(10, Math.round(Number(raw?.lead) || 0))),
+  };
+}
+
+/** The end rule for a file: 'auto' follows the show's auto-advance setting. */
+export function endRule(show, item) {
+  const after = item?.after || 'auto';
+  return after === 'auto' ? (show.settings?.autoNext ? 'next' : 'stay') : after;
 }
 
 /** Apply one remote command. Returns the new show (never mutates). */
@@ -127,6 +143,40 @@ export function showReduce(show, command) {
       if (s.phase !== 'live') return s;
       if (s.step < last) return bump({ step: s.step + 1 });
       return s.settings.loop ? bump({ step: 0 }) : s;
+    case 'item': {
+      // Per-file options; allowed during the show (no files change).
+      const found = s.items.some((item) => item.id === command.id);
+      if (!found) throw Error('الملف غير موجود');
+      return bump({
+        items: s.items.map((item) =>
+          item.id === command.id
+            ? { ...item, ...itemOptions({ ...item, ...command.options }) }
+            : item,
+        ),
+      });
+    }
+    case 'finish': {
+      // The current file ended (or reached its early hand-over point).
+      if (s.phase !== 'live' || !steps.length) return s;
+      const current = steps[s.step];
+      const item = s.items.find((entry) => entry.id === current.item);
+      const lastPart = !steps[s.step + 1] || steps[s.step + 1].item !== current.item;
+      const rule = lastPart ? endRule(s, item) : s.settings.autoNext ? 'next' : 'stay';
+      if (rule === 'stay') return s;
+      if (rule === 'next') {
+        if (s.step < last) return bump({ step: s.step + 1 });
+        return s.settings.loop ? bump({ step: 0 }) : s;
+      }
+      // Back to the standby screen; «متابعة» continues with the next file.
+      if (s.step < last) return bump({ phase: 'paused', step: s.step + 1 });
+      return bump({ phase: s.settings.loop ? 'paused' : 'standby', step: 0 });
+    }
+    case 'play': {
+      // Play a file now, out of order (first slide of a PowerPoint).
+      const index = steps.findIndex((step) => step.item === command.id);
+      if (index < 0) throw Error('الملف غير موجود');
+      return bump({ phase: 'live', step: index, blackout: false });
+    }
     case 'blackout':
       return bump({
         blackout: typeof command.value === 'boolean' ? command.value : !s.blackout,

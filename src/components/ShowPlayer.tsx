@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
 import { useTransitionClips } from '@/lib/transitions';
 import { TransitionOverlay, type TransitionPhase } from './TransitionOverlay';
-import { partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
+import { endRule, partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
 import type { School, Template } from '@/lib/types';
 
 type Props = {
@@ -72,8 +72,11 @@ function LiveShow({
   showKey: string;
   logo: string;
 }) {
-  const { show, urls, stored, progress, videoCommand, reportPlayback, advance, command } =
-    useShowHost(screenId, showKey, token);
+  const { show, urls, stored, progress, videoCommand, reportPlayback, command } = useShowHost(
+    screenId,
+    showKey,
+    token,
+  );
   const steps = showSteps(show.items);
   const step = steps[Math.min(show.step, Math.max(0, steps.length - 1))];
   const url = step ? urls[partKey(step.item, step.part)] : '';
@@ -122,25 +125,65 @@ function LiveShow({
     <TransitionOverlay
       clips={clips}
       phase={transition}
-      onDone={(phase) => setTransition((current) => (current === phase ? null : current))}
+      onDone={(phase) => {
+        // Between files: once the curtain covers the old file, sweep it away over the new one.
+        if (phase === 'intro' && switching.current) {
+          switching.current = false;
+          setTransition('outro');
+        } else setTransition((current) => (current === phase ? null : current));
+      }}
     />
   );
-  // Images move on by themselves only when auto-advance is on (and the screen isn't blacked out).
+  // The current file's end rule (per file, or the show's auto-advance).
+  const item = step ? show.items.find((entry) => entry.id === step.item) : undefined;
+  const lastPart = !!step && (!steps[show.step + 1] || steps[show.step + 1].item !== step.item);
+  const rule = lastPart ? endRule(show, item) : settings?.autoNext ? 'next' : 'stay';
+  const finish = useCallback(() => command({ op: 'finish' }), [command]);
+  // Images (and PowerPoint slides) move on by themselves after their time when a rule says so.
   useEffect(() => {
-    if (!live || step.kind !== 'image' || !settings?.autoNext || show.blackout) return;
-    const timer = setTimeout(advance, (settings.imageSeconds || 10) * 1000);
+    if (!live || step.kind !== 'image' || rule === 'stay' || show.blackout) return;
+    const timer = setTimeout(finish, (settings?.imageSeconds || 10) * 1000);
     return () => clearTimeout(timer);
   }, [
     live,
     step?.item,
     step?.part,
     step?.kind,
-    settings?.autoNext,
+    rule,
     settings?.imageSeconds,
     show.blackout,
     show.revision,
-    advance,
+    finish,
   ]);
+  // Keep the last file on screen while the curtain sweeps over it (end / back to standby).
+  // What is on screen. The last file stays under the curtain while it sweeps in
+  // (back to standby, end, or switching to another file).
+  const held = useRef<{ step: NonNullable<typeof step>; url: string } | null>(null);
+  const wasLive = useRef(false);
+  const switching = useRef(false);
+  // A different file (video / photo / whole PowerPoint) → curtain in, then out over the new one.
+  // Slides inside one PowerPoint keep the quick fade.
+  if (
+    clips &&
+    live &&
+    wasLive.current &&
+    held.current &&
+    held.current.step.item !== step.item &&
+    !switching.current &&
+    transition === null
+  ) {
+    switching.current = true;
+    setTransition('intro');
+  }
+  if (live && !switching.current) held.current = { step, url };
+  wasLive.current = live;
+  const shown = switching.current
+    ? held.current
+    : live
+      ? { step, url }
+      : transition === 'intro'
+        ? held.current
+        : null;
   useEffect(() => {
     if (!live || step.kind !== 'video') reportPlayback(null);
   }, [live, step?.kind, step?.item, reportPlayback]);
@@ -172,7 +215,7 @@ function LiveShow({
         done={ready.complete}
       />
     );
-  if (!live)
+  if (!shown)
     return (
       <>
         <Standby
@@ -193,16 +236,17 @@ function LiveShow({
     );
   return (
     <div className="screen show-screen" dir="rtl">
-      <div className="show-layer" key={step.item + ':' + step.part}>
-        {step.kind === 'video' ? (
+      <div className="show-layer" key={shown.step.item + ':' + shown.step.part}>
+        {shown.step.kind === 'video' ? (
           <ShowVideo
-            src={url}
+            src={shown.url}
             command={videoCommand}
             onReport={reportPlayback}
-            onEnded={() => settings?.autoNext && advance()}
+            lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
+            onFinish={() => live && !switching.current && finish()}
           />
         ) : (
-          <img src={url} alt="" draggable={false} />
+          <img src={shown.url} alt="" draggable={false} />
         )}
       </div>
       <div className={'show-blackout' + (show.blackout ? ' on' : '')} aria-hidden="true" />
@@ -228,13 +272,17 @@ function ShowVideo({
   src,
   command,
   onReport,
-  onEnded,
+  lead,
+  onFinish,
 }: {
   src: string;
   command: ReturnType<typeof useShowHost>['videoCommand'];
   onReport: (p: ShowPlayback | null) => void;
-  onEnded: () => void;
+  /** Hand over this many seconds before the end (0 = when it ends). */
+  lead: number;
+  onFinish: () => void;
 }) {
+  const finished = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
   const [mountedAt] = useState(Date.now());
   const report = useRef(onReport);
@@ -318,9 +366,18 @@ function ShowVideo({
       onSeeked={send}
       onVolumeChange={send}
       onLoadedMetadata={send}
+      onTimeUpdate={(e) => {
+        const el = e.currentTarget;
+        if (!lead || finished.current || !el.duration || el.duration - el.currentTime > lead)
+          return;
+        finished.current = true;
+        onFinish();
+      }}
       onEnded={() => {
         send();
-        onEnded();
+        if (finished.current) return;
+        finished.current = true;
+        onFinish();
       }}
     />
   );

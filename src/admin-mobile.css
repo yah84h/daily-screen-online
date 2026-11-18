@@ -1944,3 +1944,111 @@
   font-size: 13px;
   white-space: nowrap;
 }
+
+/* Presenting mode: play-now list with per-file rules */
+.show-playlist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.show-playlist > li {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  background: #fff;
+  border: 2px solid var(--studio-line);
+}
+.show-playlist > li.playing {
+  border-color: var(--studio-accent);
+  box-shadow: 0 6px 18px #5b6cf022;
+}
+.show-playlist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.show-playlist-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  color: var(--studio-accent-ink);
+  background: var(--studio-accent-soft);
+}
+.show-playlist-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.show-playlist-text bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.show-playlist-text small {
+  color: var(--studio-muted);
+  font-size: 12px;
+}
+.show-playlist li.playing .show-playlist-text small {
+  color: var(--studio-accent-ink);
+  font-weight: 700;
+}
+.admin-studio .show-play-now {
+  flex-shrink: 0;
+  width: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 50%;
+}
+.show-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-studio .show-rules select {
+  flex: 1 1 140px;
+  min-height: 40px;
+  padding-block: 0;
+  font-size: 13px;
+  border-radius: 12px;
+}
+.show-slides {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.show-slides button {
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: #0b1a33;
+  color: #fff;
+}
+.show-slides button[aria-current='step'] {
+  border-color: var(--studio-accent);
+}
+.show-slides img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.show-slides em {
+  position: absolute;
+  bottom: 2px;
+  inset-inline-start: 4px;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+}

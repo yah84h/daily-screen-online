@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-/** The school's intro / loop / outro clips (cut from one video: 0–3 s, 3–12 s, 12–15 s). */
-export type TransitionClips = { intro: string; loop: string; outro: string };
+/** The school loop clip (3–12 s of the school video): standby background and transition curtain. */
+export type TransitionClips = { loop: string };
 
 let pending: Promise<TransitionClips | null> | null = null;
 
@@ -9,15 +9,9 @@ let pending: Promise<TransitionClips | null> | null = null;
 export function loadTransitionClips(): Promise<TransitionClips | null> {
   pending ||= (async () => {
     try {
-      const names = ['intro', 'loop', 'outro'] as const;
-      const urls = await Promise.all(
-        names.map(async (name) => {
-          const response = await fetch('/transitions/' + name + '.mp4');
-          if (!response.ok) throw Error(name);
-          return URL.createObjectURL(await response.blob());
-        }),
-      );
-      return { intro: urls[0], loop: urls[1], outro: urls[2] };
+      const response = await fetch('/transitions/loop.mp4');
+      if (!response.ok) throw Error('loop');
+      return { loop: URL.createObjectURL(await response.blob()) };
     } catch {
       pending = null; // try again next time
       return null;

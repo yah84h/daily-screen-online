@@ -119,7 +119,7 @@ try {
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
   if (edge)
     await tv.waitForFunction(
-      () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'outro',
+      () => document.querySelector('.transition-curtain')?.dataset.phase === 'outro',
     );
   await tv.waitForFunction(() => {
     const video = document.querySelector('.show-layer video');
@@ -149,6 +149,17 @@ try {
   await phone.getByRole('button', { name: 'إظهار الشاشة' }).click();
   await tv.locator('.show-blackout.on').waitFor({ state: 'detached' });
   await phone.getByRole('button', { name: 'التالي' }).click();
+  if (edge) {
+    // Video → photo: the curtain sweeps over the still-playing video, then away over the photo.
+    await tv.waitForFunction(
+      () =>
+        document.querySelector('.transition-curtain')?.dataset.phase === 'intro' &&
+        !!document.querySelector('.show-layer video'),
+    );
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-curtain')?.dataset.phase === 'outro',
+    );
+  }
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText('2 / 3').waitFor();
   await phone
@@ -163,16 +174,35 @@ try {
   await tv.locator('.show-standby').waitFor();
   await phone.getByRole('button', { name: 'متابعة العرض' }).click();
   await tv.locator('.show-layer img').waitFor();
-  await phone.getByRole('button', { name: /1\s*opening\.webm/ }).click();
+  await phone.getByRole('button', { name: 'تشغيل الآن: opening.webm' }).click();
   await tv.locator('.show-layer video').waitFor();
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
   await tv.locator('.show-standby').waitFor();
+
+  // Per-file rule: this video goes back to the standby 4 s before its end;
+  // «متابعة» then continues with the next file.
+  await phone.getByLabel('بعد انتهاء opening.webm').selectOption('standby');
+  await phone.getByLabel('توقيت التبديل opening.webm').selectOption('4');
+  await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
+  await phone.getByRole('button', { name: 'متابعة العرض' }).waitFor({ timeout: 20000 });
+  await tv.locator('.show-standby').waitFor();
+  await phone.getByRole('button', { name: 'متابعة العرض' }).click();
+  await phone.getByText('2 / 3').waitFor();
+  await tv.locator('.show-layer img').waitFor();
+  await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
+  await tv.locator('.show-standby').waitFor();
+  await phone.getByLabel('بعد انتهاء opening.webm').selectOption('auto');
+  await phone.getByLabel('توقيت التبديل opening.webm').selectOption('0');
 
   // Auto-advance: an image moves on by itself after its time.
   await phone.getByLabel(/انتقال تلقائي/).check();
   await phone.getByLabel('مدة كل صورة / شريحة').selectOption('5');
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
-  await phone.getByRole('button', { name: /^2\s/ }).click();
+  await phone
+    .locator('.show-playlist > li')
+    .nth(1)
+    .getByRole('button', { name: /تشغيل الآن/ })
+    .click();
   await phone.getByText('2 / 3').waitFor();
   await phone.getByText('3 / 3').waitFor({ timeout: 12000 });
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
@@ -190,12 +220,31 @@ try {
   const slides = Number(total.match(/\/(\d+)/)[1]);
   assert(slides > 3, 'deck adds one step per slide');
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
-  await phone.getByRole('button', { name: new RegExp('^' + slides + '\\s') }).click();
+  await tv.locator('.show-layer').waitFor();
+  await tv.waitForFunction(() => !document.querySelector('.transition-curtain')?.dataset.phase);
+  await phone.getByRole('button', { name: 'تشغيل الآن: presentation-test.pptx' }).click();
+  if (edge)
+    // Opening the PowerPoint is a new file: curtain.
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-curtain')?.dataset.phase === 'intro',
+    );
+  await tv.waitForFunction(() => !document.querySelector('.transition-curtain')?.dataset.phase);
+  await tv.evaluate(() => {
+    window.__curtainDuringSlides = false;
+    new MutationObserver(() => {
+      if (document.querySelector('.transition-curtain')?.dataset.phase)
+        window.__curtainDuringSlides = true;
+    }).observe(document.querySelector('.transition-curtain'), { attributes: true });
+  });
+  await phone.getByRole('button', { name: new RegExp('^' + slides + ' الشريحة') }).click();
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText(slides + ' / ' + slides).waitFor();
+  await tv.waitForTimeout(600);
+  // Slides inside the same PowerPoint keep the quick fade: no curtain between them.
+  assert.equal(await tv.evaluate(() => window.__curtainDuringSlides), false);
   // Slide thumbnails on the phone remote.
   // Every PowerPoint slide has a thumbnail (the 1×1 test PNG is too small to thumbnail).
-  assert((await phone.locator('.show-jump-thumb').count()) >= slides - 3);
+  assert.equal(await phone.locator('.show-slides img').count(), slides - 3);
   await phone.locator('.show-now-thumb').waitFor();
   // A presenter clicker / keyboard on the TV drives the show too.
   await tv.keyboard.press('Home');
@@ -209,10 +258,16 @@ try {
   await tv.keyboard.press('b');
   await tv.locator('.show-blackout.on').waitFor({ state: 'detached' });
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
-  if (edge)
+  if (edge) {
+    // The curtain sweeps straight over the last file (no fade to black)...
     await tv.waitForFunction(
-      () => document.querySelector('.transition-overlay video.on')?.dataset.phase === 'intro',
+      () =>
+        document.querySelector('.transition-curtain')?.dataset.phase === 'intro' &&
+        !!document.querySelector('.show-layer'),
     );
+    // ...then the standby takes over.
+    await tv.locator('.show-standby').waitFor();
+  }
 
   // Files live on the TV: after a reload everything is still there, ready.
   await tv.reload();

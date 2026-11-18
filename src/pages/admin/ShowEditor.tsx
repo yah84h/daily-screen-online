@@ -110,6 +110,8 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
       kind: 'image',
       source: 'phone',
       url: '',
+      after: 'auto',
+      lead: 0,
       name: file.name,
       parts: 1,
       size: file.size,
@@ -162,6 +164,8 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
             kind: 'deck',
             source: 'phone',
             url: '',
+            after: 'auto',
+            lead: 0,
             name: file.name,
             parts: slides.length,
             size: slides.reduce((sum, slide) => sum + slide.size, 0),
@@ -175,7 +179,17 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               : null;
           if (!kind) throw Error(file.name + ': اختر فيديو أو صورة أو ملف PPTX.');
           if (file.size > SHOW_FILE_LIMIT) throw Error(file.name + ': أكبر من ٢ جيجابايت.');
-          item = { id, kind, source: 'phone', url: '', name: file.name, parts: 1, size: file.size };
+          item = {
+            id,
+            kind,
+            source: 'phone',
+            url: '',
+            after: 'auto',
+            lead: 0,
+            name: file.name,
+            parts: 1,
+            size: file.size,
+          };
           parts = [file];
         }
         setPreparing('');
@@ -524,25 +538,62 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
             إنهاء العرض
           </button>
           {settingsPanel}
-          <ol className="show-jump" aria-label="الانتقال إلى">
-            {steps.map((step, index) => {
-              const item = show.items.find((entry) => entry.id === step.item);
-              const Icon = item ? kindIcon[item.kind] : ImageIcon;
+          <ol className="show-playlist" aria-label="ملفات العرض">
+            {show.items.map((item) => {
+              const Icon = kindIcon[item.kind];
+              const first = steps.findIndex((step) => step.item === item.id);
+              const playing = current?.item === item.id;
+              const isNext = !playing && nextStep?.item === item.id;
               return (
-                <li key={step.item + step.part}>
-                  <button
-                    aria-current={index === show.step ? 'step' : undefined}
-                    onClick={() => act(() => send({ op: 'goto', index }))}
-                  >
-                    <em>{index + 1}</em>
-                    {thumbOf(step) ? (
-                      <img className="show-jump-thumb" src={thumbOf(step)} alt="" />
+                <li key={item.id} className={playing ? 'playing' : ''}>
+                  <div className="show-playlist-row">
+                    {thumbOf(steps[first]) ? (
+                      <img className="show-jump-thumb" src={thumbOf(steps[first])} alt="" />
                     ) : (
-                      <Icon size={16} />
+                      <span className="show-playlist-icon">
+                        <Icon size={18} />
+                      </span>
                     )}
-                    <bdi>{item?.name}</bdi>
-                    {item?.kind === 'deck' ? ' · ' + (step.part + 1) : ''}
-                  </button>
+                    <span className="show-playlist-text">
+                      <bdi>{item.name}</bdi>
+                      <small>
+                        {playing
+                          ? show.phase === 'paused'
+                            ? 'التالي بعد الانتظار'
+                            : 'يُعرض الآن'
+                          : isNext
+                            ? 'التالي'
+                            : kindName[item.kind] +
+                              (item.kind === 'deck' ? ' · ' + item.parts + ' شريحة' : '')}
+                      </small>
+                    </span>
+                    <button
+                      className="button primary show-play-now"
+                      aria-label={'تشغيل الآن: ' + item.name}
+                      disabled={pending || (playing && show.phase === 'live')}
+                      onClick={() => act(() => send({ op: 'play', id: item.id }))}
+                    >
+                      <Play size={16} />
+                    </button>
+                  </div>
+                  <ItemRules item={item} pending={pending} act={act} send={send} />
+                  {item.kind === 'deck' && playing && (
+                    <div className="show-slides" aria-label={'شرائح ' + item.name}>
+                      {steps.map((step, index) =>
+                        step.item === item.id ? (
+                          <button
+                            key={index}
+                            aria-label={`${index + 1} الشريحة ${step.part + 1} من ${item.name}`}
+                            aria-current={index === show.step ? 'step' : undefined}
+                            onClick={() => act(() => send({ op: 'goto', index }))}
+                          >
+                            {thumbOf(step) ? <img src={thumbOf(step)} alt="" /> : null}
+                            <em>{step.part + 1}</em>
+                          </button>
+                        ) : null,
+                      )}
+                    </div>
+                  )}
                 </li>
               );
             })}
@@ -698,6 +749,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
                       <progress className="show-item-bar" value={state.fraction} max={1} />
                     )}
                     {state.detail && <small className="show-item-detail">{state.detail}</small>}
+                    <ItemRules item={item} pending={pending} act={act} send={send} />
                   </span>
                   <span className="show-item-actions">
                     {state.tone === 'error' && files.current.has(item.id) && (
@@ -831,4 +883,46 @@ async function thumbnail(blob: Blob): Promise<string> {
   } catch {
     return '';
   }
+}
+
+/** Per-file: what happens when it ends, and (videos) whether to hand over 4 s early. */
+function ItemRules({
+  item,
+  pending,
+  act,
+  send,
+}: {
+  item: ShowItem;
+  pending: boolean;
+  act: (fn: () => Promise<void>) => Promise<void>;
+  send: ReturnType<typeof useShowRemote>['send'];
+}) {
+  const set = (options: Partial<Pick<ShowItem, 'after' | 'lead'>>) =>
+    void act(() => send({ op: 'item', id: item.id, options }));
+  return (
+    <span className="show-rules">
+      <select
+        aria-label={'بعد انتهاء ' + item.name}
+        value={item.after || 'auto'}
+        disabled={pending}
+        onChange={(e) => set({ after: e.target.value as ShowItem['after'] })}
+      >
+        <option value="auto">بعده: حسب الإعدادات</option>
+        <option value="next">بعده: الملف التالي</option>
+        <option value="standby">بعده: شاشة الانتظار</option>
+        <option value="stay">بعده: يبقى على الشاشة</option>
+      </select>
+      {item.kind === 'video' && (
+        <select
+          aria-label={'توقيت التبديل ' + item.name}
+          value={item.lead || 0}
+          disabled={pending}
+          onChange={(e) => set({ lead: Number(e.target.value) })}
+        >
+          <option value={0}>عند نهاية الفيديو</option>
+          <option value={4}>قبل النهاية بـ ٤ ثوانٍ</option>
+        </select>
+      )}
+    </span>
+  );
 }
