@@ -28,26 +28,35 @@ export function Standby({
   title,
   note,
   photo = '',
+  photoKind = 'image',
   loop = '',
 }: {
   logo: string;
   title: string;
   note: string;
-  /** The presenter's own background photo. */
+  /** The presenter's own full-screen background: photo / GIF, or a video that loops. */
   photo?: string;
+  photoKind?: 'image' | 'video';
   /** The school loop clip (it already shows the logo). */
   loop?: string;
 }) {
   const kind = photo ? ' with-photo' : loop ? ' with-loop' : '';
   return (
-    <div className={'screen show-screen show-standby' + kind} dir="rtl">
+    <div
+      className={'screen show-screen show-standby' + kind + (title ? ' has-title' : '')}
+      dir="rtl"
+    >
       {photo ? (
-        <img className="show-standby-bg" src={photo} alt="" />
+        photoKind === 'video' ? (
+          <video className="show-standby-bg" src={photo} autoPlay muted loop playsInline />
+        ) : (
+          <img className="show-standby-bg" src={photo} alt="" />
+        )
       ) : loop ? (
         <video className="show-standby-bg" src={loop} autoPlay muted loop playsInline />
       ) : null}
       <div className="show-standby-card">
-        {!loop || photo ? (
+        {!loop && !photo ? (
           logo ? (
             <img src={logo} alt="" />
           ) : (
@@ -222,6 +231,7 @@ function LiveShow({
           logo={logo}
           title={show.title}
           photo={photo}
+          photoKind={show.background?.kind === 'video' ? 'video' : 'image'}
           loop={clips?.loop || ''}
           note={
             show.phase === 'live' && step && !url

@@ -182,10 +182,12 @@ export function showReduce(show, command) {
         blackout: typeof command.value === 'boolean' ? command.value : !s.blackout,
       });
     case 'background': {
-      // Standby background photo (sent from the phone like any file); null = school loop clip.
+      // Standby background: a photo / GIF or a looping video sent from the phone like any file;
+      // null = the school loop clip.
       if (!command.item) return bump({ background: null });
-      const item = cleanItem({ ...command.item, kind: 'image', source: 'phone' });
-      return bump({ background: { id: item.id, name: item.name } });
+      const kind = command.item.kind === 'video' ? 'video' : 'image';
+      const item = cleanItem({ ...command.item, kind, source: 'phone' });
+      return bump({ background: { id: item.id, name: item.name, kind } });
     }
     case 'settings':
       return bump({ settings: cleanSettings({ ...s.settings, ...command.settings }) });
@@ -209,7 +211,7 @@ export function findPartOwner(show, id) {
   if (show?.background?.id === id)
     return {
       id,
-      kind: 'image',
+      kind: show.background.kind === 'video' ? 'video' : 'image',
       source: 'phone',
       url: '',
       name: show.background.name,

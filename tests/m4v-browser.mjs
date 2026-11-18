@@ -78,6 +78,19 @@ try {
   await phone.getByText('التلفزيون متصل. أضف ملفات العرض').waitFor({ timeout: 30000 });
   await phone.locator('.show-add input[type=file]').setInputFiles(m4v);
   await phone.getByText('كل شيء محفوظ على التلفزيون. جاهز للعرض').waitFor({ timeout: 60000 });
+  // A looping video as the full-screen standby background.
+  await phone.getByLabel('ملف الخلفية').setInputFiles({ ...m4v, name: 'خلفية.m4v' });
+  await phone.getByText('خلفية.m4v · على التلفزيون ✓').waitFor({ timeout: 60000 });
+  await tv.waitForFunction(
+    () => {
+      const v = document.querySelector('.show-standby.with-photo video.show-standby-bg');
+      return v && v.loop && v.currentTime > 0.2 && v.videoWidth > 0;
+    },
+    undefined,
+    { timeout: 30000 },
+  );
+  assert.equal(await tv.locator('.show-standby.with-photo img').count(), 0, 'no logo card over it');
+  await tv.screenshot({ path: 'work/standby-video.png' });
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
   await tv.waitForFunction(
     () => {
@@ -89,7 +102,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    'PASS .m4v: uploaded and played full screen, and sent phone → TV and played in presenting mode (Edge).',
+    'PASS .m4v: uploaded and played full screen, and sent phone → TV and played in presenting mode, and loops as the full-screen standby background (Edge).',
   );
 } finally {
   await browser?.close();

@@ -99,12 +99,26 @@
   height: 100%;
   object-fit: cover;
 }
-.show-standby.with-photo::before {
+/* Own background (photo / GIF / video) fills the screen as it is; a soft shade only behind a title. */
+.show-standby.with-photo.has-title::before {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(180deg, #0b1a3399, #0b1a33cc);
+  background: linear-gradient(180deg, transparent 45%, #0b1a33b3);
+}
+.show-standby.with-photo.has-title {
+  place-items: end center;
+}
+.show-standby.with-photo .show-standby-card {
+  margin-bottom: 7cqw;
+  animation: none;
+}
+.show-standby.with-photo h1 {
+  padding: 0.6cqw 2cqw;
+  border-radius: 999px;
+  background: #0b1a33d9;
+  font-size: 2.2cqw;
 }
 .show-standby.with-photo .show-standby-card,
 .show-standby.with-loop .show-standby-card {
