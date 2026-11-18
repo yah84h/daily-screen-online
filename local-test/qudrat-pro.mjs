@@ -40,7 +40,14 @@ async function boundedJSON(response) {
   } finally {
     await reader.cancel().catch(() => {});
   }
-  return JSON.parse(Buffer.concat(parts).toString('utf8'));
+  // Web APIs only (no Buffer), so this also runs on Cloudflare.
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  for (const part of parts) {
+    bytes.set(part, offset);
+    offset += part.byteLength;
+  }
+  return JSON.parse(new TextDecoder().decode(bytes));
 }
 export async function fetchQudratLeaderboard({
   url = process.env.QUDRAT_PRO_LEADERBOARD_URL,
@@ -51,7 +58,7 @@ export async function fetchQudratLeaderboard({
   const endpoint = leaderboardURL(url),
     source = createHash('sha256').update(endpoint.href).digest('hex');
   if (cached?.source !== source) cached = null;
-  if (!cached && cacheFile && fs.existsSync(cacheFile))
+  if (!cached && cacheFile && fs?.existsSync?.(cacheFile))
     try {
       const saved = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
       if (saved.source === source && Number.isFinite(saved.fetchedAt))
@@ -63,12 +70,14 @@ export async function fetchQudratLeaderboard({
   const fallback = cached;
   const task = (async () => {
     try {
+      // Cloudflare Workers reject redirect: 'error'; 'manual' + a status check is equivalent.
       const response = await fetcher(endpoint.href, {
-        redirect: 'error',
+        redirect: 'manual',
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(10000),
       });
-      if (!response.ok) throw Error('Upstream unavailable');
+      if (response.status >= 300 && response.status < 400) throw Error('Unexpected redirect');
+      if (!response.ok) throw Error('Upstream unavailable (' + response.status + ')');
       const data = normalizeLeaderboard(await boundedJSON(response));
       const saved = { source, data, fetchedAt: now };
       cached = saved;
