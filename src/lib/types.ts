@@ -97,7 +97,7 @@ export type Template = {
   >;
   loopLayout?: string;
   loopBackdrop?:
-    'waves' | 'zigzag' | 'school-video' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
+    'waves' | 'zigzag' | 'school-video' | 'html' | 'aurora' | 'dots' | 'grid' | 'orbits' | 'plain';
   loopCardStyle?: 'soft' | 'glass' | 'outlined';
   /** Classes background: elements switched off (see LOOP_ELEMENTS). */
   loopHidden?: string[];
@@ -105,6 +105,8 @@ export type Template = {
   loopTexts?: LoopText[];
   /** Classes background: custom HTML designs (position / size in % of the screen). */
   loopHtml?: LoopHtml[];
+  /** Classes background: an uploaded HTML page used as the whole wallpaper (backdrop 'html'). */
+  loopWallpaperHtml?: { name: string; html: string };
   loopExtras?: {
     topic?: boolean;
     announcement?: boolean;

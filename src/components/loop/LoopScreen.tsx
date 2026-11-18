@@ -18,7 +18,7 @@ import {
   periodAt,
   recognitionOf,
 } from '@/lib/loop';
-import { LoopHtmlBlocks } from './LoopHtmlBlocks';
+import { LoopHtmlBlocks, LoopHtmlWallpaper } from './LoopHtmlBlocks';
 import { NewsTicker } from './NewsTicker';
 import NativeBackground from './NativeBackground';
 import { RecognitionBoard } from './RecognitionBoard';
@@ -86,31 +86,32 @@ export function LoopScreen({
   const schoolName =
     template.loopSchoolName?.trim() ||
     (template.loopBranding === 'school' ? school.name : defaultLoopSchoolName);
-  const htmlFields: Record<string, string> = template.loopHtml?.length
-    ? {
-        time: now.toLocaleTimeString('ar-SA', {
-          timeZone: 'Asia/Riyadh',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-        date: now.toLocaleDateString('ar-SA-u-ca-gregory', {
-          timeZone: 'Asia/Riyadh',
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-        }),
-        hijri: now.toLocaleDateString('ar-SA-u-ca-islamic-umalqura', {
-          timeZone: 'Asia/Riyadh',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }),
-        school: schoolName,
-        period: period.label,
-        periodDetail: period.detail,
-        countdown: countdown?.label || '',
-      }
-    : {};
+  const htmlFields: Record<string, string> =
+    template.loopHtml?.length || template.loopBackdrop === 'html'
+      ? {
+          time: now.toLocaleTimeString('ar-SA', {
+            timeZone: 'Asia/Riyadh',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          date: now.toLocaleDateString('ar-SA-u-ca-gregory', {
+            timeZone: 'Asia/Riyadh',
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+          }),
+          hijri: now.toLocaleDateString('ar-SA-u-ca-islamic-umalqura', {
+            timeZone: 'Asia/Riyadh',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }),
+          school: schoolName,
+          period: period.label,
+          periodDetail: period.detail,
+          countdown: countdown?.label || '',
+        }
+      : {};
   return (
     <div
       style={
@@ -194,6 +195,9 @@ export function LoopScreen({
       )}
       <div className="loop-decoration" aria-hidden="true">
         {template.loopBackdrop === 'zigzag' && <ZigzagWallpaper />}
+        {template.loopBackdrop === 'html' && template.loopWallpaperHtml?.html.trim() && (
+          <LoopHtmlWallpaper html={template.loopWallpaperHtml.html} fields={htmlFields} />
+        )}
         {template.loopBackdrop === 'school-video' && (
           <video
             className="school-video-wallpaper"
