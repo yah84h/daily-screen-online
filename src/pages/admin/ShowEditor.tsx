@@ -32,8 +32,8 @@ import { renderPptxSlides } from '@/lib/browserPresentation';
 import { parseDriveLink } from '@/lib/driveVideo';
 import { useAdmin } from './store';
 
-const kindIcon = { video: FileVideo, image: ImageIcon, deck: Presentation };
-const kindName = { video: 'فيديو', image: 'صورة', deck: 'PowerPoint' };
+const kindIcon = { video: FileVideo, image: ImageIcon, deck: Presentation, break: CirclePause };
+const kindName = { video: 'فيديو', image: 'صورة', deck: 'PowerPoint', break: 'استراحة' };
 const mb = (bytes: number) =>
   bytes >= 1024 * 1024 * 1024
     ? (bytes / 1024 / 1024 / 1024).toFixed(1) + ' جيجابايت'
@@ -100,7 +100,8 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
     step ? thumbs[step.item]?.[step.part] || '' : '';
   const bgPicker = useRef<HTMLInputElement>(null);
   const background = show?.background;
-  const backgroundReady = !!background && !!status?.stored[partKey(background.id)];
+  const wallpaper = background?.kind === 'wallpaper';
+  const backgroundReady = !!background && (wallpaper || !!status?.stored[partKey(background.id)]);
   const chooseBackground = async (file?: File) => {
     if (!file) return;
     const video = file.type.startsWith('video/') || /\.(mp4|m4v|webm|mov)$/i.test(file.name);
@@ -239,6 +240,8 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
 
   /** Per-file state: where it is, how far, how fast, how long left. */
   const itemState = (item: ShowItem) => {
+    if (item.kind === 'break')
+      return { tone: 'ok', text: 'يعرض شاشة الانتظار حتى تضغط «التالي»', fraction: 1 };
     const total = item.kind === 'deck' ? item.parts : 1;
     let done = 0;
     for (let part = 0; part < total; part++) if (status?.stored[partKey(item.id, part)]) done++;
@@ -633,17 +636,39 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               <button
                 type="button"
                 role="radio"
-                aria-checked={!!background}
+                aria-checked={wallpaper}
+                disabled={!online || pending}
+                onClick={() =>
+                  act(() =>
+                    send({
+                      op: 'background',
+                      item: { id: 'wallpaper', name: 'wallpaper', kind: 'wallpaper' },
+                    }),
+                  )
+                }
+              >
+                <span className="show-bg-swatch wallpaper" />
+                خلفية الحصص المتحركة
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!!background && !wallpaper}
                 disabled={!online || pending}
                 onClick={() => bgPicker.current?.click()}
               >
                 <span className="show-bg-swatch photo">
                   <ImageIcon size={18} />
                 </span>
-                {background ? 'تغيير الخلفية' : 'صورة أو GIF أو فيديو'}
+                {background && !wallpaper ? 'تغيير الخلفية' : 'صورة أو GIF أو فيديو'}
               </button>
             </div>
-            {background && (
+            {wallpaper && (
+              <small className="show-item-state ok">
+                خلفية الحصص المتحركة بألوان لوحة الشاشة (تُغيّر من «الألوان» في التصميم) ✓
+              </small>
+            )}
+            {background && !wallpaper && (
               <small className={'show-item-state ' + (backgroundReady ? 'ok' : 'busy')}>
                 <bdi>{background.name}</bdi> ·{' '}
                 {backgroundReady
@@ -703,6 +728,26 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
             >
               <Smartphone size={20} />
               إرسال ملفات من الجوال
+            </button>
+            <button
+              className="button white show-add-break"
+              disabled={!online || pending}
+              onClick={() =>
+                act(() =>
+                  send({
+                    op: 'add',
+                    item: {
+                      id: crypto.randomUUID(),
+                      kind: 'break',
+                      name: 'شاشة الانتظار',
+                      source: 'phone',
+                    },
+                  }),
+                )
+              }
+            >
+              <CirclePause size={18} />
+              إضافة فاصل · شاشة الانتظار
             </button>
             <small>فيديو MP4، صور، أو PowerPoint (يتحول إلى شرائح على جوالك).</small>
             {preparing && <p className="show-preparing">{preparing}</p>}

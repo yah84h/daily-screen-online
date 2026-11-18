@@ -1,4 +1,4 @@
-export type ShowKind = 'image' | 'video' | 'deck';
+export type ShowKind = 'image' | 'video' | 'deck' | 'break';
 export type ShowItem = {
   id: string;
   kind: ShowKind;
@@ -28,9 +28,9 @@ export type Show = {
   revision: number;
   blackout: boolean;
   settings: ShowSettings;
-  background: { id: string; name: string; kind?: 'image' | 'video' } | null;
+  background: { id: string; name: string; kind?: 'image' | 'video' | 'wallpaper' } | null;
 };
-export type ShowStep = { item: string; part: number; kind: 'image' | 'video' };
+export type ShowStep = { item: string; part: number; kind: 'image' | 'video' | 'break' };
 export type ShowCommand =
   | { op: 'title'; title: string }
   | { op: 'add'; item: Partial<ShowItem> }
@@ -41,7 +41,10 @@ export type ShowCommand =
   | { op: 'item'; id: string; options: Partial<Pick<ShowItem, 'after' | 'lead'>> }
   | { op: 'finish' }
   | { op: 'play'; id: string }
-  | { op: 'background'; item: { id: string; name: string; kind?: 'image' | 'video' } | null }
+  | {
+      op: 'background';
+      item: { id: string; name: string; kind?: 'image' | 'video' | 'wallpaper' } | null;
+    }
   | { op: 'settings'; settings: Partial<ShowSettings> }
   | { op: 'goto'; index: number };
 export const SHOW_KINDS: ShowKind[];

@@ -1,7 +1,8 @@
 // Presenting mode ("وضع التقديم"): pure rules shared by the TV, the admin remote and tests.
 // The show lives on the TV only; the phone sends commands, the TV owns the state.
 
-export const SHOW_KINDS = ['image', 'video', 'deck'];
+// 'break' = a stop at the standby (starter) screen placed anywhere in the order; it has no file.
+export const SHOW_KINDS = ['image', 'video', 'deck', 'break'];
 export const MAX_ITEMS = 60;
 export const MAX_SLIDES = 200;
 
@@ -13,6 +14,7 @@ export function showSteps(items) {
       const count = Math.max(0, Math.min(MAX_SLIDES, Number(item.parts) || 0));
       for (let part = 0; part < count; part++) steps.push({ item: item.id, part, kind: 'image' });
     } else steps.push({ item: item.id, part: 0, kind: item.kind });
+    // A break is one step that shows the standby screen.
   }
   return steps;
 }
@@ -185,6 +187,9 @@ export function showReduce(show, command) {
       // Standby background: a photo / GIF or a looping video sent from the phone like any file;
       // null = the school loop clip.
       if (!command.item) return bump({ background: null });
+      // The classes-background animated wallpaper (palette colors); nothing to send.
+      if (command.item.kind === 'wallpaper')
+        return bump({ background: { id: 'wallpaper', name: 'wallpaper', kind: 'wallpaper' } });
       const kind = command.item.kind === 'video' ? 'video' : 'image';
       const item = cleanItem({ ...command.item, kind, source: 'phone' });
       return bump({ background: { id: item.id, name: item.name, kind } });
@@ -208,7 +213,7 @@ export function showReduce(show, command) {
 export function findPartOwner(show, id) {
   const item = (show?.items || []).find((entry) => entry.id === id);
   if (item) return item;
-  if (show?.background?.id === id)
+  if (show?.background?.id === id && show.background.kind !== 'wallpaper')
     return {
       id,
       kind: show.background.kind === 'video' ? 'video' : 'image',
@@ -225,7 +230,11 @@ export function showReadiness(items, stored) {
   let total = 0,
     ready = 0;
   for (const item of items || [])
-    for (let part = 0; part < (item.kind === 'deck' ? item.parts : 1); part++) {
+    for (
+      let part = 0;
+      part < (item.kind === 'deck' ? item.parts : item.kind === 'break' ? 0 : 1);
+      part++
+    ) {
       total++;
       if (stored?.[partKey(item.id, part)]) ready++;
     }
