@@ -149,6 +149,17 @@ try {
   await phone.getByRole('button', { name: 'إظهار الشاشة' }).click();
   await tv.locator('.show-blackout.on').waitFor({ state: 'detached' });
   await phone.getByRole('button', { name: 'التالي' }).click();
+  if (edge) {
+    // Video → photo: the curtain sweeps over the still-playing video, then away over the photo.
+    await tv.waitForFunction(
+      () =>
+        document.querySelector('.transition-curtain')?.dataset.phase === 'intro' &&
+        !!document.querySelector('.show-layer video'),
+    );
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-curtain')?.dataset.phase === 'outro',
+    );
+  }
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText('2 / 3').waitFor();
   await phone
@@ -209,10 +220,28 @@ try {
   const slides = Number(total.match(/\/(\d+)/)[1]);
   assert(slides > 3, 'deck adds one step per slide');
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
+  await tv.locator('.show-layer').waitFor();
+  await tv.waitForFunction(() => !document.querySelector('.transition-curtain')?.dataset.phase);
   await phone.getByRole('button', { name: 'تشغيل الآن: presentation-test.pptx' }).click();
+  if (edge)
+    // Opening the PowerPoint is a new file: curtain.
+    await tv.waitForFunction(
+      () => document.querySelector('.transition-curtain')?.dataset.phase === 'intro',
+    );
+  await tv.waitForFunction(() => !document.querySelector('.transition-curtain')?.dataset.phase);
+  await tv.evaluate(() => {
+    window.__curtainDuringSlides = false;
+    new MutationObserver(() => {
+      if (document.querySelector('.transition-curtain')?.dataset.phase)
+        window.__curtainDuringSlides = true;
+    }).observe(document.querySelector('.transition-curtain'), { attributes: true });
+  });
   await phone.getByRole('button', { name: new RegExp('^' + slides + ' الشريحة') }).click();
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText(slides + ' / ' + slides).waitFor();
+  await tv.waitForTimeout(600);
+  // Slides inside the same PowerPoint keep the quick fade: no curtain between them.
+  assert.equal(await tv.evaluate(() => window.__curtainDuringSlides), false);
   // Slide thumbnails on the phone remote.
   // Every PowerPoint slide has a thumbnail (the 1×1 test PNG is too small to thumbnail).
   assert.equal(await phone.locator('.show-slides img').count(), slides - 3);

@@ -125,7 +125,13 @@ function LiveShow({
     <TransitionOverlay
       clips={clips}
       phase={transition}
-      onDone={(phase) => setTransition((current) => (current === phase ? null : current))}
+      onDone={(phase) => {
+        // Between files: once the curtain covers the old file, sweep it away over the new one.
+        if (phase === 'intro' && switching.current) {
+          switching.current = false;
+          setTransition('outro');
+        } else setTransition((current) => (current === phase ? null : current));
+      }}
     />
   );
   // The current file's end rule (per file, or the show's auto-advance).
@@ -150,9 +156,34 @@ function LiveShow({
     finish,
   ]);
   // Keep the last file on screen while the curtain sweeps over it (end / back to standby).
+  // What is on screen. The last file stays under the curtain while it sweeps in
+  // (back to standby, end, or switching to another file).
   const held = useRef<{ step: NonNullable<typeof step>; url: string } | null>(null);
-  if (live) held.current = { step, url };
-  const shown = live ? { step, url } : transition === 'intro' ? held.current : null;
+  const wasLive = useRef(false);
+  const switching = useRef(false);
+  // A different file (video / photo / whole PowerPoint) → curtain in, then out over the new one.
+  // Slides inside one PowerPoint keep the quick fade.
+  if (
+    clips &&
+    live &&
+    wasLive.current &&
+    held.current &&
+    held.current.step.item !== step.item &&
+    !switching.current &&
+    transition === null
+  ) {
+    switching.current = true;
+    setTransition('intro');
+  }
+  if (live && !switching.current) held.current = { step, url };
+  wasLive.current = live;
+  const shown = switching.current
+    ? held.current
+    : live
+      ? { step, url }
+      : transition === 'intro'
+        ? held.current
+        : null;
   useEffect(() => {
     if (!live || step.kind !== 'video') reportPlayback(null);
   }, [live, step?.kind, step?.item, reportPlayback]);
@@ -211,8 +242,8 @@ function LiveShow({
             src={shown.url}
             command={videoCommand}
             onReport={reportPlayback}
-            lead={live && rule !== 'stay' ? item?.lead || 0 : 0}
-            onFinish={() => live && finish()}
+            lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
+            onFinish={() => live && !switching.current && finish()}
           />
         ) : (
           <img src={shown.url} alt="" draggable={false} />
