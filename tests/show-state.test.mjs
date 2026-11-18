@@ -124,3 +124,37 @@ test('standby background photo is set, sanitised and cleared', async () => {
   s = showReduce(s, { op: 'background', item: null });
   assert.equal(s.background, null);
 });
+
+test('per-file end rules, early hand-over value, play out of order', () => {
+  let s = showReduce(showReduce(emptyShow(), video), deck);
+  s = showReduce(s, { op: 'add', item: { id: 'video-2', kind: 'video', name: 'b.mp4' } });
+  assert.deepEqual([s.items[0].after, s.items[0].lead], ['auto', 0]);
+  s = showReduce(s, { op: 'start' });
+  // auto + auto-advance off → stays.
+  assert.equal(showReduce(s, { op: 'finish' }).step, 0);
+  // video-1 → back to standby; resume continues with the next file.
+  s = showReduce(s, { op: 'item', id: 'video-1', options: { after: 'standby', lead: 4 } });
+  assert.deepEqual([s.items[0].after, s.items[0].lead], ['standby', 4]);
+  s = showReduce(s, { op: 'finish' });
+  assert.deepEqual([s.phase, s.step], ['paused', 1]);
+  s = showReduce(s, { op: 'resume' });
+  assert.deepEqual([s.phase, s.step], ['live', 1]);
+  // Middle slides of a deck follow auto-advance only; its rule applies on the last slide.
+  s = showReduce(s, { op: 'item', id: 'deck-01', options: { after: 'next' } });
+  assert.equal(showReduce(s, { op: 'finish' }).step, 1, 'slide 1 of 3 stays without auto-advance');
+  s = showReduce(s, { op: 'goto', index: 3 });
+  assert.equal(showReduce(s, { op: 'finish' }).step, 4, 'last slide → next file');
+  // Play any file now; lead is clamped.
+  s = showReduce(s, { op: 'play', id: 'video-1' });
+  assert.deepEqual([s.phase, s.step], ['live', 0]);
+  s = showReduce(s, { op: 'item', id: 'video-2', options: { lead: 99 } });
+  assert.equal(s.items[2].lead, 10);
+  assert.throws(() => showReduce(s, { op: 'play', id: 'nope' }));
+  // Last file → standby ends the show.
+  s = showReduce(s, { op: 'item', id: 'video-2', options: { after: 'standby' } });
+  s = showReduce(s, { op: 'goto', index: 4 });
+  assert.deepEqual(
+    [showReduce(s, { op: 'finish' }).phase, showReduce(s, { op: 'finish' }).step],
+    ['standby', 0],
+  );
+});

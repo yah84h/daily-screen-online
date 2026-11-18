@@ -7,6 +7,10 @@ export type ShowItem = {
   name: string;
   parts: number;
   size: number;
+  /** After this file: follow auto-advance, go next, back to standby, or stay. */
+  after: 'auto' | 'next' | 'standby' | 'stay';
+  /** Videos: hand over this many seconds before the end (0 = at the end). */
+  lead: number;
 };
 export type ShowPhase = 'standby' | 'live' | 'paused';
 export type ShowSettings = {
@@ -34,6 +38,9 @@ export type ShowCommand =
   | { op: 'move'; id: string; by: 1 | -1 }
   | { op: 'clear' | 'start' | 'next' | 'previous' | 'standby' | 'resume' | 'end' | 'advance' }
   | { op: 'blackout'; value?: boolean }
+  | { op: 'item'; id: string; options: Partial<Pick<ShowItem, 'after' | 'lead'>> }
+  | { op: 'finish' }
+  | { op: 'play'; id: string }
   | { op: 'background'; item: { id: string; name: string } | null }
   | { op: 'settings'; settings: Partial<ShowSettings> }
   | { op: 'goto'; index: number };
@@ -46,6 +53,8 @@ export function defaultSettings(): ShowSettings;
 export function emptyShow(): Show;
 export function cleanItem(raw: unknown): ShowItem;
 export function showReduce(show: Show, command: ShowCommand): Show;
+export const AFTER: ShowItem['after'][];
+export function endRule(show: Show, item?: ShowItem): 'next' | 'standby' | 'stay';
 export function findPartOwner(show: Show, id: string): ShowItem | null;
 export function showReadiness(
   items: ShowItem[],

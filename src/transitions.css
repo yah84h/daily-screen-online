@@ -1,30 +1,30 @@
-/* The clips are opaque (dark navy at the start of the intro and the end of the outro),
-   so the overlay fades in over the old screen and fades out over the new one. */
+/* Curtain transition: the school loop sweeps over the screen behind a stepped zigzag edge. */
 .transition-overlay {
   position: fixed;
   inset: 0;
   z-index: 40;
   pointer-events: none;
-  background: #0b1a33;
-  opacity: 0;
-  transition: opacity 0.45s ease;
 }
-.transition-overlay.active {
-  opacity: 1;
-}
-.transition-overlay video {
+.transition-curtain,
+.transition-rim {
   position: absolute;
   inset: 0;
+  visibility: hidden;
+  will-change: clip-path;
+}
+.transition-curtain {
+  background: #0b1a33;
+}
+.transition-curtain video {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0;
 }
-.transition-overlay video.on {
-  opacity: 1;
+/* Light band edge, like the video's zigzag band. */
+.transition-rim {
+  background: #a4bfd6;
 }
-@media (prefers-reduced-motion: reduce) {
-  .transition-overlay {
-    transition: none;
-  }
+/* While the curtain is up the audience sees only the curtain (progress goes to the phone). */
+body:has(.transition-overlay.active) :is(.cache-status-line, .cache-retry) {
+  visibility: hidden;
 }
