@@ -279,6 +279,7 @@ export type LoopHtml = {
 };
 /** Fonts for custom text: Arabic, English, or both. */
 export const TEXT_FONTS: [family: string, label: string][] = [
+  ['Helvetica Neue W23', 'هلفتيكا نيو W23 · عربي + English'],
   ['Cairo', 'Cairo · عربي + English'],
   ['Tajawal', 'تجوال · عربي + English'],
   ['Changa', 'Changa · عربي + English'],
