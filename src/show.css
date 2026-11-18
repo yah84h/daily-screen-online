@@ -128,3 +128,108 @@
   background: #0b1a33d9;
   font-size: 2.2cqw;
 }
+/* Preparation page (before the show starts). */
+.show-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+  padding: 3.5cqw 6cqw;
+  color: #e8eefc;
+  background:
+    radial-gradient(60% 55% at 50% 0%, #1d3b73 0%, transparent 70%),
+    linear-gradient(160deg, #0b1a33, #132a52);
+}
+.show-loading-head {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+}
+.show-loading-head img {
+  height: 5cqw;
+  width: auto;
+  max-width: 14cqw;
+  object-fit: contain;
+}
+.show-loading-head > div {
+  flex: 1;
+}
+.show-loading-head small {
+  font-size: 1.3cqw;
+  color: #9fb7ff;
+}
+.show-loading-head h1 {
+  margin: 0.3cqw 0 0;
+  font-size: 2.6cqw;
+}
+.show-loading-head > b {
+  font:
+    800 4cqw/1 'Cairo',
+    sans-serif;
+  color: #fff;
+}
+.show-loading-bar,
+.show-loading-row-bar {
+  height: 0.8cqw;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #ffffff1f;
+}
+.show-loading-bar i,
+.show-loading-row-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6a7bff, #9fb7ff);
+  transition: width 0.5s ease;
+}
+.show-loading.done .show-loading-bar i,
+.show-loading-list li.ok .show-loading-row-bar i {
+  background: #46c48f;
+}
+.show-loading-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1cqw 3cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.show-loading-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4cqw 1cqw;
+  font-size: 1.35cqw;
+}
+.show-loading-list bdi {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.show-loading-kind {
+  padding: 0.2cqw 0.8cqw;
+  border-radius: 999px;
+  font-size: 1cqw;
+  color: #9fb7ff;
+  background: #ffffff14;
+}
+.show-loading-state {
+  font-weight: 700;
+  direction: ltr;
+}
+.show-loading-list li.ok .show-loading-state {
+  color: #46c48f;
+}
+.show-loading-list li.error .show-loading-state {
+  color: #ff8a80;
+}
+.show-loading-row-bar {
+  grid-column: 1 / -1;
+  height: 0.4cqw;
+}
+.show-loading-foot {
+  margin-top: auto;
+  font-size: 1.15cqw;
+  color: #9fb7ff;
+}

@@ -95,6 +95,10 @@ try {
   await phone.getByRole('button', { name: 'إضافة', exact: true }).click();
   await phone.getByText('كل شيء محفوظ على التلفزيون. جاهز للعرض').waitFor();
   await phone.getByText('على التلفزيون ✓').nth(2).waitFor();
+  // Before the show the TV shows a full preparation page, then switches to the standby.
+  await tv.locator('.show-loading.done').waitFor();
+  assert.equal(await tv.locator('.show-loading-list li.ok').count(), 3);
+  await tv.screenshot({ path: 'work/show-tv-loading.png' });
   await tv.getByText('● 3/3').waitFor();
   // Standby background: the school loop by default, or a photo sent from the phone.
   if (edge) {

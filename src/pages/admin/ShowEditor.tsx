@@ -301,6 +301,14 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
         />
         تكرار العرض من البداية بعد آخر ملف
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={settings.loadingPage !== false}
+          onChange={(e) => changeSettings({ loadingPage: e.target.checked })}
+        />
+        صفحة التجهيز على التلفزيون قبل البدء (تعرض تقدّم كل ملف)
+      </label>
     </details>
   );
 

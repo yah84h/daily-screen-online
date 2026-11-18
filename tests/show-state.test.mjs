@@ -84,9 +84,14 @@ test('readiness counts every slide of a deck', () => {
 
 test('auto-advance, loop, blackout and settings', () => {
   let s = showReduce(showReduce(emptyShow(), video), deck);
-  assert.deepEqual(s.settings, { autoNext: false, imageSeconds: 10, loop: false });
+  assert.deepEqual(s.settings, {
+    autoNext: false,
+    imageSeconds: 10,
+    loop: false,
+    loadingPage: true,
+  });
   s = showReduce(s, { op: 'settings', settings: { imageSeconds: 1, loop: true, autoNext: true } });
-  assert.deepEqual(s.settings, { autoNext: true, imageSeconds: 3, loop: true });
+  assert.deepEqual(s.settings, { autoNext: true, imageSeconds: 3, loop: true, loadingPage: true });
   s = showReduce(s, { op: 'advance' });
   assert.equal(s.step, 0, 'advance does nothing before start');
   s = showReduce(s, { op: 'start' });
