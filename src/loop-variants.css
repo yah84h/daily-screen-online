@@ -824,3 +824,21 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/* Custom HTML designs on the classes background. */
+.screen-loop .loop-html {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.screen-loop .loop-html-back {
+  z-index: 0;
+}
+.screen-loop .loop-html-front {
+  z-index: 7;
+}
+.screen-loop .loop-html > iframe {
+  position: absolute;
+  border: 0;
+  background: transparent;
+  color-scheme: normal;
+}

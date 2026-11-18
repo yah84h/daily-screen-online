@@ -103,6 +103,8 @@ export type Template = {
   loopHidden?: string[];
   /** Classes background: free text blocks (position / width in %, size in % of screen width). */
   loopTexts?: LoopText[];
+  /** Classes background: custom HTML designs (position / size in % of the screen). */
+  loopHtml?: LoopHtml[];
   loopExtras?: {
     topic?: boolean;
     announcement?: boolean;
@@ -259,6 +261,19 @@ export type LoopText = {
   color: string;
   weight: number;
   align: 'right' | 'center' | 'left';
+};
+export type LoopHtml = {
+  id: string;
+  name: string;
+  html: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  /** 'back' sits behind the clock and cards; 'front' sits on top of them. */
+  layer: 'back' | 'front';
+  opacity: number;
+  hidden?: boolean;
 };
 /** Fonts for custom text: Arabic, English, or both. */
 export const TEXT_FONTS: [family: string, label: string][] = [

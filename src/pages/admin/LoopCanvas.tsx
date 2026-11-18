@@ -8,7 +8,7 @@ import {
   type LoopPosition,
 } from '@/lib/loopPositions';
 import { useAdmin } from './store';
-import type { LoopText } from '@/lib/types';
+import type { LoopHtml, LoopText } from '@/lib/types';
 export function LoopCanvas() {
   const { content, template, data, setTemplate } = useAdmin();
   const root = useRef<HTMLDivElement>(null);
@@ -129,6 +129,77 @@ export function LoopCanvas() {
       </div>
     );
   });
+  // Custom HTML designs: drag to move; the corner handle changes width and height.
+  const htmlDrag = useRef<{
+    id: string;
+    mode: 'move' | 'resize';
+    x: number;
+    y: number;
+    start: LoopHtml;
+    width: number;
+    height: number;
+  } | null>(null);
+  const changeHtml = (id: string, patch: Partial<LoopHtml>) =>
+    setTemplate((t) => ({
+      ...t,
+      loopHtml: (t.loopHtml || []).map((x) => (x.id === id ? { ...x, ...patch } : x)),
+    }));
+  const htmlBoxes = (template.loopHtml || [])
+    .filter((b) => !b.hidden)
+    .map((b) => (
+      <div
+        key={b.id}
+        className="loop-edit-box loop-html-box"
+        role="group"
+        aria-label={'تصميم: ' + b.name}
+        style={{ left: b.x + '%', top: b.y + '%', width: b.w + '%', height: b.h + '%' }}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          const bounds = root.current!.getBoundingClientRect();
+          htmlDrag.current = {
+            id: b.id,
+            mode: (e.target as HTMLElement).dataset.resize ? 'resize' : 'move',
+            x: e.clientX,
+            y: e.clientY,
+            start: b,
+            width: bounds.width,
+            height: bounds.height,
+          };
+        }}
+        onPointerMove={(e) => {
+          const d = htmlDrag.current;
+          if (!d || d.id !== b.id) return;
+          const dx = ((e.clientX - d.x) / d.width) * 100;
+          const dy = ((e.clientY - d.y) / d.height) * 100;
+          const clamp = (v: number, a: number, z: number) =>
+            Math.round(Math.max(a, Math.min(z, v)) * 10) / 10;
+          if (d.mode === 'move')
+            changeHtml(b.id, {
+              x: clamp(d.start.x + dx, -50, 100),
+              y: clamp(d.start.y + dy, -50, 100),
+            });
+          else
+            changeHtml(b.id, {
+              w: clamp(d.start.w + dx, 5, 150),
+              h: clamp(d.start.h + dy, 5, 150),
+            });
+        }}
+        onPointerUp={() => (htmlDrag.current = null)}
+        onPointerCancel={() => (htmlDrag.current = null)}
+      >
+        <span>{b.name.slice(0, 24) || 'تصميم'}</span>
+        <span
+          className="loop-resize-handle"
+          data-resize="true"
+          role="separator"
+          aria-label={'تغيير حجم التصميم ' + b.name}
+        >
+          ↘
+        </span>
+      </div>
+    ));
   return (
     <>
       <div className="loop-canvas-viewport">
@@ -144,6 +215,7 @@ export function LoopCanvas() {
           />
           {editing && (
             <div className="loop-canvas-overlay">
+              {htmlBoxes}
               {textBoxes}
               {(Object.keys(loopElements) as LoopElement[]).map((key) => {
                 const p = template.loopPositions?.[key];
