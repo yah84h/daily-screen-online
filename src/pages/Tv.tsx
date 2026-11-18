@@ -10,11 +10,35 @@ import { CacheStatusLine } from '@/components/CacheStatusLine';
 import { fetchTv, requestPairing, screenChannel } from '@/lib/api';
 import { cacheTvState, readTvCache } from '@/lib/offline';
 import { initialContent, type TvState } from '@/lib/types';
+import { TvErrorBoundary } from '@/components/TvErrorBoundary';
+import { buildStatus, installGlobalErrorLog, publishStatus, recordError } from '@/lib/tvHealth';
+import { acceptCommand, backoffDelay, createWindowCounter } from '@/lib/tvWatchdog';
 
 const TOKEN_KEY = location.pathname === '/tv' ? 'tv-token' : 'tv-token:' + location.pathname;
 const urlToken = new URLSearchParams(location.search).get('token') || '';
 const CACHE_KEY = urlToken || (location.pathname === '/tv' ? 'last' : TOKEN_KEY);
 const POLL_MS = 5_000;
+const HEARTBEAT_MS = 30_000;
+const BLACKOUT_KEY = 'tv-blackout';
+// Watchdog: after this many failed polls in a row (~10 min with backoff) while the
+// browser thinks it is online, reload the page once; at most once every 30 minutes.
+const WATCHDOG_FAILURES = 12;
+const WATCHDOG_KEY = 'tv-watchdog-reload';
+const watchdogReload = () => {
+  try {
+    const last = Number(localStorage.getItem(WATCHDOG_KEY)) || 0;
+    if (Date.now() - last < 30 * 60_000) return;
+    localStorage.setItem(WATCHDOG_KEY, String(Date.now()));
+  } catch {}
+  void reloadDisplay();
+};
+const readBlackout = () => {
+  try {
+    return localStorage.getItem(BLACKOUT_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 type Paired = Extract<TvState, { status: 'paired' }>;
 
@@ -26,6 +50,14 @@ export default function Tv() {
   const [closeHint, setCloseHint] = useState(false);
   const [confirmStop, setConfirmStop] = useState(false);
   const lastVersion = useRef('');
+  const [blackout, setBlackout] = useState(readBlackout);
+  const live = useRef({ online: true, blackout: readBlackout(), failures: 0, mode: '' });
+  live.current.online = online;
+  live.current.blackout = blackout;
+  live.current.mode =
+    state?.status === 'paired'
+      ? (state as Paired).screen.template?.displayMode || 'daily'
+      : state?.status || 'loading';
 
   //تأكيد داخل الصفحة (نوافذ confirm قد لا تظهر في وضع Kiosk)
   const stopDisplay = () => {
@@ -50,6 +82,37 @@ export default function Tv() {
     let sub: ReturnType<typeof screenChannel> | null = null;
 
     let requestId = 0;
+    let pollTimer = 0;
+    let screenId = '';
+    const seen = new Set<string>();
+    const globalErrors = createWindowCounter(5 * 60_000);
+    installGlobalErrorLog(() => {
+      // A burst of uncaught errors usually means the page is wedged: start fresh.
+      if (globalErrors.add() >= 25) watchdogReload();
+    });
+    const heartbeat = () => {
+      if (!screenId || !token) return;
+      void publishStatus(screenId, token, buildStatus({ token, ...live.current })).catch(() => {});
+    };
+    const runCommand = (raw: unknown) => {
+      const cmd = acceptCommand(raw, token, seen);
+      if (!cmd) return;
+      if (cmd.name === 'reload') location.reload();
+      else if (cmd.name === 'restart') void reloadDisplay();
+      else if (cmd.name === 'blackout' || cmd.name === 'wake') {
+        const on = cmd.name === 'blackout';
+        try {
+          localStorage.setItem(BLACKOUT_KEY, on ? '1' : '0');
+        } catch {}
+        live.current.blackout = on;
+        setBlackout(on);
+      }
+      setTimeout(heartbeat, 300); // confirm quickly (also answers 'ping')
+    };
+    const schedule = () => {
+      clearTimeout(pollTimer);
+      if (active) pollTimer = window.setTimeout(load, backoffDelay(live.current.failures, POLL_MS));
+    };
     const load = async () => {
       const request = ++requestId;
       try {
@@ -66,6 +129,7 @@ export default function Tv() {
           token = '';
           return load();
         }
+        live.current.failures = 0;
         setOnline(true);
         setError('');
         setState(data);
@@ -75,19 +139,33 @@ export default function Tv() {
             cacheTvState(data, CACHE_KEY);
           }
           if (!sub) {
+            screenId = data.screen.id;
             sub = screenChannel(data.screen.id);
-            sub.on('broadcast', { event: 'update' }, () => load()).subscribe();
+            sub
+              .on('broadcast', { event: 'update' }, () => load())
+              .on('broadcast', { event: 'command' }, (m) => runCommand(m.payload))
+              .subscribe((s) => s === 'SUBSCRIBED' && heartbeat());
           }
         }
       } catch (e) {
         if (!active || request !== requestId) return;
+        live.current.failures += 1;
+        recordError(e);
         setOnline(false);
         setError((e as Error).message);
+        if (live.current.failures >= WATCHDOG_FAILURES && navigator.onLine) watchdogReload();
+      } finally {
+        if (request === requestId) schedule();
       }
     };
 
     load();
-    const timer = setInterval(load, POLL_MS);
+    const beat = setInterval(heartbeat, HEARTBEAT_MS);
+    const onOnline = () => {
+      live.current.failures = 0;
+      void load();
+    };
+    window.addEventListener('online', onOnline);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 's' || e.key === 'S') setSettings((v) => !v);
       if (e.key === 'Escape') setSettings(false);
@@ -109,7 +187,9 @@ export default function Tv() {
     window.addEventListener('dragstart', block);
     return () => {
       active = false;
-      clearInterval(timer);
+      clearTimeout(pollTimer);
+      clearInterval(beat);
+      window.removeEventListener('online', onOnline);
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('contextmenu', block);
       window.removeEventListener('dragstart', block);
@@ -122,17 +202,19 @@ export default function Tv() {
   return (
     <div className="tv" onDoubleClick={() => setSettings((v) => !v)}>
       {paired ? (
-        <PreparedDisplay
-          key={paired.screen.id}
-          content={paired.post?.content || initialContent}
-          template={paired.screen.template}
-          school={paired.school}
-          large
-          presentationContext={{
-            screenId: paired.screen.id,
-            token: urlToken || localStorage.getItem(TOKEN_KEY) || '',
-          }}
-        />
+        <TvErrorBoundary>
+          <PreparedDisplay
+            key={paired.screen.id}
+            content={paired.post?.content || initialContent}
+            template={paired.screen.template}
+            school={paired.school}
+            large
+            presentationContext={{
+              screenId: paired.screen.id,
+              token: urlToken || localStorage.getItem(TOKEN_KEY) || '',
+            }}
+          />
+        </TvErrorBoundary>
       ) : (
         <div className="tv-pairing">
           <Monitor size={56} />
@@ -150,14 +232,22 @@ export default function Tv() {
           )}
         </div>
       )}
-      <BackgroundAudio source={paired?.post?.content.backgroundAudio} controls={settings} />
-      {paired && (
-        <RemoteMediaReceiver
-          key={paired.screen.id}
-          screen={paired.screen.id}
-          token={urlToken || localStorage.getItem(TOKEN_KEY) || ''}
+      <TvErrorBoundary fallback={null}>
+        <BackgroundAudio
+          source={blackout ? undefined : paired?.post?.content.backgroundAudio}
+          controls={settings}
         />
+      </TvErrorBoundary>
+      {paired && (
+        <TvErrorBoundary fallback={null}>
+          <RemoteMediaReceiver
+            key={paired.screen.id}
+            screen={paired.screen.id}
+            token={urlToken || localStorage.getItem(TOKEN_KEY) || ''}
+          />
+        </TvErrorBoundary>
       )}
+      {blackout && <div className="tv-blackout" aria-label="الشاشة مطفأة عن بُعد" />}
       {/* Presentations keep progress off the audience's screen; the phone shows it. */}
       {!['presentation', 'show'].includes(paired?.screen.template?.displayMode || '') && (
         <CacheStatusLine />
@@ -166,6 +256,18 @@ export default function Tv() {
       {settings && (
         <div className="tv-settings">
           <b>{online ? 'متصلة' : 'غير متصلة · تُعرض آخر شاشة محفوظة'}</b>
+          {blackout && (
+            <button
+              onClick={() => {
+                try {
+                  localStorage.setItem(BLACKOUT_KEY, '0');
+                } catch {}
+                setBlackout(false);
+              }}
+            >
+              إلغاء الشاشة السوداء
+            </button>
+          )}
           {paired && <span>{paired.screen.name}</span>}
           <button onClick={() => void reloadDisplay()}>تحديث الموقع وإعادة تحميل الشاشة</button>
           <button

@@ -164,6 +164,9 @@ export type Device = {
   label: string | null;
   paired_at: string | null;
   last_seen_at: string | null;
+  /** Set by tv_report_status (migration 0011); absent until it is installed. */
+  status?: import('./tvWatchdog').DeviceStatus | null;
+  status_at?: string | null;
 };
 
 export type TvState =
