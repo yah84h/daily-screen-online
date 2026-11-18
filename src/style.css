@@ -1357,3 +1357,24 @@ label {
   color: #fff;
   border-color: #a32d2d;
 }
+
+/* Remote "black screen" from the admin panel. The settings menu stays reachable above it. */
+.tv-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: #000;
+  cursor: none;
+}
+.tv-recovering {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0b0f14;
+  color: rgb(255 255 255 / 0.55);
+  font-size: 1.4rem;
+}
+.tv-blackout ~ .tv-settings {
+  z-index: 9001;
+}

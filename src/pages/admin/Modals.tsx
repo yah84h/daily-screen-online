@@ -1,3 +1,4 @@
+import { DeviceHealthPanel } from '@/components/DeviceHealthPanel';
 import { MonitorLink } from './MonitorLink';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, Copy, Monitor, Plus, Trash2, Upload, X, Eraser, Check } from 'lucide-react';
@@ -457,6 +458,7 @@ function Setup() {
           })}
         </div>
       )}
+      {data && <DeviceHealthPanel screenId={data.screen.id} devices={data.devices} />}
     </>
   );
 }
