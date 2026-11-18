@@ -108,7 +108,13 @@ export async function driveVideoResponse(request, { fetcher = fetch } = {}) {
           ]
         : image
           ? ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/octet-stream']
-          : ['video/mp4', 'video/webm', 'video/quicktime', 'application/octet-stream']
+          : [
+              'video/mp4',
+              'video/x-m4v',
+              'video/webm',
+              'video/quicktime',
+              'application/octet-stream',
+            ]
     ).includes(mime)
   ) {
     await upstream.body?.cancel();
