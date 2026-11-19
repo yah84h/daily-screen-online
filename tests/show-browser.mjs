@@ -235,6 +235,8 @@ try {
       if (document.querySelector('.transition-curtain')?.dataset.phase)
         window.__curtainDuringSlides = true;
     }).observe(document.querySelector('.transition-curtain'), { attributes: true });
+    document.querySelector('.show-layer').dataset.firstSlide = 'yes';
+    window.__firstSlideSrc = document.querySelector('.show-layer img').src;
   });
   await phone.getByRole('button', { name: new RegExp('^' + slides + ' الشريحة') }).click();
   await tv.locator('.show-layer img').waitFor();
@@ -242,6 +244,16 @@ try {
   await tv.waitForTimeout(600);
   // Slides inside the same PowerPoint keep the quick fade: no curtain between them.
   assert.equal(await tv.evaluate(() => window.__curtainDuringSlides), false);
+  // Slides swap instantly in the same layer: no remount, so no fade through black.
+  assert.equal(
+    await tv.evaluate(
+      () =>
+        document.querySelector('.show-layer').dataset.firstSlide === 'yes' &&
+        document.querySelector('.show-layer img').src !== window.__firstSlideSrc,
+    ),
+    true,
+    'PowerPoint slides change in place',
+  );
   // Slide thumbnails on the phone remote.
   // Every PowerPoint slide has a thumbnail (the 1×1 test PNG is too small to thumbnail).
   assert.equal(await phone.locator('.show-slides img').count(), slides - 3);

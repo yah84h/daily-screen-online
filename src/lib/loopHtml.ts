@@ -28,9 +28,10 @@ const BRIDGE = `(function(){
     window.school=d;
     dispatchEvent(new CustomEvent('school-data',{detail:d}));
   }
-  var last=null;
+  var last=null,lastJson='';
   addEventListener('message',function(e){
     if(e.source!==parent||!e.data||e.data.type!=='school-loop-html') return;
+    var j=JSON.stringify(e.data.payload); if(j===lastJson) return; lastJson=j;
     last=e.data.payload; if(document.body){ if(!slots.length) scan(); apply(last); }
   });
   addEventListener('DOMContentLoaded',function(){ scan(); if(last) apply(last); });

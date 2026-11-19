@@ -4,7 +4,6 @@ import { clearShowCache } from '@/lib/assetCache';
 import { BackgroundAudio } from '@/components/BackgroundAudio';
 import DisplayControls from '@/components/DisplayControls';
 import { useEffect, useRef, useState } from 'react';
-import { useSoundBlocked } from '@/lib/sound';
 import { Monitor } from 'lucide-react';
 import { PreparedDisplay } from '@/components/PreparedDisplay';
 import { CacheStatusLine } from '@/components/CacheStatusLine';
@@ -42,11 +41,6 @@ const readBlackout = () => {
 };
 
 type Paired = Extract<TvState, { status: 'paired' }>;
-
-function SoundHint() {
-  const blocked = useSoundBlocked();
-  return blocked ? <div className="tv-sound-hint">🔊 اضغط على الشاشة لتشغيل الصوت</div> : null;
-}
 
 export default function Tv() {
   const [state, setState] = useState<TvState | null>(null);
@@ -259,7 +253,6 @@ export default function Tv() {
         <CacheStatusLine />
       )}
       <DisplayControls />
-      <SoundHint />
       {settings && (
         <div className="tv-settings">
           <b>{online ? 'متصلة' : 'غير متصلة · تُعرض آخر شاشة محفوظة'}</b>
