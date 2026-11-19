@@ -122,3 +122,19 @@ h1{margin:0;font-size:9vh} p{margin:1vh 0 0;font-size:4vh;opacity:.85}
 </style></head><body>
 <div class="card"><h1>{{time}}</h1><p>{{period}} · {{date}}</p></div>
 </body></html>`;
+
+/**
+ * The design's own base color (from its html/body background), painted under the frame
+ * right away so the screen never shows the default wallpaper while the design loads.
+ */
+export function loopHtmlBaseColor(html: string) {
+  const color = /#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)|\b(?:black|white|transparent)\b/i;
+  for (const m of html.matchAll(/(?:^|[},\s])(?:html|body)\b[^{]*\{([^}]*)\}/gi)) {
+    const bg = /background(?:-color)?\s*:\s*([^;]+)/i.exec(m[1]);
+    const found = bg && color.exec(bg[1]);
+    if (found && found[0].toLowerCase() !== 'transparent') return found[0];
+  }
+  const inline = /<body[^>]*style=["'][^"']*background(?:-color)?\s*:\s*([^;"']+)/i.exec(html);
+  const found = inline && color.exec(inline[1]);
+  return found ? found[0] : '#000';
+}
