@@ -24,6 +24,7 @@ import {
   Square,
   Trash2,
   TriangleAlert,
+  Music2,
 } from 'lucide-react';
 import { useShowRemote, SHOW_FILE_LIMIT, type ShowItem } from '@/lib/show';
 import type { ShowSettings } from '../../../local-test/show-state.mjs';
@@ -136,6 +137,137 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
       notify((error as Error).message);
     }
   };
+  // Background music: one looping track sent to the TV like any file, with its own controls.
+  const musicPicker = useRef<HTMLInputElement>(null);
+  const music = show?.music;
+  const musicReady = !!music && !!status?.stored[partKey(music.id)];
+  const [musicVolume, setMusicVolume] = useState<number | null>(null);
+  const chooseMusic = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('audio/') && !/\.(mp3|m4a|aac|wav|ogg|opus|flac)$/i.test(file.name))
+      return notify('اختر ملف صوت (MP3 أو M4A أو WAV).');
+    if (file.size > SHOW_FILE_LIMIT) return notify('الملف أكبر من ٢ جيجابايت.');
+    const id = crypto.randomUUID();
+    const item: ShowItem = {
+      id,
+      kind: 'video',
+      source: 'phone',
+      url: '',
+      after: 'auto',
+      lead: 0,
+      name: file.name,
+      parts: 1,
+      size: file.size,
+    };
+    try {
+      await send({ op: 'music', item: { id, name: file.name } });
+      files.current.set(id, [file]);
+      await sendFiles(item, [file]);
+      files.current.delete(id);
+    } catch (error) {
+      notify((error as Error).message);
+    }
+  };
+  const musicPanel = (
+    <div className="show-music-panel" aria-label="موسيقى الخلفية">
+      <b>
+        <Music2 size={16} /> موسيقى الخلفية
+      </b>
+      {music ? (
+        <>
+          <small className={'show-item-state ' + (musicReady ? 'ok' : 'busy')}>
+            <bdi>{music.name}</bdi> ·{' '}
+            {musicReady
+              ? 'على التلفزيون ✓'
+              : sending[music.id]
+                ? 'إرسال ' +
+                  Math.floor(
+                    (sending[music.id].sent / Math.max(1, sending[music.id].total)) * 100,
+                  ) +
+                  '٪'
+                : 'بانتظار الإرسال'}
+          </small>
+          <div className="show-music-controls">
+            <button
+              type="button"
+              className={'button white' + (music.playing ? ' active' : '')}
+              aria-pressed={music.playing}
+              disabled={!online || pending}
+              onClick={() => act(() => send({ op: 'musicPlay' }))}
+            >
+              {music.playing ? <Pause size={18} /> : <Play size={18} />}
+              {music.playing ? 'إيقاف مؤقت' : 'تشغيل'}
+            </button>
+            <label className="show-music-volume">
+              <Volume2 size={16} />
+              <input
+                type="range"
+                aria-label="مستوى صوت الموسيقى"
+                min={0}
+                max={100}
+                value={Math.round((musicVolume ?? music.volume) * 100)}
+                disabled={!online}
+                onChange={(e) => setMusicVolume(Number(e.target.value) / 100)}
+                onPointerUp={() => {
+                  if (musicVolume === null) return;
+                  void send({ op: 'musicVolume', value: musicVolume }).finally(() =>
+                    setMusicVolume(null),
+                  );
+                }}
+                onKeyUp={() => {
+                  if (musicVolume === null) return;
+                  void send({ op: 'musicVolume', value: musicVolume }).finally(() =>
+                    setMusicVolume(null),
+                  );
+                }}
+              />
+            </label>
+          </div>
+          <div className="show-music-controls">
+            <button
+              type="button"
+              className="button white"
+              disabled={!online || pending}
+              onClick={() => musicPicker.current?.click()}
+            >
+              تغيير الملف
+            </button>
+            <button
+              type="button"
+              className="button white danger"
+              disabled={!online || pending}
+              onClick={() => act(() => send({ op: 'music', item: null }))}
+            >
+              إزالة
+            </button>
+          </div>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="button white"
+          disabled={!online || pending}
+          onClick={() => musicPicker.current?.click()}
+        >
+          <Music2 size={18} /> إضافة ملف صوت
+        </button>
+      )}
+      <small className="field-hint">
+        تعمل بتكرار طوال العرض، وتتوقف تلقائيًا أثناء الفيديوهات ثم تعود.
+      </small>
+      <input
+        ref={musicPicker}
+        type="file"
+        hidden
+        accept="audio/*,.mp3,.m4a,.aac,.wav,.ogg,.opus,.flac"
+        aria-label="ملف الموسيقى"
+        onChange={(e) => {
+          void chooseMusic(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
+    </div>
+  );
   const [localSettings, setLocalSettings] = useState<Partial<ShowSettings>>({});
 
   const act = async (fn: () => Promise<void>) => {
@@ -552,6 +684,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               </button>
             )}
           </div>
+          {musicPanel}
           <button className="button white danger" onClick={() => act(() => send({ op: 'end' }))}>
             <Square size={18} />
             إنهاء العرض
@@ -695,6 +828,7 @@ function ShowRemote({ screen, showKey }: { screen: string; showKey: string }) {
               }}
             />
           </div>
+          {musicPanel}
           <label className="show-title">
             عنوان العرض (يظهر على شاشة الانتظار)
             <input

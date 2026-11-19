@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   emptyShow,
   showReduce,
+  findPartOwner,
   showSteps,
   showReadiness,
   partKey,
@@ -177,4 +178,24 @@ test('break items stop at the standby screen; wallpaper background has no file',
   s = showReduce(s, { op: 'background', item: { id: 'x', name: 'x', kind: 'wallpaper' } });
   assert.deepEqual(s.background, { id: 'wallpaper', name: 'wallpaper', kind: 'wallpaper' });
   assert.equal(findPartOwner(s, 'wallpaper'), null);
+});
+
+test('background music: set, own play/pause and volume, part owner, remove', () => {
+  let s = showReduce(emptyShow(), { op: 'music', item: { id: 'music-1', name: 'calm.mp3' } });
+  assert.deepEqual(s.music, { id: 'music-1', name: 'calm.mp3', playing: true, volume: 0.5 });
+  assert.equal(findPartOwner(s, 'music-1').name, 'calm.mp3');
+  s = showReduce(s, { op: 'musicPlay' });
+  assert.equal(s.music.playing, false);
+  s = showReduce(s, { op: 'musicPlay', value: true });
+  assert.equal(s.music.playing, true);
+  s = showReduce(s, { op: 'musicVolume', value: 3 });
+  assert.equal(s.music.volume, 1);
+  s = showReduce(s, { op: 'musicVolume', value: 0.25 });
+  assert.equal(s.music.volume, 0.25);
+  // Music never counts as a show step or blocks readiness.
+  assert.equal(showSteps(s.items).length, 0);
+  s = showReduce(s, { op: 'music', item: null });
+  assert.equal(s.music, null);
+  assert.equal(findPartOwner(s, 'music-1'), null);
+  assert.equal(showReduce(s, { op: 'musicPlay' }).revision, s.revision);
 });

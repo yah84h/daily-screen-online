@@ -12,7 +12,7 @@ import { initialContent, type Content } from '@/lib/types';
 import '@/show.css';
 import { GraduationCap } from 'lucide-react';
 import { useShowHost, type ShowPlayback } from '@/lib/show';
-import { soundBlocked } from '@/lib/sound';
+import { soundBlocked, soundReleased } from '@/lib/sound';
 import { useTransitionClips } from '@/lib/transitions';
 import { TransitionOverlay, type TransitionPhase } from './TransitionOverlay';
 import { endRule, partKey, showReadiness, showSteps } from '../../local-test/show-state.mjs';
@@ -284,20 +284,35 @@ function LiveShow({
     show.settings?.loadingPage !== false &&
     ready.total > 0 &&
     (!ready.complete || Date.now() - readyAt < 4000);
+  // Background music sits outside every screen below, so switching screens never restarts it.
+  // It pauses itself while a video of the show is on screen and comes back after.
+  const music = (
+    <ShowMusic
+      key="music"
+      src={show.music ? urls[partKey(show.music.id)] || '' : ''}
+      playing={!!show.music?.playing}
+      volume={show.music?.volume ?? 0.5}
+      quiet={!!shown && shown.step.kind === 'video' && !show.blackout}
+    />
+  );
   if (preparing)
     return (
-      <LoadingPage
-        title={show.title}
-        logo={logo}
-        items={show.items}
-        stored={stored}
-        progress={progress}
-        done={ready.complete}
-      />
+      <>
+        {music}
+        <LoadingPage
+          title={show.title}
+          logo={logo}
+          items={show.items}
+          stored={stored}
+          progress={progress}
+          done={ready.complete}
+        />
+      </>
     );
   if (!shown)
     return (
       <>
+        {music}
         <Standby
           logo={logo}
           title={show.title}
@@ -317,33 +332,76 @@ function LiveShow({
       </>
     );
   return (
-    <div className="screen show-screen" dir="rtl">
-      <div
-        // Under a curtain the curtain does the reveal: no extra fade from black.
-        className={'show-layer' + (transition ? ' no-fade' : '')}
-        // Slides of one PowerPoint swap in place (no fade through black); a new file remounts.
-        key={
-          shown.step.kind === 'video' ? shown.step.item + ':' + shown.step.part : shown.step.item
-        }
-      >
-        {shown.step.kind === 'video' ? (
-          <ShowVideo
-            src={shown.url}
-            command={videoCommand}
-            onReport={reportPlayback}
-            lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
-            onFinish={() => live && !switching.current && finish()}
-            frozen={!live || switching.current}
-            hold={transition !== null}
-          />
-        ) : (
-          <img src={shown.url} alt="" draggable={false} />
-        )}
+    <>
+      {music}
+      <div className="screen show-screen" dir="rtl">
+        <div
+          // Under a curtain the curtain does the reveal: no extra fade from black.
+          className={'show-layer' + (transition ? ' no-fade' : '')}
+          // Slides of one PowerPoint swap in place (no fade through black); a new file remounts.
+          key={
+            shown.step.kind === 'video' ? shown.step.item + ':' + shown.step.part : shown.step.item
+          }
+        >
+          {shown.step.kind === 'video' ? (
+            <ShowVideo
+              src={shown.url}
+              command={videoCommand}
+              onReport={reportPlayback}
+              lead={live && !switching.current && rule !== 'stay' ? item?.lead || 0 : 0}
+              onFinish={() => live && !switching.current && finish()}
+              frozen={!live || switching.current}
+              hold={transition !== null}
+            />
+          ) : (
+            <img src={shown.url} alt="" draggable={false} />
+          )}
+        </div>
+        <div className={'show-blackout' + (show.blackout ? ' on' : '')} aria-hidden="true" />
+        {overlay}
       </div>
-      <div className={'show-blackout' + (show.blackout ? ' on' : '')} aria-hidden="true" />
-      {overlay}
-    </div>
+    </>
   );
+}
+
+/** Looping background music for the show: its own play / pause and volume, fades in and out. */
+function ShowMusic({
+  src,
+  playing,
+  volume,
+  quiet,
+}: {
+  src: string;
+  playing: boolean;
+  volume: number;
+  quiet: boolean;
+}) {
+  const audio = useRef<HTMLAudioElement>(null);
+  const on = !!src && playing && !quiet;
+  useEffect(() => {
+    const el = audio.current;
+    if (!el || !src) return;
+    const target = on ? volume : 0;
+    if (on && el.paused) {
+      el.volume = 0;
+      el.play().catch(() => soundBlocked(el));
+    }
+    // A short fade so it never cuts in or out abruptly.
+    const start = el.volume;
+    const began = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - began) / 600);
+      el.volume = Math.max(0, Math.min(1, start + (target - start) * t));
+      if (t < 1) frame = requestAnimationFrame(step);
+      else if (!on) el.pause();
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [on, volume, src]);
+  useEffect(() => () => soundReleased(audio.current!), []);
+  if (!src) return null;
+  return <audio ref={audio} className="show-music" src={src} loop preload="auto" />;
 }
 
 const VOLUME_KEY = 'daily-screen-show-volume';

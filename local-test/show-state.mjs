@@ -39,6 +39,21 @@ export function emptyShow() {
     blackout: false,
     settings: defaultSettings(),
     background: null,
+    music: null,
+  };
+}
+
+/** Background music: one looping track with its own play/pause and volume. */
+function cleanMusic(raw) {
+  if (!raw || typeof raw.id !== 'string') return null;
+  return {
+    id: raw.id,
+    name: clean(raw.name, 120) || 'موسيقى',
+    playing: raw.playing !== false,
+    volume: Math.max(
+      0,
+      Math.min(1, Number.isFinite(Number(raw.volume)) ? Number(raw.volume) : 0.5),
+    ),
   };
 }
 
@@ -194,6 +209,23 @@ export function showReduce(show, command) {
       const item = cleanItem({ ...command.item, kind, source: 'phone' });
       return bump({ background: { id: item.id, name: item.name, kind } });
     }
+    case 'music': {
+      // Background music for the whole show; null removes it.
+      if (!command.item) return bump({ music: null });
+      const item = cleanItem({ ...command.item, kind: 'video', source: 'phone' });
+      return bump({ music: cleanMusic({ id: item.id, name: item.name }) });
+    }
+    case 'musicPlay':
+      if (!s.music) return s;
+      return bump({
+        music: {
+          ...s.music,
+          playing: typeof command.value === 'boolean' ? command.value : !s.music.playing,
+        },
+      });
+    case 'musicVolume':
+      if (!s.music) return s;
+      return bump({ music: cleanMusic({ ...s.music, volume: command.value }) });
     case 'settings':
       return bump({ settings: cleanSettings({ ...s.settings, ...command.settings }) });
     case 'standby':
@@ -220,6 +252,16 @@ export function findPartOwner(show, id) {
       source: 'phone',
       url: '',
       name: show.background.name,
+      parts: 1,
+      size: 0,
+    };
+  if (show?.music?.id === id)
+    return {
+      id,
+      kind: 'video',
+      source: 'phone',
+      url: '',
+      name: show.music.name,
       parts: 1,
       size: 0,
     };

@@ -116,6 +116,45 @@ try {
   await tv.screenshot({ path: 'work/show-tv-standby-photo.png' });
   await phone.screenshot({ path: 'work/show-phone-ready.png', fullPage: true });
 
+  // Background music: sent like any file, loops on the TV with its own controls.
+  const rate = 8000;
+  const pcm = Buffer.alloc(rate * 3 * 2);
+  for (let i = 0; i < rate * 3; i++)
+    pcm.writeInt16LE(Math.round(Math.sin((i / rate) * 2 * Math.PI * 440) * 8000), i * 2);
+  const wavHeader = Buffer.alloc(44);
+  wavHeader.write('RIFF', 0);
+  wavHeader.writeUInt32LE(36 + pcm.length, 4);
+  wavHeader.write('WAVEfmt ', 8);
+  wavHeader.writeUInt32LE(16, 16);
+  wavHeader.writeUInt16LE(1, 20);
+  wavHeader.writeUInt16LE(1, 22);
+  wavHeader.writeUInt32LE(rate, 24);
+  wavHeader.writeUInt32LE(rate * 2, 28);
+  wavHeader.writeUInt16LE(2, 32);
+  wavHeader.writeUInt16LE(16, 34);
+  wavHeader.write('data', 36);
+  wavHeader.writeUInt32LE(pcm.length, 40);
+  await phone.getByLabel('ملف الموسيقى').setInputFiles({
+    name: 'calm.wav',
+    mimeType: 'audio/wav',
+    buffer: Buffer.concat([wavHeader, pcm]),
+  });
+  await phone.getByText('calm.wav · على التلفزيون ✓').waitFor();
+  await tv.waitForFunction(() => {
+    const a = document.querySelector('audio.show-music');
+    return a && !a.paused && a.loop && a.currentTime > 0;
+  });
+  // Its own pause / play, separate from the show.
+  await phone.getByRole('button', { name: 'إيقاف مؤقت' }).click();
+  await tv.waitForFunction(() => document.querySelector('audio.show-music').paused);
+  await phone.getByRole('button', { name: 'تشغيل', exact: true }).click();
+  await tv.waitForFunction(() => !document.querySelector('audio.show-music').paused);
+  await phone.getByLabel('مستوى صوت الموسيقى').fill('30');
+  await phone.getByLabel('مستوى صوت الموسيقى').dispatchEvent('pointerup');
+  await tv.waitForFunction(
+    () => Math.abs(document.querySelector('audio.show-music').volume - 0.3) < 0.02,
+  );
+
   await phone.getByRole('button', { name: 'ابدأ العرض' }).click();
   if (edge)
     await tv.waitForFunction(
@@ -162,6 +201,8 @@ try {
   }
   await tv.locator('.show-layer img').waitFor();
   await phone.getByText('2 / 3').waitFor();
+  // …and comes back for the photos, without restarting the track.
+  await tv.waitForFunction(() => !document.querySelector('audio.show-music').paused);
   await phone
     .locator('.show-next-up')
     .getByText(/\.png$/)
@@ -176,6 +217,8 @@ try {
   await tv.locator('.show-layer img').waitFor();
   await phone.getByRole('button', { name: 'تشغيل الآن: opening.webm' }).click();
   await tv.locator('.show-layer video').waitFor();
+  // The music steps aside while a video of the show is on screen.
+  await tv.waitForFunction(() => document.querySelector('audio.show-music').paused);
   await phone.getByRole('button', { name: 'إنهاء العرض' }).click();
   await tv.locator('.show-standby').waitFor();
 

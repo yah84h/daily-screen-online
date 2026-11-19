@@ -2225,3 +2225,32 @@
   padding: 1px 6px;
   font-size: 12px;
 }
+.show-music-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e3edff;
+  border-radius: 12px;
+  background: #f7faff;
+}
+.show-music-panel > b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.show-music-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.show-music-volume {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 140px;
+}
+.show-music-volume input {
+  flex: 1;
+}
