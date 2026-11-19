@@ -344,6 +344,8 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
           if (!next.items.some((kept) => kept.id === item.id)) await forget(item);
       if (before.background && before.background.id !== next.background?.id)
         await forget(findPartOwner(before, before.background.id)!);
+      if (before.music && before.music.id !== next.music?.id)
+        await forget(findPartOwner(before, before.music.id)!);
       commit(next);
       if (cmd.op === 'add') {
         const item = next.items[next.items.length - 1];
@@ -476,9 +478,11 @@ export function useShowHost(screen: string, key: string, token = ''): ShowHost {
         const saved = { ...emptyShow(), ...((await loadShow()) || {}) };
         await measure();
         const keys = new Set(await fileKeys());
-        const owners = saved.background
-          ? [...saved.items, findPartOwner(saved, saved.background.id)!]
-          : saved.items;
+        const owners = [
+          ...saved.items,
+          ...(saved.background ? [findPartOwner(saved, saved.background.id)] : []),
+          ...(saved.music ? [findPartOwner(saved, saved.music.id)] : []),
+        ].filter((item): item is ShowItem => !!item);
         for (const item of owners)
           for (let part = 0; part < (item.kind === 'deck' ? item.parts : 1); part++) {
             const k = partKey(item.id, part);

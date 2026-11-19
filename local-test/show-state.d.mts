@@ -29,7 +29,10 @@ export type Show = {
   blackout: boolean;
   settings: ShowSettings;
   background: { id: string; name: string; kind?: 'image' | 'video' | 'wallpaper' } | null;
+  /** Background music: loops under the show, pauses itself while a video plays. */
+  music?: ShowMusic | null;
 };
+export type ShowMusic = { id: string; name: string; playing: boolean; volume: number };
 export type ShowStep = { item: string; part: number; kind: 'image' | 'video' | 'break' };
 export type ShowCommand =
   | { op: 'title'; title: string }
@@ -45,6 +48,9 @@ export type ShowCommand =
       op: 'background';
       item: { id: string; name: string; kind?: 'image' | 'video' | 'wallpaper' } | null;
     }
+  | { op: 'music'; item: { id: string; name: string } | null }
+  | { op: 'musicPlay'; value?: boolean }
+  | { op: 'musicVolume'; value: number }
   | { op: 'settings'; settings: Partial<ShowSettings> }
   | { op: 'goto'; index: number };
 export const SHOW_KINDS: ShowKind[];
