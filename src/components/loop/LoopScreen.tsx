@@ -19,6 +19,7 @@ import {
   recognitionOf,
 } from '@/lib/loop';
 import { LoopHtmlBlocks, LoopHtmlWallpaper } from './LoopHtmlBlocks';
+import { loopHtmlBaseColor } from '@/lib/loopHtml';
 import { NewsTicker } from './NewsTicker';
 import NativeBackground from './NativeBackground';
 import { RecognitionBoard } from './RecognitionBoard';
@@ -83,6 +84,8 @@ export function LoopScreen({
       ]);
     }),
   );
+  const htmlWallpaper =
+    template.loopBackdrop === 'html' ? template.loopWallpaperHtml?.html.trim() || '' : '';
   const schoolName =
     template.loopSchoolName?.trim() ||
     (template.loopBranding === 'school' ? school.name : defaultLoopSchoolName);
@@ -123,6 +126,8 @@ export function LoopScreen({
             Math.max(0.6, Math.min(5, (template.loopPositions?.school?.h || 6) * 0.32)) + 'cqw',
           '--position-clock-font':
             Math.max(2, Math.min(8, (template.loopPositions?.clock?.w || 25) * 0.2)) + 'cqw',
+          // HTML wallpaper: its own color from the first frame, never the default wallpaper.
+          ...(htmlWallpaper ? { backgroundColor: loopHtmlBaseColor(htmlWallpaper) } : {}),
           backgroundImage: template.backgroundImage
             ? `url(${template.backgroundImage})`
             : undefined,
@@ -195,8 +200,8 @@ export function LoopScreen({
       )}
       <div className="loop-decoration" aria-hidden="true">
         {template.loopBackdrop === 'zigzag' && <ZigzagWallpaper />}
-        {template.loopBackdrop === 'html' && template.loopWallpaperHtml?.html.trim() && (
-          <LoopHtmlWallpaper html={template.loopWallpaperHtml.html} fields={htmlFields} />
+        {htmlWallpaper && (
+          <LoopHtmlWallpaper html={template.loopWallpaperHtml!.html} fields={htmlFields} />
         )}
         {template.loopBackdrop === 'school-video' && (
           <video

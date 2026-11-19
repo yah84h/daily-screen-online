@@ -44,6 +44,21 @@ try {
     try {
       localStorage.setItem('tv-token', 'tv-test');
     } catch {}
+    // Record what the screen looks like the moment it first appears (before the design loads).
+    new MutationObserver((_, obs) => {
+      const el = document.querySelector('.screen-loop');
+      if (!el) return;
+      obs.disconnect();
+      const art = el.querySelector('.native-artwork');
+      window.__first = {
+        bg: getComputedStyle(el).backgroundColor,
+        image: getComputedStyle(el).backgroundImage,
+        art: art ? getComputedStyle(art).display : 'none',
+        frameOpacity: getComputedStyle(el.querySelector('.loop-html-wallpaper iframe')).opacity,
+        ready: el.querySelector('.loop-html-wallpaper').dataset.ready,
+        base: getComputedStyle(el.querySelector('.loop-html-wallpaper')).backgroundColor,
+      };
+    }).observe(document, { childList: true, subtree: true });
   });
   await ctx.route('https://mock.school.test/**', async (route) => {
     const req = route.request();
@@ -80,6 +95,17 @@ try {
   const f = frame();
   assert.match(await f.evaluate(() => document.getElementById('s').textContent), /\S/);
   assert.match(await f.evaluate(() => document.getElementById('t').textContent), /[0-9٠-٩]/);
+  // From the very first frame: the design's own color, no built-in wallpaper, frame hidden until painted.
+  const first = await tv.evaluate(() => window.__first);
+  console.log('first frame:', first);
+  assert.equal(first.bg, 'rgb(11, 17, 22)');
+  assert.equal(first.base, 'rgb(11, 17, 22)');
+  assert.equal(first.image, 'none');
+  assert.equal(first.art, 'none');
+  assert.equal(first.frameOpacity, '0');
+  await tv.waitForFunction(
+    () => document.querySelector('.loop-html-wallpaper')?.dataset.ready === 'true',
+  );
   const before = await f.evaluate(() => window.__msgs);
   await tv.waitForTimeout(5000);
   const after = await f.evaluate(() => window.__msgs);

@@ -866,3 +866,19 @@
   contain: strict;
   transform: translateZ(0);
 }
+/* The design fades in over its own base color once it has painted: no white or default flash. */
+.screen-loop .loop-html-wallpaper > iframe {
+  opacity: 0;
+  transition: opacity 0.2s ease-out;
+}
+.screen-loop .loop-html-wallpaper[data-ready='true'] > iframe {
+  opacity: 1;
+}
+/* With an HTML wallpaper none of the built-in wallpaper layers paint, even for a moment. */
+.screen-loop[data-backdrop='html']
+  :is(.native-artwork, .zigzag-wallpaper, .school-video-wallpaper) {
+  display: none;
+}
+.screen-loop[data-backdrop='html'] {
+  background-image: none !important;
+}

@@ -1,8 +1,16 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
-import { loopHtmlDocument, type LoopHtmlFields } from '@/lib/loopHtml';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { loopHtmlBaseColor, loopHtmlDocument, type LoopHtmlFields } from '@/lib/loopHtml';
 import type { LoopHtml } from '@/lib/types';
 
-const Frame = memo(function Frame({ block, fields }: { block: LoopHtml; fields: LoopHtmlFields }) {
+const Frame = memo(function Frame({
+  block,
+  fields,
+  onReady,
+}: {
+  block: LoopHtml;
+  fields: LoopHtmlFields;
+  onReady?: () => void;
+}) {
   const frame = useRef<HTMLIFrameElement>(null);
   const source = useMemo(() => loopHtmlDocument(block.html), [block.html]);
   // Only post when a value actually changed (the clock ticks every second; most fields don't).
@@ -34,13 +42,17 @@ const Frame = memo(function Frame({ block, fields }: { block: LoopHtml; fields: 
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       srcDoc={source}
-      onLoad={() => send(true)}
+      onLoad={() => {
+        send(true);
+        // Wait one frame so the design has painted before it is shown.
+        requestAnimationFrame(() => requestAnimationFrame(() => onReady?.()));
+      }}
       style={{
         left: block.x + '%',
         top: block.y + '%',
         width: block.w + '%',
         height: block.h + '%',
-        opacity: block.opacity / 100,
+        opacity: block.opacity === 100 ? undefined : block.opacity / 100,
       }}
     />
   );
@@ -68,22 +80,26 @@ export function LoopHtmlBlocks({
 
 /** An uploaded HTML page filling the whole classes background. */
 export function LoopHtmlWallpaper({ html, fields }: { html: string; fields: LoopHtmlFields }) {
+  const base = useMemo(() => loopHtmlBaseColor(html), [html]);
+  const [ready, setReady] = useState(false);
+  const block = useMemo<LoopHtml>(
+    () => ({
+      id: 'wallpaper',
+      name: 'خلفية HTML',
+      html,
+      x: 0,
+      y: 0,
+      w: 100,
+      h: 100,
+      layer: 'back',
+      opacity: 100,
+    }),
+    [html],
+  );
+  useEffect(() => setReady(false), [html]);
   return (
-    <div className="loop-html-wallpaper">
-      <Frame
-        block={{
-          id: 'wallpaper',
-          name: 'خلفية HTML',
-          html,
-          x: 0,
-          y: 0,
-          w: 100,
-          h: 100,
-          layer: 'back',
-          opacity: 100,
-        }}
-        fields={fields}
-      />
+    <div className="loop-html-wallpaper" data-ready={ready} style={{ background: base }}>
+      <Frame block={block} fields={fields} onReady={() => setReady(true)} />
     </div>
   );
 }
