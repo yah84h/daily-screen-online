@@ -321,7 +321,10 @@ function LiveShow({
       <div
         // Under a curtain the curtain does the reveal: no extra fade from black.
         className={'show-layer' + (transition ? ' no-fade' : '')}
-        key={shown.step.item + ':' + shown.step.part}
+        // Slides of one PowerPoint swap in place (no fade through black); a new file remounts.
+        key={
+          shown.step.kind === 'video' ? shown.step.item + ':' + shown.step.part : shown.step.item
+        }
       >
         {shown.step.kind === 'video' ? (
           <ShowVideo

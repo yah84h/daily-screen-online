@@ -854,3 +854,15 @@
   height: 100%;
   border: 0;
 }
+/* Over an animated HTML wallpaper the soft cards skip the live blur: at their
+   near-solid background it is invisible, but it re-renders every frame. */
+.screen-loop[data-backdrop='html']:not([data-cards='glass'])
+  :is(.loop-clock-panel, .recognition-board, .loop-tech-card) {
+  backdrop-filter: none;
+}
+/* The wallpaper frame is its own layer, so the ticking clock never repaints it. */
+.screen-loop .loop-html-wallpaper,
+.screen-loop .loop-html {
+  contain: strict;
+  transform: translateZ(0);
+}

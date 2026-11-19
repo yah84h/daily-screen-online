@@ -5,9 +5,27 @@ import type { LoopHtml } from '@/lib/types';
 const Frame = memo(function Frame({ block, fields }: { block: LoopHtml; fields: LoopHtmlFields }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const source = useMemo(() => loopHtmlDocument(block.html), [block.html]);
-  const send = () =>
-    frame.current?.contentWindow?.postMessage({ type: 'school-loop-html', payload: fields }, '*');
-  useEffect(send);
+  // Only post when a value actually changed (the clock ticks every second; most fields don't).
+  const last = useRef('');
+  // Only the fields this design uses, so a ticking countdown doesn't wake a design without one.
+  const used = useMemo(() => {
+    if (/school-data|window\.school|\bschool\./.test(block.html)) return null;
+    const keys = new Set<string>();
+    for (const m of block.html.matchAll(/\{\{\s*(\w+)\s*\}\}|data-school-field=["'](\w+)["']/g))
+      keys.add(m[1] || m[2]);
+    return keys;
+  }, [block.html]);
+  const send = (force?: boolean) => {
+    const payload = used
+      ? Object.fromEntries(Object.entries(fields).filter(([k]) => used.has(k)))
+      : fields;
+    const json = JSON.stringify(payload);
+    if (!force && json === last.current) return;
+    last.current = json;
+    if (!force && used && !used.size) return;
+    frame.current?.contentWindow?.postMessage({ type: 'school-loop-html', payload }, '*');
+  };
+  useEffect(() => send());
   return (
     <iframe
       ref={frame}
@@ -16,7 +34,7 @@ const Frame = memo(function Frame({ block, fields }: { block: LoopHtml; fields: 
       sandbox="allow-scripts"
       referrerPolicy="no-referrer"
       srcDoc={source}
-      onLoad={send}
+      onLoad={() => send(true)}
       style={{
         left: block.x + '%',
         top: block.y + '%',
