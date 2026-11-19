@@ -1,4 +1,4 @@
-// Ezaati Player: full-screen Windows kiosk for the school TV page, with media saved to disk.
+// Ezaati Player: full-screen kiosk (Windows and Mac) for the school TV page, with media saved to disk.
 const {
   app,
   BrowserWindow,
