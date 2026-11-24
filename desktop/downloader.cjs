@@ -69,7 +69,18 @@ function createDownloader({ dir, fetcher = fetch, limitBytes = 20 * 1024 ** 3 })
     index = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
   } catch {}
   const inflight = new Map();
-  const saveIndex = () => fsp.writeFile(indexFile, JSON.stringify(index, null, 1));
+  let writes = Promise.resolve();
+  // Never truncate the only index during a save: a kiosk restart must retain completed files.
+  const saveIndex = () => {
+    const snapshot = JSON.stringify(index, null, 1);
+    const task = writes.catch(() => {}).then(async () => {
+      const temporary = indexFile + '.tmp';
+      await fsp.writeFile(temporary, snapshot);
+      await fsp.rename(temporary, indexFile);
+    });
+    writes = task;
+    return task;
+  };
   const keyOf = (url, base) => {
     const d = driveTarget(url, base);
     return d ? 'drive:' + d.id : new URL(url, base).href;
@@ -164,6 +175,16 @@ function createDownloader({ dir, fetcher = fetch, limitBytes = 20 * 1024 ** 3 })
       delete index[key];
       await saveIndex();
       if (entry) await fsp.rm(path.join(dir, entry.file), { force: true });
+    },
+    async clear() {
+      if (inflight.size) throw Error('DOWNLOAD_IN_PROGRESS');
+      const entries = Object.values(index);
+      index = {};
+      await saveIndex();
+      for (const entry of entries) {
+        if (/^[a-f0-9]{32}\.[a-z0-9]+$/.test(entry.file))
+          await fsp.rm(path.join(dir, entry.file), { force: true });
+      }
     },
     fileFor(name) {
       if (!/^[a-f0-9]{32}\.[a-z0-9]+$/.test(name)) return null;

@@ -8,7 +8,8 @@ type DesktopBridge = {
       onProgress?: (loaded: number, total: number) => void;
     },
   ): Promise<{ url: string; size: number; type: string }>;
-  forgetMedia(url: string): Promise<void>;
+  forgetMedia(url: string, options?: { explicit: boolean }): Promise<void>;
+  clearMediaCache?(): Promise<void>;
 };
 declare global {
   interface Window {

@@ -30,6 +30,7 @@ if (location.protocol === 'file:') {
         listeners.delete(id);
       }
     },
-    forgetMedia: (url) => ipcRenderer.invoke('media:forget', { url: String(url), base: location.href }),
+    forgetMedia: (url, options = {}) => ipcRenderer.invoke('media:forget', { url: String(url), base: location.href, explicit: options.explicit === true }),
+    clearMediaCache: () => ipcRenderer.invoke('media:clear'),
   });
 }

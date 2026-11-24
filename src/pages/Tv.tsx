@@ -272,6 +272,8 @@ export default function Tv() {
           <button onClick={() => void reloadDisplay()}>تحديث الموقع وإعادة تحميل الشاشة</button>
           <button
             onClick={() => {
+              if (!confirm('مسح ملفات الوسائط المحفوظة على هذا الجهاز؟ ستحتاج إلى تنزيلها مجددًا.'))
+                return;
               void clearShowCache()
                 .then(() => location.reload())
                 .catch(() => alert('تعذر مسح ذاكرة الوسائط.'));

@@ -63,3 +63,31 @@ test('rejects private Drive files that only return HTML', async () => {
   });
   await assert.rejects(d.prepare('https://drive.google.com/file/d/AAAAAAAAAAAAAAAA/view'), /DRIVE_NOT_PUBLIC/);
 });
+
+test('completed media survives an interrupted index write and repeated offline restarts until explicit clearing', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ezaati-retention-'));
+  try {
+    let calls = 0;
+    const first = createDownloader({dir, fetcher:async()=>{
+      calls++;
+      return new Response(new Uint8Array([1,2,3,4]),{headers:{'content-type':'video/mp4','content-length':'4'}});
+    }});
+    const urls=['https://media.example/one.mp4','https://media.example/two.mp4'];
+    const entries=await Promise.all(urls.map(url=>first.prepare(url)));
+    assert.equal(calls,2);
+    // An app crash while writing the next index leaves only a partial temp file.
+    fs.writeFileSync(path.join(dir,'index.json.tmp'),'{incomplete');
+    for(let restart=0;restart<3;restart++){
+      const offline=createDownloader({dir,fetcher:()=>assert.fail('A reload/restart must not redownload saved media')});
+      for(let i=0;i<urls.length;i++){
+        const saved=await offline.prepare(urls[i]);
+        assert.equal(saved.file,entries[i].file);
+        assert.deepEqual([...fs.readFileSync(offline.fileFor(saved.file).path)],[1,2,3,4]);
+      }
+    }
+    const cleanup=createDownloader({dir,fetcher:()=>assert.fail('no download')});
+    await cleanup.clear();
+    assert.deepEqual(JSON.parse(fs.readFileSync(path.join(dir,'index.json'),'utf8')),{});
+    for(const entry of entries) assert.equal(fs.existsSync(path.join(dir,entry.file)),false);
+  } finally { fs.rmSync(dir,{recursive:true,force:true}); }
+});
