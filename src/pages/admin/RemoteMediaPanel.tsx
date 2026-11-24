@@ -1,3 +1,4 @@
+import { PeerVideoSender } from './PeerVideoSender';
 import {
   Play,
   Pause,
@@ -16,15 +17,18 @@ export function RemoteMediaPanel() {
   const { data } = useAdmin();
   if (!data) return null;
   return (
-    <ScreenMediaPanel
-      key={data.screen.id}
-      screen={data.screen.id}
-      name={data.screen.name}
-      playlist={
-        !!data.current?.content.videoPlaylist?.enabled &&
-        !!data.current?.content.videoPlaylist.items.length
-      }
-    />
+    <>
+      <PeerVideoSender key={data.screen.id} />
+      <ScreenMediaPanel
+        key={data.screen.id}
+        screen={data.screen.id}
+        name={data.screen.name}
+        playlist={
+          !!data.current?.content.videoPlaylist?.enabled &&
+          !!data.current?.content.videoPlaylist.items.length
+        }
+      />
+    </>
   );
 }
 function ScreenMediaPanel({

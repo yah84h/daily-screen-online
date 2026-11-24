@@ -1,3 +1,4 @@
+import { PeerVideoReceiver } from '@/components/PeerVideoReceiver';
 import { reloadDisplay } from '@/lib/reloadDisplay';
 import { RemoteMediaReceiver } from '@/components/RemoteMediaReceiver';
 import { clearShowCache } from '@/lib/assetCache';
@@ -251,6 +252,13 @@ export default function Tv() {
       {/* Presentations keep progress off the audience's screen; the phone shows it. */}
       {!['presentation', 'show'].includes(paired?.screen.template?.displayMode || '') && (
         <CacheStatusLine />
+      )}
+      {paired && (
+        <PeerVideoReceiver
+          key={paired.screen.id}
+          screen={paired.screen.id}
+          token={urlToken || localStorage.getItem(TOKEN_KEY) || ''}
+        />
       )}
       <DisplayControls />
       {settings && (
