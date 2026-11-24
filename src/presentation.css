@@ -657,3 +657,31 @@ html[data-pointer-ui='false'] .device-audio-controls {
     width: 100%;
   }
 }
+
+.peer-video-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: #000;
+}
+.peer-video-overlay video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.peer-video-overlay > button {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+}
+.peer-transfer-note {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 95;
+  padding: 12px 20px;
+  border-radius: 16px;
+  background: #13283ee8;
+  color: white;
+  backdrop-filter: blur(16px);
+}
