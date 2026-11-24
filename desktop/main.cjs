@@ -155,9 +155,14 @@ ipcMain.handle('media:prepare', async (event, { url, base, kind, id }) => {
   });
   return { url: `${SCHEME}://media/${entry.file}`, size: entry.size, type: entry.type };
 });
-ipcMain.handle('media:forget', async (event, { url, base }) => {
+ipcMain.handle('media:forget', async (event, { url, base, explicit }) => {
   if (!senderAllowed(event)) throw Error('NOT_ALLOWED');
+  if (explicit !== true) return;
   await downloader.forget(url, base);
+});
+ipcMain.handle('media:clear', async (event) => {
+  if (!senderAllowed(event)) throw Error('NOT_ALLOWED');
+  await downloader.clear();
 });
 // Settings page (offline.html) — only from the local file, never from the website.
 ipcMain.handle('settings:get', (event) =>
@@ -189,9 +194,11 @@ app.whenReady().then(() => {
   if (app.isPackaged) app.setLoginItemSettings({ openAtLogin: true, path: process.execPath });
   powerSaveBlocker.start('prevent-display-sleep');
   // The TV page only needs full screen; camera, microphone, location etc. are refused.
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, done) =>
-    done(permission === 'fullscreen'),
-  );
+  session.defaultSession.setPermissionRequestHandler((_wc, permission, done, details) => {
+    let trusted = false;
+    try { trusted = new URL(details.requestingUrl).origin === allowedOrigin(); } catch {}
+    done(trusted && ['fullscreen', 'persistent-storage'].includes(permission));
+  });
   createWindow();
   // Ctrl+Shift+Q quit · Ctrl+Shift+R reload · Ctrl+Shift+S settings · F11 full screen.
   globalShortcut.register('CommandOrControl+Shift+Q', () => app.quit());

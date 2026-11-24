@@ -71,7 +71,7 @@ async function saveStoredAsset(url: string, blob: Blob) {
   }
 }
 export async function removeShowAsset(url: string) {
-  if (desktop) await desktop.forgetMedia(url).catch(() => {});
+  // A transient decode failure may discard the browser copy, never the kiosk disk file.
   const db = await openCacheDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
@@ -85,6 +85,7 @@ export async function removeShowAsset(url: string) {
   }
 }
 export async function clearShowCache() {
+  await desktop?.clearMediaCache?.();
   const db = await openCacheDatabase();
   try {
     await new Promise<void>((resolve, reject) => {
